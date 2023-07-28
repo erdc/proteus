@@ -311,8 +311,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  outputQuantDOFs=False,
                  #NULLSPACE INFO
                  nullSpace='NoNullSpace',
-                 initialize=True):
-
+                 initialize=True,
+                 useExact_s=False):
+        self.useExact_s = useExact_s
         self.variableNames = ['vof']
         self.LS_modelIndex = LS_model
         self.V_model = V_model
@@ -577,7 +578,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd=True,
                  movingDomain=False,
                  bdyNullSpace=False):
-        if coefficients.STABILIZATION_TYPE > 1:
+        if coefficients.useExact_s:
             self.hasCutCells=True
         self.auxiliaryCallCalculateResidual = False
         #
@@ -1247,7 +1248,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["quantDOFs"] = self.quantDOFs
         argsDict["ghost_penalty_constant"] = self.coefficients.flowCoefficients.ghost_penalty_constant
         argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
-        argsDict["useExact"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["useExact"] = int(self.coefficients.useExact_s)
         argsDict["isActiveR"] = self.isActiveR
         argsDict["isActiveDOF"] = self.isActiveDOF
         argsDict["isActiveElement"] = self.isActiveElement
@@ -1337,7 +1338,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["STABILIZATION_TYPE"] = self.coefficients.STABILIZATION_TYPE
         argsDict["ghost_penalty_constant"] = self.coefficients.flowCoefficients.ghost_penalty_constant
         argsDict["phi_solid_nodes"] = self.coefficients.flowCoefficients.phi_s
-        argsDict["useExact"] = int(self.coefficients.flowCoefficients.useExact)
+        argsDict["useExact"] = int(self.coefficients.useExact_s)
         argsDict["isActiveR"] = self.isActiveR
         argsDict["isActiveDOF"] = self.isActiveDOF
         argsDict["isActiveElement"] = self.isActiveElement

@@ -62,9 +62,10 @@ class OscillatingRotation2Dcylinder(object):
 
 analyticalSolution = {0:OscillatingRotation2D(L)}
 
+from proteus.ctransportCoefficients import unitSquareRotationEvaluate
+from proteus.ctransportCoefficients import unitSquareRotationLevelSetEvaluate
+
 class UnitSquareRotation(NCLS.Coefficients):
-    from proteus.ctransportCoefficients import unitSquareRotationEvaluate
-    from proteus.ctransportCoefficients import unitSquareRotationLevelSetEvaluate
     def __init__(self,useHJ=False,epsFact=1.5,checkMass=False,
                  RD_model=None,
                  useMetrics=0.0,sc_uref=1.0,sc_beta=1.0):
@@ -94,12 +95,12 @@ class UnitSquareRotation(NCLS.Coefficients):
         self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.q_v = numpy.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
-        self.unitSquareRotationLevelSetEvaluate(self.model.timeIntegration.tLast,
-                                              self.model.q['x'],
-                                              self.model.q[('u',0)],self.model.q[('grad(u)',0)],
-                                              self.model.q[('m',0)],self.model.q[('dm',0,0)],
-                                              self.model.q[('dH',0,0)],self.model.q[('dH',0,0)],
-                                              self.model.q[('H',0)],self.q_v)
+        unitSquareRotationLevelSetEvaluate(self.model.timeIntegration.tLast,
+                                           self.model.q['x'],
+                                           self.model.q[('u',0)],self.model.q[('grad(u)',0)],
+                                           self.model.q[('m',0)],self.model.q[('dm',0,0)],
+                                           self.model.q[('dH',0,0)],self.model.q[('dH',0,0)],
+                                           self.model.q[('H',0)],self.q_v)
         self.model.q[('velocity',0)]=self.q_v
         self.model.ebqe[('velocity',0)]=self.ebqe_v
         if self.RD_modelIndex != None:
@@ -120,6 +121,12 @@ class UnitSquareRotation(NCLS.Coefficients):
         #     self.lsGlobalMassErrorArray = [0.0]
         #     self.fluxArray = [0.0]
         #     self.timeArray = [self.model.timeIntegration.t]
+        self.ghost_penalty_constant=0.0
+        self.phi_s = np.ones(self.model.mesh.nodeArray.shape[0], 'd')*1e10#
+        self.useExact=False
+        self.ebqe_phi_s = np.ones((self.model.ebqe['x'].shape[0],self.model.ebqe['x'].shape[1]),'d') * 1e10
+        self.q_phi_solid = np.ones(self.model.q[('u', 0)].shape, 'd')
+        self.flowCoefficients = self
     def preStep(self,t,firstStep=False):
         self.q_v[...,0]  = -2.0*math.pi*self.model.q['x'][...,1]
         self.q_v[...,1]  =  2.0*math.pi*self.model.q['x'][...,0]

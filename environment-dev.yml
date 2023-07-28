@@ -55,3 +55,4 @@ dependencies:
   - ipython =8.14.0
   - decorator =5.1.1
   - cffi =1.15.1
+  - sympy =1.11.1

@@ -223,7 +223,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ENTROPY_TYPE=2,  # logarithmic
                  LUMPED_MASS_MATRIX=False,
                  MONOLITHIC=True,
-                 FCT=True,
+                 FCT=False,
+                 forceStrongBoundaryConditions=False,
                  num_fct_iter=1,
                  # FOR ENTROPY VISCOSITY
                  cE=1.0,
@@ -293,7 +294,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.uL = uL
         self.uR = uR
         self.cK = cK
-        self.forceStrongConditions = True
+        self.forceStrongConditions = forceStrongBoundaryConditions
         self.cE = cE
         self.outputQuantDOFs = outputQuantDOFs
         TC_base.__init__(self,
@@ -820,7 +821,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')        
-        self.forceStrongConditions=True
+        self.forceStrongConditions=self.coefficients.forceStrongConditions
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -1176,7 +1177,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
 
         argsDict = cArgumentsDict.ArgumentsDict()
-        argsDict["bc_mask"] = self.bc_mask
+        if self.forceStrongConditions:
+            argsDict["bc_mask"] = self.bc_mask
         argsDict["dt"] = self.timeIntegration.dt
         argsDict["Theta"] = 1.0
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi

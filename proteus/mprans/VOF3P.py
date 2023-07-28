@@ -951,11 +951,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["dt"] = self.timeIntegration.dt
-        argsDict["NNZ"] = self.nnz,  
+        argsDict["NNZ"] = self.nnz  
         argsDict["numDOFs"] = len(rowptr) - 1
-        argsDict["lumped_mass_matrix"] = self.ML,  
+        argsDict["lumped_mass_matrix"] = self.ML  
         argsDict["soln"] = self.u_dof_old
-        argsDict["solH"] = self.timeIntegration.u,  # high order solution
+        argsDict["solH"] = self.timeIntegration.u  # high order solution
         argsDict["uLow"] = self.uLow
         argsDict["dLow"] = self.dLow
         argsDict["limited_solution"] = limited_solution

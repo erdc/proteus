@@ -368,12 +368,12 @@ class TC_base(object):
 #\f]
 #
 #where \f$i=0,\ldots,nc-1\f$
+from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
 class LinearVADR_ConstantCoefficients(TC_base):
     """
     This class implements constant coefficients with no cross-component diffusion for
     a system of advection-diffuion-reaction equations.
     """
-    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=[0],A=[0],B=[0],C=[0],rFunc=None,useSparseDiffusion = True):
         mass={}
         advection={}
@@ -403,17 +403,17 @@ class LinearVADR_ConstantCoefficients(TC_base):
         self.rFunc=rFunc
     def evaluate(self,t,c):
         for  i  in range(self.nc):
-            self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
-                                                        self.A[i],
-                                                        self.B[i],
-                                                        self.C[i],
-                                                        t,
-                                                        c['x'],
-                                                        c[('u',i)],
-                                                        c[('m',i)],c[('dm',i,i)],
-                                                        c[('f',i)],c[('df',i,i)],
-                                                        c[('a',i,i)],
-                                                        c[('r',i)],c[('dr',i,i)])
+            linearADR_ConstantCoefficientsEvaluate(self.M[i],
+                                                   self.A[i],
+                                                   self.B[i],
+                                                   self.C[i],
+                                                   t,
+                                                   c['x'],
+                                                   c[('u',i)],
+                                                   c[('m',i)],c[('dm',i,i)],
+                                                   c[('f',i)],c[('df',i,i)],
+                                                   c[('a',i,i)],
+                                                   c[('r',i)],c[('dr',i,i)])
             nSpace=c['x'].shape[-1]
             if self.rFunc is not None:
                 for n in range(len(c[('u',i)].flat)):
@@ -429,11 +429,11 @@ class LinearVADR_ConstantCoefficients(TC_base):
 #\f]
 #
 #where \f$=0,\ldots,nc-1\f$
+from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
 class LinearVADR_ConstantCoefficients_skew(TC_base):
     """
     This class implements constant coefficients for a skew symmetric system, mainly for testing and debugging
     """
-    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -462,17 +462,17 @@ class LinearVADR_ConstantCoefficients_skew(TC_base):
     def evaluate(self,t,c):
         nc=self.nc
         for  i  in range(self.nc):
-            self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
-                                                        self.A[i],
-                                                        self.B[i],
-                                                        self.C[i],
-                                                        t,
-                                                        c['x'],
-                                                        c[('u',nc-1-i)],
-                                                        c[('m',i)],c[('dm',i,nc-1-i)],
-                                                        c[('f',i)],c[('df',i,nc-1-i)],
-                                                        c[('a',i,nc-1-i)],
-                                                        c[('r',i)],c[('dr',i,nc-1-i)])
+            linearADR_ConstantCoefficientsEvaluate(self.M[i],
+                                                   self.A[i],
+                                                   self.B[i],
+                                                   self.C[i],
+                                                   t,
+                                                   c['x'],
+                                                   c[('u',nc-1-i)],
+                                                   c[('m',i)],c[('dm',i,nc-1-i)],
+                                                   c[('f',i)],c[('df',i,nc-1-i)],
+                                                   c[('a',i,nc-1-i)],
+                                                   c[('r',i)],c[('dr',i,nc-1-i)])
 
 ##\brief Linear advection-diffusion-reaction (upper triangular multi-component systems)
 #
@@ -489,11 +489,11 @@ class LinearVADR_ConstantCoefficients_skew(TC_base):
 #f^i &=& \mathbf{b}^i u^i + \sum_{j = i+1}^{nc-1} f^j \\
 #r^i &=& c^i u^i + \sum_{j = i+1}^{nc-1} r^j
 #\f}
+from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
 class LinearVADR_ConstantCoefficients_upper(TC_base):
     """
     This class implements constant coefficients with upper diagonal coupling
     """
-    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -526,17 +526,17 @@ class LinearVADR_ConstantCoefficients_upper(TC_base):
         self.C = C
     def evaluate(self,t,c):
         for  i  in range(self.nc-1,-1,-1):
-            self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
-                                                        self.A[i],
-                                                        self.B[i],
-                                                        self.C[i],
-                                                        t,
-                                                        c['x'],
-                                                        c[('u',i)],
-                                                        c[('m',i)],c[('dm',i,i)],
-                                                        c[('f',i)],c[('df',i,i)],
-                                                        c[('a',i,i)],
-                                                        c[('r',i)],c[('dr',i,i)])
+            linearADR_ConstantCoefficientsEvaluate(self.M[i],
+                                                   self.A[i],
+                                                   self.B[i],
+                                                   self.C[i],
+                                                   t,
+                                                   c['x'],
+                                                   c[('u',i)],
+                                                   c[('m',i)],c[('dm',i,i)],
+                                                   c[('f',i)],c[('df',i,i)],
+                                                   c[('a',i,i)],
+                                                   c[('r',i)],c[('dr',i,i)])
             for j in range(self.nc-1,i,-1):
                 c[('m',i)]+=c[('m',j)]
                 c[('dm',i,j)].flat[:]=c[('dm',j,j)].flat
@@ -560,11 +560,11 @@ class LinearVADR_ConstantCoefficients_upper(TC_base):
 #f^i &=& \mathbf{b}^i u^i + \sum_{j = 0}{i-1} f^j \\
 #r^i &=& c^i u^i + \sum_{j = 0}{i-1} r^j
 #\f}
+from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
 class LinearVADR_ConstantCoefficients_lower(TC_base):
     """
     This class implements constant coefficients with lower diagonal coupling
     """
-    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -597,17 +597,17 @@ class LinearVADR_ConstantCoefficients_lower(TC_base):
         self.C = C
     def evaluate(self,t,c):
         for  i  in range(self.nc):
-            self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
-                                                        self.A[i],
-                                                        self.B[i],
-                                                        self.C[i],
-                                                        t,
-                                                        c['x'],
-                                                        c[('u',i)],
-                                                        c[('m',i)],c[('dm',i,i)],
-                                                        c[('f',i)],c[('df',i,i)],
-                                                        c[('a',i,i)],
-                                                        c[('r',i)],c[('dr',i,i)])
+            linearADR_ConstantCoefficientsEvaluate(self.M[i],
+                                                   self.A[i],
+                                                   self.B[i],
+                                                   self.C[i],
+                                                   t,
+                                                   c['x'],
+                                                   c[('u',i)],
+                                                   c[('m',i)],c[('dm',i,i)],
+                                                   c[('f',i)],c[('df',i,i)],
+                                                   c[('a',i,i)],
+                                                   c[('r',i)],c[('dr',i,i)])
             for j in range(i):
                 c[('m',i)]+=c[('m',j)]
                 c[('dm',i,j)].flat[:]=c[('dm',j,j)].flat
@@ -633,11 +633,11 @@ class LinearVADR_ConstantCoefficients_lower(TC_base):
 #a^{i,j} &=& \epsilon \mathbf{a}^{i,i} \quad j \neq i \\
 #r^i &=& c^i u^i + \sum_{j \neq i} \epsilon r^j
 #\f}
+from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
 class LinearVADR_ConstantCoefficients_full(TC_base):
     """
     This class implements constant coefficients with full coupling
     """
-    from .ctransportCoefficients import linearADR_ConstantCoefficientsEvaluate
     def __init__(self,nc=1,M=0,A=0,B=0,C=0):
         mass={}
         advection={}
@@ -674,29 +674,29 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
         ftmp=numpy.zeros(c[('f',0)].shape,'d')
         rtmp=numpy.zeros(c[('r',0)].shape,'d')
         for  i  in range(self.nc):
-            self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
-                                                        self.A[i],
-                                                        self.B[i],
-                                                        self.C[i],
-                                                        t,
-                                                        c['x'],
-                                                        c[('u',i)],
-                                                        c[('m',i)],c[('dm',i,i)],
-                                                        c[('f',i)],c[('df',i,i)],
-                                                        c[('a',i,i)],
-                                                        c[('r',i)],c[('dr',i,i)])
+            linearADR_ConstantCoefficientsEvaluate(self.M[i],
+                                                   self.A[i],
+                                                   self.B[i],
+                                                   self.C[i],
+                                                   t,
+                                                   c['x'],
+                                                   c[('u',i)],
+                                                   c[('m',i)],c[('dm',i,i)],
+                                                   c[('f',i)],c[('df',i,i)],
+                                                   c[('a',i,i)],
+                                                   c[('r',i)],c[('dr',i,i)])
             for j in list(range(0,i))+list(range(i+1,self.nc)):
-                self.linearADR_ConstantCoefficientsEvaluate(self.eps*self.M[j],
-                                                            self.eps*self.A[j],
-                                                            self.eps*self.B[j],
-                                                            self.eps*self.C[j],
-                                                            t,
-                                                            c['x'],
-                                                            c[('u',j)],
-                                                            mtmp,c[('dm',i,j)],
-                                                            ftmp,c[('df',i,j)],
-                                                            c[('a',i,j)],
-                                                            rtmp,c[('dr',i,j)])
+                linearADR_ConstantCoefficientsEvaluate(self.eps*self.M[j],
+                                                       self.eps*self.A[j],
+                                                       self.eps*self.B[j],
+                                                       self.eps*self.C[j],
+                                                       t,
+                                                       c['x'],
+                                                       c[('u',j)],
+                                                       mtmp,c[('dm',i,j)],
+                                                       ftmp,c[('df',i,j)],
+                                                       c[('a',i,j)],
+                                                       rtmp,c[('dr',i,j)])
                 c[('m',i)]+=mtmp
                 c[('f',i)]+=ftmp
                 c[('r',i)]+=rtmp
@@ -709,12 +709,12 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
 #\f[
 # m u^p + \nabla \cdot \left( \mathbf{b} u^q - \mathbf{a} u^t \nabla u^r \right) + c u^s = 0
 #\f]
+from .ctransportCoefficients import nonlinearADR_pqrstEvaluate
 class NonlinearVADR_pqrst(TC_base):
     """
     This class implements simple monomial nonlinear coefficients with no cross-component diffusion for
     a system of advection-diffuion-reaction equations.
     """
-    from .ctransportCoefficients import nonlinearADR_pqrstEvaluate
     def __init__(self,nc=1,M={0:0.0},A={0:1.0},B={0:0.0},C={0:0.0},
                  p={0:1.0},q={0:1.0},r={0:1.0},s={0:1.0},t={0:0.0}):
         mass={}
@@ -800,11 +800,11 @@ class NonlinearVADR_pqrst(TC_base):
 #\phi^i &=& (u^i)^r \\
 #r^i &=& c^i (u^i)^s + \sum_{j \neq i} \epsilon r^j
 #\f}
+from .ctransportCoefficients import nonlinearADR_pqrstEvaluate
 class NonlinearVADR_pqrst_full(TC_base):
     """
     This class implements the simple nonlinear ADR equation with full coupling
     """
-    from .ctransportCoefficients import nonlinearADR_pqrstEvaluate
     def __init__(self,nc=1,M={0:0.0},A={0:1.0},B={0:0.0},C={0:0.0},
                  p={0:1.0},q={0:1.0},r={0:1.0},s={0:1.0},t={0:0.0}):
         mass={}
@@ -849,41 +849,41 @@ class NonlinearVADR_pqrst_full(TC_base):
         rtmp=numpy.zeros(c[('r',0)].shape,'d')
         phitmp=numpy.zeros(c[('phi',0)].shape,'d')
         for  i  in range(self.nc):
-            self.nonlinearADR_pqrstEvaluate(self.M[i],
-                                            self.A[i],
-                                            self.B[i],
-                                            self.C[i],
-                                            self.p[i],
-                                            self.q[i],
-                                            self.r[i],
-                                            self.s[i],
-                                            self.t[i],
-                                            t,
-                                            c['x'],
-                                            c[('u',i)],
-                                            c[('m',i)],c[('dm',i,i)],
-                                            c[('f',i)],c[('df',i,i)],
-                                            c[('a',i,i)],c[('da',i,i,i)],
-                                            phitmp,phitmp,
-                                            c[('r',i)],c[('dr',i,i)])
+            nonlinearADR_pqrstEvaluate(self.M[i],
+                                       self.A[i],
+                                       self.B[i],
+                                       self.C[i],
+                                       self.p[i],
+                                       self.q[i],
+                                       self.r[i],
+                                       self.s[i],
+                                       self.t[i],
+                                       t,
+                                       c['x'],
+                                       c[('u',i)],
+                                       c[('m',i)],c[('dm',i,i)],
+                                       c[('f',i)],c[('df',i,i)],
+                                       c[('a',i,i)],c[('da',i,i,i)],
+                                       phitmp,phitmp,
+                                       c[('r',i)],c[('dr',i,i)])
             for j in list(range(0,i))+list(range(i+1,self.nc)):
-                self.nonlinearADR_pqrstEvaluate(self.eps*self.M[j],
-                                                self.eps*self.A[j],
-                                                self.eps*self.B[j],
-                                                self.eps*self.C[j],
-                                                self.p[j],
-                                                self.q[j],
-                                                self.r[j],
-                                                self.s[j],
-                                                self.t[j],
-                                                t,
-                                                c['x'],
-                                                c[('u',j)],
-                                                mtmp,c[('dm',i,j)],
-                                                ftmp,c[('df',i,j)],
-                                                c[('a',i,j)],c[('da',i,j,j)],
-                                                phitmp,phitmp,
-                                                rtmp,c[('dr',i,j)])
+                nonlinearADR_pqrstEvaluate(self.eps*self.M[j],
+                                           self.eps*self.A[j],
+                                           self.eps*self.B[j],
+                                           self.eps*self.C[j],
+                                           self.p[j],
+                                           self.q[j],
+                                           self.r[j],
+                                           self.s[j],
+                                           self.t[j],
+                                           t,
+                                           c['x'],
+                                           c[('u',j)],
+                                           mtmp,c[('dm',i,j)],
+                                           ftmp,c[('df',i,j)],
+                                           c[('a',i,j)],c[('da',i,j,j)],
+                                           phitmp,phitmp,
+                                           rtmp,c[('dr',i,j)])
                 c[('m',i)]+=mtmp
                 c[('f',i)]+=ftmp
                 c[('r',i)]+=rtmp
@@ -901,11 +901,11 @@ class NonlinearVADR_pqrst_full(TC_base):
 # v_x &=& 2 \pi (y - 1/2) \\
 # v_y &=& 2 \pi (1/2-x) \\
 #\f}
+from .ctransportCoefficients import unitSquareRotationEvaluate
 class UnitSquareRotation(TC_base):
     """
     Conservative linear advection with a rotating velocity field
     """
-    from .ctransportCoefficients import unitSquareRotationEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -922,16 +922,16 @@ class UnitSquareRotation(TC_base):
                          reaction,
                          hamiltonian)
     def evaluate(self,t,c):
-        self.unitSquareRotationEvaluate(c['x'],
-                                        c[('u',0)],
-                                        c[('m',0)],c[('dm',0,0)],
-                                        c[('f',0)],c[('df',0,0)])
-
+        unitSquareRotationEvaluate(c['x'],
+                                   c[('u',0)],
+                                   c[('m',0)],c[('dm',0,0)],
+                                   c[('f',0)],c[('df',0,0)])
+        
+from .ctransportCoefficients import unitCubeRotationEvaluate
 class UnitCubeRotation(TC_base):
     """
     Conservative linear advection with a rotating velocity field in 3d
     """
-    from .ctransportCoefficients import unitCubeRotationEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -948,10 +948,10 @@ class UnitCubeRotation(TC_base):
                          reaction,
                          hamiltonian)
     def evaluate(self,t,c):
-        self.unitCubeRotationEvaluate(c['x'],
-                                      c[('u',0)],
-                                      c[('m',0)],c[('dm',0,0)],
-                                      c[('f',0)],c[('df',0,0)])
+        unitCubeRotationEvaluate(c['x'],
+                                 c[('u',0)],
+                                 c[('m',0)],c[('dm',0,0)],
+                                 c[('f',0)],c[('df',0,0)])
 
 ##\brief Incompressible Navier-Stokes equations
 #
@@ -963,12 +963,12 @@ class UnitCubeRotation(TC_base):
 #\f}
 #
 #where \f$\mathbf{v}\f$ is the velocity, \f$p\f$ is the pressure, \f$\nu\f$ is the kinematic viscosity, \f$\rho\f$ is the density, and \f$\mathbf{g}\f$ is the gravitational acceleration.
+from .ctransportCoefficients import NavierStokes_2D_Evaluate
+from .ctransportCoefficients import NavierStokes_3D_Evaluate
 class NavierStokes(TC_base):
     """
     The coefficients for the incompressible Navier-Stokes equations.
     """
-    from .ctransportCoefficients import NavierStokes_2D_Evaluate
-    from .ctransportCoefficients import NavierStokes_3D_Evaluate
     def __init__(self,rho=998.2,nu=1.004e-6,g=[0.0,9.8],nd=2):
         self.rho = rho
         self.nu = nu
@@ -1049,78 +1049,79 @@ class NavierStokes(TC_base):
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:
-            self.NavierStokes_2D_Evaluate(self.rho,
-                                          self.nu,
-                                          self.g,
-                                          c[('u',0)],
-                                          c[('grad(u)',0)],
-                                          c[('u',1)],
-                                          c[('u',2)],
-                                          c[('m',1)],
-                                          c[('dm',1,1)],
-                                          c[('m',2)],
-                                          c[('dm',2,2)],
-                                          c[('f',0)],
-                                          c[('df',0,1)],
-                                          c[('df',0,2)],
-                                          c[('f',1)],
-                                          c[('df',1,1)],
-                                          c[('df',1,2)],
-                                          c[('f',2)],
-                                          c[('df',2,1)],
-                                          c[('df',2,2)],
-                                          c[('a',1,1)],
-                                          c[('a',2,2)],
-                                          c[('r',1)],
-                                          c[('r',2)],
-                                          c[('H',1)],
-                                          c[('dH',1,0)],
-                                          c[('H',2)],
-                                          c[('dH',2,0)])
+            NavierStokes_2D_Evaluate(self.rho,
+                                     self.nu,
+                                     self.g,
+                                     c[('u',0)],
+                                     c[('grad(u)',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('m',1)],
+                                     c[('dm',1,1)],
+                                     c[('m',2)],
+                                     c[('dm',2,2)],
+                                     c[('f',0)],
+                                     c[('df',0,1)],
+                                     c[('df',0,2)],
+                                     c[('f',1)],
+                                     c[('df',1,1)],
+                                     c[('df',1,2)],
+                                     c[('f',2)],
+                                     c[('df',2,1)],
+                                     c[('df',2,2)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('r',1)],
+                                     c[('r',2)],
+                                     c[('H',1)],
+                                     c[('dH',1,0)],
+                                     c[('H',2)],
+                                     c[('dH',2,0)])
         elif  self.nd==3:
-            self.NavierStokes_3D_Evaluate(self.rho,
-                                          self.nu,
-                                          self.g,
-                                          c[('u',0)],
-                                          c[('grad(u)',0)],
-                                          c[('u',1)],
-                                          c[('u',2)],
-                                          c[('u',3)],
-                                          c[('m',1)],
-                                          c[('dm',1,1)],
-                                          c[('m',2)],
-                                          c[('dm',2,2)],
-                                          c[('m',3)],
-                                          c[('dm',3,3)],
-                                          c[('f',0)],
-                                          c[('df',0,1)],
-                                          c[('df',0,2)],
-                                          c[('df',0,3)],
-                                          c[('f',1)],
-                                          c[('df',1,1)],
-                                          c[('df',1,2)],
-                                          c[('df',1,3)],
-                                          c[('f',2)],
-                                          c[('df',2,1)],
-                                          c[('df',2,2)],
-                                          c[('df',2,3)],
-                                          c[('f',3)],
-                                          c[('df',3,1)],
-                                          c[('df',3,2)],
-                                          c[('df',3,3)],
-                                          c[('a',1,1)],
-                                          c[('a',2,2)],
-                                          c[('a',3,3)],
-                                          c[('r',1)],
-                                          c[('r',2)],
-                                          c[('r',3)],
-                                          c[('H',1)],
-                                          c[('dH',1,0)],
-                                          c[('H',2)],
-                                          c[('dH',2,0)],
-                                          c[('H',3)],
-                                          c[('dH',3,0)])
-
+            NavierStokes_3D_Evaluate(self.rho,
+                                     self.nu,
+                                     self.g,
+                                     c[('u',0)],
+                                     c[('grad(u)',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('u',3)],
+                                     c[('m',1)],
+                                     c[('dm',1,1)],
+                                     c[('m',2)],
+                                     c[('dm',2,2)],
+                                     c[('m',3)],
+                                     c[('dm',3,3)],
+                                     c[('f',0)],
+                                     c[('df',0,1)],
+                                     c[('df',0,2)],
+                                     c[('df',0,3)],
+                                     c[('f',1)],
+                                     c[('df',1,1)],
+                                     c[('df',1,2)],
+                                     c[('df',1,3)],
+                                     c[('f',2)],
+                                     c[('df',2,1)],
+                                     c[('df',2,2)],
+                                     c[('df',2,3)],
+                                     c[('f',3)],
+                                     c[('df',3,1)],
+                                     c[('df',3,2)],
+                                     c[('df',3,3)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('a',3,3)],
+                                     c[('r',1)],
+                                     c[('r',2)],
+                                     c[('r',3)],
+                                     c[('H',1)],
+                                     c[('dH',1,0)],
+                                     c[('H',2)],
+                                     c[('dH',2,0)],
+                                     c[('H',3)],
+                                     c[('dH',3,0)])
+from .ctransportCoefficients import shallowWater_1D_Evaluate
+from .ctransportCoefficients import shallowWater_2D_Evaluate
 class ShallowWater(TC_base):
     r"""The coefficients for the shallow water equations.
 
@@ -1136,8 +1137,6 @@ class ShallowWater(TC_base):
     :math:`a = 1/3` for Mannings law --> bedFrictionPower
 
     """
-    from .ctransportCoefficients import shallowWater_1D_Evaluate
-    from .ctransportCoefficients import shallowWater_2D_Evaluate
 #    from ctransportCoefficients import shallowWater_3D_Evaluate
     def __init__(self,g=9.8,nd=1,h_eps=1.0e-8,
                  bedFrictionCoefficient=0.0, #bed friction law coefficient (n^2 for Manning)
@@ -1314,68 +1313,68 @@ class ShallowWater(TC_base):
         if ('H',0) not in c and ('u',0) in c:
             c[('H',0)] = numpy.copy(c[('u',0)])
         if self.nd==1:
-            self.shallowWater_1D_Evaluate(self.h_eps,
-                                          self.g,
-                                          self.bedFrictionCoefficient,
-                                          self.bedFrictionPower,
-                                          self.eddyViscosity,
-                                          c['x'],
-                                          grad_b,
-                                          c[('u',0)],
-                                          c[('u',1)],
-                                          c[('H',0)],
-                                          c[('m',0)],
-                                          c[('dm',0,0)],
-                                          c[('m',1)],
-                                          c[('dm',1,1)],
-                                          c[('f',0)],
-                                          c[('df',0,1)],
-                                          c[('f',1)],
-                                          c[('df',1,0)],
-                                          c[('df',1,1)],
-                                          c[('a',1,1)],
-                                          c[('r',1)],
-                                          c[('dr',1,0)],
-                                          c[('dr',1,1)])
+            shallowWater_1D_Evaluate(self.h_eps,
+                                     self.g,
+                                     self.bedFrictionCoefficient,
+                                     self.bedFrictionPower,
+                                     self.eddyViscosity,
+                                     c['x'],
+                                     grad_b,
+                                     c[('u',0)],
+                                     c[('u',1)],
+                                     c[('H',0)],
+                                     c[('m',0)],
+                                     c[('dm',0,0)],
+                                     c[('m',1)],
+                                     c[('dm',1,1)],
+                                     c[('f',0)],
+                                     c[('df',0,1)],
+                                     c[('f',1)],
+                                     c[('df',1,0)],
+                                     c[('df',1,1)],
+                                     c[('a',1,1)],
+                                     c[('r',1)],
+                                     c[('dr',1,0)],
+                                     c[('dr',1,1)])
         if self.nd==2:
-            self.shallowWater_2D_Evaluate(self.h_eps,
-                                          self.g,
-                                          self.bedFrictionCoefficient,
-                                          self.bedFrictionPower,
-                                          self.eddyViscosity,
-                                          c['x'],
-                                          grad_b,
-                                          c[('u',0)],
-                                          c[('u',1)],
-                                          c[('u',2)],
-                                          c[('H',0)],
-                                          c[('m',0)],
-                                          c[('dm',0,0)],
-                                          c[('m',1)],
-                                          c[('dm',1,1)],
-                                          c[('m',2)],
-                                          c[('dm',2,2)],
-                                          c[('f',0)],
-                                          c[('df',0,1)],
-                                          c[('df',0,2)],
-                                          c[('f',1)],
-                                          c[('df',1,0)],
-                                          c[('df',1,1)],
-                                          c[('df',1,2)],
-                                          c[('f',2)],
-                                          c[('df',2,0)],
-                                          c[('df',2,1)],
-                                          c[('df',2,2)],
-                                          c[('a',1,1)],
-                                          c[('a',2,2)],
-                                          c[('r',1)],
-                                          c[('dr',1,0)],
-                                          c[('dr',1,1)],
-                                          c[('dr',1,2)],
-                                          c[('r',2)],
-                                          c[('dr',2,0)],
-                                          c[('dr',2,1)],
-                                          c[('dr',2,2)])
+            shallowWater_2D_Evaluate(self.h_eps,
+                                     self.g,
+                                     self.bedFrictionCoefficient,
+                                     self.bedFrictionPower,
+                                     self.eddyViscosity,
+                                     c['x'],
+                                     grad_b,
+                                     c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('H',0)],
+                                     c[('m',0)],
+                                     c[('dm',0,0)],
+                                     c[('m',1)],
+                                     c[('dm',1,1)],
+                                     c[('m',2)],
+                                     c[('dm',2,2)],
+                                     c[('f',0)],
+                                     c[('df',0,1)],
+                                     c[('df',0,2)],
+                                     c[('f',1)],
+                                     c[('df',1,0)],
+                                     c[('df',1,1)],
+                                     c[('df',1,2)],
+                                     c[('f',2)],
+                                     c[('df',2,0)],
+                                     c[('df',2,1)],
+                                     c[('df',2,2)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('r',1)],
+                                     c[('dr',1,0)],
+                                     c[('dr',1,1)],
+                                     c[('dr',1,2)],
+                                     c[('r',2)],
+                                     c[('dr',2,0)],
+                                     c[('dr',2,1)],
+                                     c[('dr',2,2)])
             #for now allow constant eddy viscosity
             #once have diagonal sparse rep
             #c[('a',1,1)].fill(self.eddyViscosity)
@@ -1423,7 +1422,8 @@ class ShallowWater(TC_base):
 #                                           c[('dH',2,0)],
 #                                           c[('H',3)],
 #                                           c[('dH',3,0)])
-
+from .ctransportCoefficients import Laplace_2D_Evaluate
+from .ctransportCoefficients import Laplace_3D_Evaluate
 class DiscreteLaplaceOperator(TC_base):
     r""" A coefficient class to construct the discrete Laplace Operator.
     
@@ -1437,8 +1437,6 @@ class DiscreteLaplaceOperator(TC_base):
     for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
     :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
     """
-    from .ctransportCoefficients import Laplace_2D_Evaluate
-    from .ctransportCoefficients import Laplace_3D_Evaluate
     def __init__(self,nd=2,nu=1.0):
         self.nd=nd
         self.nu=nu # ... Detail I need to worry about later ...
@@ -1502,21 +1500,21 @@ class DiscreteLaplaceOperator(TC_base):
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:
-            self.Laplace_2D_Evaluate(c[('u',0)],
-                                     c[('u',1)],
-                                     c[('u',2)],
-                                     c[('a',0,0)],
-                                     c[('a',1,1)],
-                                     c[('a',2,2)])
+            Laplace_2D_Evaluate(c[('u',0)],
+                                c[('u',1)],
+                                c[('u',2)],
+                                c[('a',0,0)],
+                                c[('a',1,1)],
+                                c[('a',2,2)])
         if self.nd==3:
-            self.Laplace_3D_Evaluate(c[('u',0)],
-                                     c[('u',1)],
-                                     c[('u',2)],
-                                     c[('u',3)],
-                                     c[('a',0,0)],
-                                     c[('a',1,1)],
-                                     c[('a',2,2)],
-                                     c[('a',3,3)])
+            Laplace_3D_Evaluate(c[('u',0)],
+                                c[('u',1)],
+                                c[('u',2)],
+                                c[('u',3)],
+                                c[('a',0,0)],
+                                c[('a',1,1)],
+                                c[('a',2,2)],
+                                c[('a',3,3)])
 
 ##\brief Incompressible Stokes equations
 #
@@ -1528,12 +1526,12 @@ class DiscreteLaplaceOperator(TC_base):
 #\f}
 #
 #where \f$\mathbf{v}\f$ is the velocity, \f$p\f$ is the pressure, \f$\nu\f$ is the kinematic viscosity, \f$\rho\f$ is the density, and \f$\mathbf{g}\f$ is the gravitational acceleration.
+from .ctransportCoefficients import Stokes_2D_Evaluate
+from .ctransportCoefficients import Stokes_3D_Evaluate
 class Stokes(TC_base):
     """
     The coefficients for the Stokes equations.
     """
-    from .ctransportCoefficients import Stokes_2D_Evaluate
-    from .ctransportCoefficients import Stokes_3D_Evaluate
     def __init__(self,rho=998.2,nu=1.004e-6,g=[0.0,9.8],nd=2,steady=True,weakBoundaryConditions=True):
         self.steady=steady
         self.rho = rho
@@ -1632,65 +1630,65 @@ class Stokes(TC_base):
 
     def evaluate(self,t,c):
         if self.nd==2:
-            self.Stokes_2D_Evaluate(self.rho,
-                                    self.nu,
-                                    self.g,
-                                    c[('u',0)],
-                                    c[('grad(u)',0)],
-                                    c[('u',1)],
-                                    c[('u',2)],
-                                    c[('m',1)],
-                                    c[('dm',1,1)],
-                                    c[('m',2)],
-                                    c[('dm',2,2)],
-                                    c[('f',0)],
-                                    c[('df',0,1)],
-                                    c[('df',0,2)],
-                                    c[('a',1,1)],
-                                    c[('a',2,2)],
-                                    c[('r',1)],
-                                    c[('r',2)],
-                                    c[('H',1)],
-                                    c[('dH',1,0)],
-                                    c[('H',2)],
-                                    c[('dH',2,0)])
+            Stokes_2D_Evaluate(self.rho,
+                               self.nu,
+                               self.g,
+                               c[('u',0)],
+                               c[('grad(u)',0)],
+                               c[('u',1)],
+                               c[('u',2)],
+                               c[('m',1)],
+                               c[('dm',1,1)],
+                               c[('m',2)],
+                               c[('dm',2,2)],
+                               c[('f',0)],
+                               c[('df',0,1)],
+                               c[('df',0,2)],
+                               c[('a',1,1)],
+                               c[('a',2,2)],
+                               c[('r',1)],
+                               c[('r',2)],
+                               c[('H',1)],
+                               c[('dH',1,0)],
+                               c[('H',2)],
+                               c[('dH',2,0)])
         elif self.nd==3:
-            self.Stokes_3D_Evaluate(self.rho,
-                                    self.nu,
-                                    self.g,
-                                    c[('u',0)],
-                                    c[('grad(u)',0)],
-                                    c[('u',1)],
-                                    c[('u',2)],
-                                    c[('u',3)],
-                                    c[('m',1)],
-                                    c[('dm',1,1)],
-                                    c[('m',2)],
-                                    c[('dm',2,2)],
-                                    c[('m',3)],
-                                    c[('dm',3,3)],
-                                    c[('f',0)],
-                                    c[('df',0,1)],
-                                    c[('df',0,2)],
-                                    c[('df',0,3)],
-                                    c[('a',1,1)],
-                                    c[('a',2,2)],
-                                    c[('a',3,3)],
-                                    c[('r',1)],
-                                    c[('r',2)],
-                                    c[('r',3)],
-                                    c[('H',1)],
-                                    c[('dH',1,0)],
-                                    c[('H',2)],
-                                    c[('dH',2,0)],
-                                    c[('H',3)],
-                                    c[('dH',3,0)])
+            Stokes_3D_Evaluate(self.rho,
+                               self.nu,
+                               self.g,
+                               c[('u',0)],
+                               c[('grad(u)',0)],
+                               c[('u',1)],
+                               c[('u',2)],
+                               c[('u',3)],
+                               c[('m',1)],
+                               c[('dm',1,1)],
+                               c[('m',2)],
+                               c[('dm',2,2)],
+                               c[('m',3)],
+                               c[('dm',3,3)],
+                               c[('f',0)],
+                               c[('df',0,1)],
+                               c[('df',0,2)],
+                               c[('df',0,3)],
+                               c[('a',1,1)],
+                               c[('a',2,2)],
+                               c[('a',3,3)],
+                               c[('r',1)],
+                               c[('r',2)],
+                               c[('r',3)],
+                               c[('H',1)],
+                               c[('dH',1,0)],
+                               c[('H',2)],
+                               c[('dH',2,0)],
+                               c[('H',3)],
+                               c[('dH',3,0)])
+from .ctransportCoefficients import StokesP_2D_Evaluate
+from .ctransportCoefficients import StokesP_3D_Evaluate
 class StokesP(TC_base):
     """
     The coefficients for the Stokes equations.
     """
-    from .ctransportCoefficients import StokesP_2D_Evaluate
-    from .ctransportCoefficients import StokesP_3D_Evaluate
     def __init__(self,rho=998.2,nu=1.004e-6,g=[0.0,9.8],nd=2,steady=True):
         self.steady=steady
         self.rho = rho
@@ -1759,57 +1757,57 @@ class StokesP(TC_base):
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:
-            self.StokesP_2D_Evaluate(self.rho,
-                                     self.nu,
-                                     self.g,
-                                     c[('u',0)],
-                                     c[('u',1)],
-                                     c[('u',2)],
-                                     c[('m',1)],
-                                     c[('dm',1,1)],
-                                     c[('m',2)],
-                                     c[('dm',2,2)],
-                                     c[('f',0)],
-                                     c[('df',0,1)],
-                                     c[('df',0,2)],
-                                     c[('f',1)],
-                                     c[('df',1,0)],
-                                     c[('f',2)],
-                                     c[('df',2,0)],
-                                     c[('a',1,1)],
-                                     c[('a',2,2)],
-                                     c[('r',1)],
-                                     c[('r',2)])
+            StokesP_2D_Evaluate(self.rho,
+                                self.nu,
+                                self.g,
+                                c[('u',0)],
+                                c[('u',1)],
+                                c[('u',2)],
+                                c[('m',1)],
+                                c[('dm',1,1)],
+                                c[('m',2)],
+                                c[('dm',2,2)],
+                                c[('f',0)],
+                                c[('df',0,1)],
+                                c[('df',0,2)],
+                                c[('f',1)],
+                                c[('df',1,0)],
+                                c[('f',2)],
+                                c[('df',2,0)],
+                                c[('a',1,1)],
+                                c[('a',2,2)],
+                                c[('r',1)],
+                                c[('r',2)])
         elif self.nd==3:
-            self.StokesP_3D_Evaluate(self.rho,
-                                     self.nu,
-                                     self.g,
-                                     c[('u',0)],
-                                     c[('u',1)],
-                                     c[('u',2)],
-                                     c[('u',3)],
-                                     c[('m',1)],
-                                     c[('dm',1,1)],
-                                     c[('m',2)],
-                                     c[('dm',2,2)],
-                                     c[('m',3)],
-                                     c[('dm',3,3)],
-                                     c[('f',0)],
-                                     c[('df',0,1)],
-                                     c[('df',0,2)],
-                                     c[('df',0,3)],
-                                     c[('f',1)],
-                                     c[('df',1,0)],
-                                     c[('f',2)],
-                                     c[('df',2,0)],
-                                     c[('f',3)],
-                                     c[('df',3,0)],
-                                     c[('a',1,1)],
-                                     c[('a',2,2)],
-                                     c[('a',3,3)],
-                                     c[('r',1)],
-                                     c[('r',2)],
-                                     c[('r',3)])
+            StokesP_3D_Evaluate(self.rho,
+                                self.nu,
+                                self.g,
+                                c[('u',0)],
+                                c[('u',1)],
+                                c[('u',2)],
+                                c[('u',3)],
+                                c[('m',1)],
+                                c[('dm',1,1)],
+                                c[('m',2)],
+                                c[('dm',2,2)],
+                                c[('m',3)],
+                                c[('dm',3,3)],
+                                c[('f',0)],
+                                c[('df',0,1)],
+                                c[('df',0,2)],
+                                c[('df',0,3)],
+                                c[('f',1)],
+                                c[('df',1,0)],
+                                c[('f',2)],
+                                c[('df',2,0)],
+                                c[('f',3)],
+                                c[('df',3,0)],
+                                c[('a',1,1)],
+                                c[('a',2,2)],
+                                c[('a',3,3)],
+                                c[('r',1)],
+                                c[('r',2)],
+                                c[('r',3)])
 
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
 #
@@ -1841,12 +1839,12 @@ class StokesP(TC_base):
 #
 #The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
+from .ctransportCoefficients import TwophaseNavierStokes_LS_SO_2D_Evaluate
+from .ctransportCoefficients import TwophaseNavierStokes_LS_SO_3D_Evaluate
 class TwophaseNavierStokes_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from .ctransportCoefficients import TwophaseNavierStokes_LS_SO_2D_Evaluate
-    from .ctransportCoefficients import TwophaseNavierStokes_LS_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.004e-6,
@@ -2071,14 +2069,14 @@ class TwophaseNavierStokes_LS_SO(TC_base):
 #
 #The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
+from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
+from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
+from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
+from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
 class TwophaseNavierStokes_ST_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
-    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
-    from .ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -2317,83 +2315,83 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
             kappa = self.ebq_kappa
         if self.nd==2:
             if self.sd:
-                self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.eps_density,
-                                                                  self.eps_viscosity,
-                                                                  self.sigma,
-                                                                  self.rho_0,
-                                                                  self.nu_0,
-                                                                  self.rho_1,
-                                                                  self.nu_1,
-                                                                  self.g,
-                                                                  phi,
-                                                                  n,
-                                                                  kappa,
-                                                                  c[('u',0)],
-                                                                  c[('grad(u)',0)],
-                                                                  c[('u',1)],
-                                                                  c[('u',2)],
-                                                                  c[('m',1)],
-                                                                  c[('dm',1,1)],
-                                                                  c[('m',2)],
-                                                                  c[('dm',2,2)],
-                                                                  c[('f',0)],
-                                                                  c[('df',0,1)],
-                                                                  c[('df',0,2)],
-                                                                  c[('f',1)],
-                                                                  c[('df',1,1)],
-                                                                  c[('df',1,2)],
-                                                                  c[('f',2)],
-                                                                  c[('df',2,1)],
-                                                                  c[('df',2,2)],
-                                                                  c[('a',1,1)],
-                                                                  c[('a',2,2)],
-                                                                  c[('a',1,2)],
-                                                                  c[('a',2,1)],
-                                                                  c[('r',1)],
-                                                                  c[('r',2)],
-                                                                  c[('H',1)],
-                                                                  c[('dH',1,0)],
-                                                                  c[('H',2)],
-                                                                  c[('dH',2,0)])
+                TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.eps_density,
+                                                             self.eps_viscosity,
+                                                             self.sigma,
+                                                             self.rho_0,
+                                                             self.nu_0,
+                                                             self.rho_1,
+                                                             self.nu_1,
+                                                             self.g,
+                                                             phi,
+                                                             n,
+                                                             kappa,
+                                                             c[('u',0)],
+                                                             c[('grad(u)',0)],
+                                                             c[('u',1)],
+                                                             c[('u',2)],
+                                                             c[('m',1)],
+                                                             c[('dm',1,1)],
+                                                             c[('m',2)],
+                                                             c[('dm',2,2)],
+                                                             c[('f',0)],
+                                                             c[('df',0,1)],
+                                                             c[('df',0,2)],
+                                                             c[('f',1)],
+                                                             c[('df',1,1)],
+                                                             c[('df',1,2)],
+                                                             c[('f',2)],
+                                                             c[('df',2,1)],
+                                                             c[('df',2,2)],
+                                                             c[('a',1,1)],
+                                                             c[('a',2,2)],
+                                                             c[('a',1,2)],
+                                                             c[('a',2,1)],
+                                                             c[('r',1)],
+                                                             c[('r',2)],
+                                                             c[('H',1)],
+                                                             c[('dH',1,0)],
+                                                             c[('H',2)],
+                                                             c[('dH',2,0)])
             else:
-                self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate(self.eps_density,
-                                                           self.eps_viscosity,
-                                                           self.sigma,
-                                                           self.rho_0,
-                                                           self.nu_0,
-                                                           self.rho_1,
-                                                           self.nu_1,
-                                                           self.g,
-                                                           phi,
-                                                           n,
-                                                           kappa,
-                                                           c[('u',0)],
-                                                           c[('grad(u)',0)],
-                                                           c[('u',1)],
-                                                           c[('u',2)],
-                                                           c[('m',1)],
-                                                           c[('dm',1,1)],
-                                                           c[('m',2)],
-                                                           c[('dm',2,2)],
-                                                           c[('f',0)],
-                                                           c[('df',0,1)],
-                                                           c[('df',0,2)],
-                                                           c[('f',1)],
-                                                           c[('df',1,1)],
-                                                           c[('df',1,2)],
-                                                           c[('f',2)],
-                                                           c[('df',2,1)],
-                                                           c[('df',2,2)],
-                                                           c[('a',1,1)],
-                                                           c[('a',2,2)],
-                                                           c[('a',1,2)],
-                                                           c[('a',2,1)],
-                                                           c[('r',1)],
-                                                           c[('r',2)],
-                                                           c[('H',1)],
-                                                           c[('dH',1,0)],
-                                                           c[('H',2)],
-                                                           c[('dH',2,0)])
+                TwophaseNavierStokes_ST_LS_SO_2D_Evaluate(self.eps_density,
+                                                          self.eps_viscosity,
+                                                          self.sigma,
+                                                          self.rho_0,
+                                                          self.nu_0,
+                                                          self.rho_1,
+                                                          self.nu_1,
+                                                          self.g,
+                                                          phi,
+                                                          n,
+                                                          kappa,
+                                                          c[('u',0)],
+                                                          c[('grad(u)',0)],
+                                                          c[('u',1)],
+                                                          c[('u',2)],
+                                                          c[('m',1)],
+                                                          c[('dm',1,1)],
+                                                          c[('m',2)],
+                                                          c[('dm',2,2)],
+                                                          c[('f',0)],
+                                                          c[('df',0,1)],
+                                                          c[('df',0,2)],
+                                                          c[('f',1)],
+                                                          c[('df',1,1)],
+                                                          c[('df',1,2)],
+                                                          c[('f',2)],
+                                                          c[('df',2,1)],
+                                                          c[('df',2,2)],
+                                                          c[('a',1,1)],
+                                                          c[('a',2,2)],
+                                                          c[('a',1,2)],
+                                                          c[('a',2,1)],
+                                                          c[('r',1)],
+                                                          c[('r',2)],
+                                                          c[('H',1)],
+                                                          c[('dH',1,0)],
+                                                          c[('H',2)],
+                                                          c[('dH',2,0)])
             if self.stokes:
                 c[('f',1)].flat[:] = 0.0
                 c[('df',1,1)].flat[:] = 0.0
@@ -2403,119 +2401,119 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                 c[('df',2,2)].flat[:] = 0.0
         elif  self.nd==3:
             if self.sd:
-                self.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd(self.eps_density,
-                                                                  self.eps_viscosity,
-                                                                  self.sigma,
-                                                                  self.rho_0,
-                                                                  self.nu_0,
-                                                                  self.rho_1,
-                                                                  self.nu_1,
-                                                                  self.g,
-                                                                  phi,
-                                                                  n,
-                                                                  kappa,
-                                                                  c[('u',0)],
-                                                                  c[('grad(u)',0)],
-                                                                  c[('u',1)],
-                                                                  c[('u',2)],
-                                                                  c[('u',3)],
-                                                                  c[('m',1)],
-                                                                  c[('dm',1,1)],
-                                                                  c[('m',2)],
-                                                                  c[('dm',2,2)],
-                                                                  c[('m',3)],
-                                                                  c[('dm',3,3)],
-                                                                  c[('f',0)],
-                                                                  c[('df',0,1)],
-                                                                  c[('df',0,2)],
-                                                                  c[('df',0,3)],
-                                                                  c[('f',1)],
-                                                                  c[('df',1,1)],
-                                                                  c[('df',1,2)],
-                                                                  c[('df',1,3)],
-                                                                  c[('f',2)],
-                                                                  c[('df',2,1)],
-                                                                  c[('df',2,2)],
-                                                                  c[('df',2,3)],
-                                                                  c[('f',3)],
-                                                                  c[('df',3,1)],
-                                                                  c[('df',3,2)],
-                                                                  c[('df',3,3)],
-                                                                  c[('a',1,1)],
-                                                                  c[('a',2,2)],
-                                                                  c[('a',3,3)],
-                                                                  c[('a',1,2)],
-                                                                  c[('a',1,3)],
-                                                                  c[('a',2,1)],
-                                                                  c[('a',2,3)],
-                                                                  c[('a',3,1)],
-                                                                  c[('a',3,2)],
-                                                                  c[('r',1)],
-                                                                  c[('r',2)],
-                                                                  c[('r',3)],
-                                                                  c[('H',1)],
-                                                                  c[('dH',1,0)],
-                                                                  c[('H',2)],
-                                                                  c[('dH',2,0)],
-                                                                  c[('H',3)],
-                                                                  c[('dH',3,0)])
+                TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd(self.eps_density,
+                                                             self.eps_viscosity,
+                                                             self.sigma,
+                                                             self.rho_0,
+                                                             self.nu_0,
+                                                             self.rho_1,
+                                                             self.nu_1,
+                                                             self.g,
+                                                             phi,
+                                                             n,
+                                                             kappa,
+                                                             c[('u',0)],
+                                                             c[('grad(u)',0)],
+                                                             c[('u',1)],
+                                                             c[('u',2)],
+                                                             c[('u',3)],
+                                                             c[('m',1)],
+                                                             c[('dm',1,1)],
+                                                             c[('m',2)],
+                                                             c[('dm',2,2)],
+                                                             c[('m',3)],
+                                                             c[('dm',3,3)],
+                                                             c[('f',0)],
+                                                             c[('df',0,1)],
+                                                             c[('df',0,2)],
+                                                             c[('df',0,3)],
+                                                             c[('f',1)],
+                                                             c[('df',1,1)],
+                                                             c[('df',1,2)],
+                                                             c[('df',1,3)],
+                                                             c[('f',2)],
+                                                             c[('df',2,1)],
+                                                             c[('df',2,2)],
+                                                             c[('df',2,3)],
+                                                             c[('f',3)],
+                                                             c[('df',3,1)],
+                                                             c[('df',3,2)],
+                                                             c[('df',3,3)],
+                                                             c[('a',1,1)],
+                                                             c[('a',2,2)],
+                                                             c[('a',3,3)],
+                                                             c[('a',1,2)],
+                                                             c[('a',1,3)],
+                                                             c[('a',2,1)],
+                                                             c[('a',2,3)],
+                                                             c[('a',3,1)],
+                                                             c[('a',3,2)],
+                                                             c[('r',1)],
+                                                             c[('r',2)],
+                                                             c[('r',3)],
+                                                             c[('H',1)],
+                                                             c[('dH',1,0)],
+                                                             c[('H',2)],
+                                                             c[('dH',2,0)],
+                                                             c[('H',3)],
+                                                             c[('dH',3,0)])
             else:
-                self.TwophaseNavierStokes_ST_LS_SO_3D_Evaluate(self.eps_density,
-                                                           self.eps_viscosity,
-                                                           self.sigma,
-                                                           self.rho_0,
-                                                           self.nu_0,
-                                                           self.rho_1,
-                                                           self.nu_1,
-                                                           self.g,
-                                                           phi,
-                                                           n,
-                                                           kappa,
-                                                           c[('u',0)],
-                                                           c[('grad(u)',0)],
-                                                           c[('u',1)],
-                                                           c[('u',2)],
-                                                           c[('u',3)],
-                                                           c[('m',1)],
-                                                           c[('dm',1,1)],
-                                                           c[('m',2)],
-                                                           c[('dm',2,2)],
-                                                           c[('m',3)],
-                                                           c[('dm',3,3)],
-                                                           c[('f',0)],
-                                                           c[('df',0,1)],
-                                                           c[('df',0,2)],
-                                                           c[('df',0,3)],
-                                                           c[('f',1)],
-                                                           c[('df',1,1)],
-                                                           c[('df',1,2)],
-                                                           c[('df',1,3)],
-                                                           c[('f',2)],
-                                                           c[('df',2,1)],
-                                                           c[('df',2,2)],
-                                                           c[('df',2,3)],
-                                                           c[('f',3)],
-                                                           c[('df',3,1)],
-                                                           c[('df',3,2)],
-                                                           c[('df',3,3)],
-                                                           c[('a',1,1)],
-                                                           c[('a',2,2)],
-                                                           c[('a',3,3)],
-                                                           c[('a',1,2)],
-                                                           c[('a',1,3)],
-                                                           c[('a',2,1)],
-                                                           c[('a',2,3)],
-                                                           c[('a',3,1)],
-                                                           c[('a',3,2)],
-                                                           c[('r',1)],
-                                                           c[('r',2)],
-                                                           c[('r',3)],
-                                                           c[('H',1)],
-                                                           c[('dH',1,0)],
-                                                           c[('H',2)],
-                                                           c[('dH',2,0)],
-                                                           c[('H',3)],
-                                                           c[('dH',3,0)])
+                TwophaseNavierStokes_ST_LS_SO_3D_Evaluate(self.eps_density,
+                                                          self.eps_viscosity,
+                                                          self.sigma,
+                                                          self.rho_0,
+                                                          self.nu_0,
+                                                          self.rho_1,
+                                                          self.nu_1,
+                                                          self.g,
+                                                          phi,
+                                                          n,
+                                                          kappa,
+                                                          c[('u',0)],
+                                                          c[('grad(u)',0)],
+                                                          c[('u',1)],
+                                                          c[('u',2)],
+                                                          c[('u',3)],
+                                                          c[('m',1)],
+                                                          c[('dm',1,1)],
+                                                          c[('m',2)],
+                                                          c[('dm',2,2)],
+                                                          c[('m',3)],
+                                                          c[('dm',3,3)],
+                                                          c[('f',0)],
+                                                          c[('df',0,1)],
+                                                          c[('df',0,2)],
+                                                          c[('df',0,3)],
+                                                          c[('f',1)],
+                                                          c[('df',1,1)],
+                                                          c[('df',1,2)],
+                                                          c[('df',1,3)],
+                                                          c[('f',2)],
+                                                          c[('df',2,1)],
+                                                          c[('df',2,2)],
+                                                          c[('df',2,3)],
+                                                          c[('f',3)],
+                                                          c[('df',3,1)],
+                                                          c[('df',3,2)],
+                                                          c[('df',3,3)],
+                                                          c[('a',1,1)],
+                                                          c[('a',2,2)],
+                                                          c[('a',3,3)],
+                                                          c[('a',1,2)],
+                                                          c[('a',1,3)],
+                                                          c[('a',2,1)],
+                                                          c[('a',2,3)],
+                                                          c[('a',3,1)],
+                                                          c[('a',3,2)],
+                                                          c[('r',1)],
+                                                          c[('r',2)],
+                                                          c[('r',3)],
+                                                          c[('H',1)],
+                                                          c[('dH',1,0)],
+                                                          c[('H',2)],
+                                                          c[('dH',2,0)],
+                                                          c[('H',3)],
+                                                          c[('dH',3,0)])
             if self.stokes:
                 c[('f',1)].flat[:] = 0.0
                 c[('df',1,1)].flat[:] = 0.0
@@ -2529,13 +2527,13 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                 c[('df',3,1)].flat[:] = 0.0
                 c[('df',3,2)].flat[:] = 0.0
                 c[('df',3,3)].flat[:] = 0.0
-
+            
+from .ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_2D_Evaluate
+from .ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate
 class ThreephaseNavierStokes_ST_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from .ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from .ctransportCoefficients import ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -2848,54 +2846,54 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
             phi_s   = self.ebq_phi_s
             n_s     = self.ebq_n_s
         if self.nd==2:
-            self.ThreephaseNavierStokes_ST_LS_SO_2D_Evaluate(self.boundaryPenaltyCoef,
-                                                             self.volumePenaltyCoef,
-                                                             self.eps_density,
-                                                             self.eps_viscosity,
-                                                             self.sigma,
-                                                             self.rho_0,
-                                                             self.nu_0,
-                                                             self.rho_1,
-                                                             self.nu_1,
-                                                             self.rho_s,
-                                                             self.nu_s,
-                                                             self.g,
-                                                             phi,
-                                                             n,
-                                                             kappa,
-                                                             phi_s,
-                                                             n_s,
-                                                             c[('u',0)],
-                                                             c[('grad(u)',0)],
-                                                             c[('u',1)],
-                                                             c[('u',2)],
-                                                             c[('m',1)],
-                                                             c[('dm',1,1)],
-                                                             c[('m',2)],
-                                                             c[('dm',2,2)],
-                                                             c[('f',0)],
-                                                             c[('df',0,1)],
-                                                             c[('df',0,2)],
-                                                             c[('f',1)],
-                                                             c[('df',1,1)],
-                                                             c[('df',1,2)],
-                                                             c[('f',2)],
-                                                             c[('df',2,1)],
-                                                             c[('df',2,2)],
-                                                             c[('a',1,1)],
-                                                             c[('a',2,2)],
-                                                             c[('a',1,2)],
-                                                             c[('a',2,1)],
-                                                             c[('r',1)],
-                                                             c[('dr',1,1)],
-                                                             c[('dr',1,2)],
-                                                             c[('r',2)],
-                                                             c[('dr',2,1)],
-                                                             c[('dr',2,2)],
-                                                             c[('H',1)],
-                                                             c[('dH',1,0)],
-                                                             c[('H',2)],
-                                                             c[('dH',2,0)])
+            ThreephaseNavierStokes_ST_LS_SO_2D_Evaluate(self.boundaryPenaltyCoef,
+                                                        self.volumePenaltyCoef,
+                                                        self.eps_density,
+                                                        self.eps_viscosity,
+                                                        self.sigma,
+                                                        self.rho_0,
+                                                        self.nu_0,
+                                                        self.rho_1,
+                                                        self.nu_1,
+                                                        self.rho_s,
+                                                        self.nu_s,
+                                                        self.g,
+                                                        phi,
+                                                        n,
+                                                        kappa,
+                                                        phi_s,
+                                                        n_s,
+                                                        c[('u',0)],
+                                                        c[('grad(u)',0)],
+                                                        c[('u',1)],
+                                                        c[('u',2)],
+                                                        c[('m',1)],
+                                                        c[('dm',1,1)],
+                                                        c[('m',2)],
+                                                        c[('dm',2,2)],
+                                                        c[('f',0)],
+                                                        c[('df',0,1)],
+                                                        c[('df',0,2)],
+                                                        c[('f',1)],
+                                                        c[('df',1,1)],
+                                                        c[('df',1,2)],
+                                                        c[('f',2)],
+                                                        c[('df',2,1)],
+                                                        c[('df',2,2)],
+                                                        c[('a',1,1)],
+                                                        c[('a',2,2)],
+                                                        c[('a',1,2)],
+                                                        c[('a',2,1)],
+                                                        c[('r',1)],
+                                                        c[('dr',1,1)],
+                                                        c[('dr',1,2)],
+                                                        c[('r',2)],
+                                                        c[('dr',2,1)],
+                                                        c[('dr',2,2)],
+                                                        c[('H',1)],
+                                                        c[('dH',1,0)],
+                                                        c[('H',2)],
+                                                        c[('dH',2,0)])
             if self.stokes:
                 c[('f',1)].flat[:] = 0.0
                 c[('df',1,1)].flat[:] = 0.0
@@ -2904,77 +2902,77 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                 c[('df',2,1)].flat[:] = 0.0
                 c[('df',2,2)].flat[:] = 0.0
         elif  self.nd==3:
-            self.ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate(self.boundaryPenaltyCoef,
-                                                             self.volumePenaltyCoef,
-                                                             self.eps_density,
-                                                             self.eps_viscosity,
-                                                             self.sigma,
-                                                             self.rho_0,
-                                                             self.nu_0,
-                                                             self.rho_1,
-                                                             self.nu_1,
-                                                             self.rho_s,
-                                                             self.nu_s,
-                                                             self.g,
-                                                             phi,
-                                                             n,
-                                                             kappa,
-                                                             phi_s,
-                                                             n_s,
-                                                             c[('u',0)],
-                                                             c[('grad(u)',0)],
-                                                             c[('u',1)],
-                                                             c[('u',2)],
-                                                             c[('u',3)],
-                                                             c[('m',1)],
-                                                             c[('dm',1,1)],
-                                                             c[('m',2)],
-                                                             c[('dm',2,2)],
-                                                             c[('m',3)],
-                                                             c[('dm',3,3)],
-                                                             c[('f',0)],
-                                                             c[('df',0,1)],
-                                                             c[('df',0,2)],
-                                                             c[('df',0,3)],
-                                                             c[('f',1)],
-                                                             c[('df',1,1)],
-                                                             c[('df',1,2)],
-                                                             c[('df',1,3)],
-                                                             c[('f',2)],
-                                                             c[('df',2,1)],
-                                                             c[('df',2,2)],
-                                                             c[('df',2,3)],
-                                                             c[('f',3)],
-                                                             c[('df',3,1)],
-                                                             c[('df',3,2)],
-                                                             c[('df',3,3)],
-                                                             c[('a',1,1)],
-                                                             c[('a',2,2)],
-                                                             c[('a',3,3)],
-                                                             c[('a',1,2)],
-                                                             c[('a',1,3)],
-                                                             c[('a',2,1)],
-                                                             c[('a',2,3)],
-                                                             c[('a',3,1)],
-                                                             c[('a',3,2)],
-                                                             c[('r',1)],
-                                                             c[('dr',1,1)],
-                                                             c[('dr',1,2)],
-                                                             c[('dr',1,3)],
-                                                             c[('r',2)],
-                                                             c[('dr',2,1)],
-                                                             c[('dr',2,2)],
-                                                             c[('dr',2,3)],
-                                                             c[('r',3)],
-                                                             c[('dr',3,1)],
-                                                             c[('dr',3,2)],
-                                                             c[('dr',3,3)],
-                                                             c[('H',1)],
-                                                             c[('dH',1,0)],
-                                                             c[('H',2)],
-                                                             c[('dH',2,0)],
-                                                             c[('H',3)],
-                                                             c[('dH',3,0)])
+            ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate(self.boundaryPenaltyCoef,
+                                                        self.volumePenaltyCoef,
+                                                        self.eps_density,
+                                                        self.eps_viscosity,
+                                                        self.sigma,
+                                                        self.rho_0,
+                                                        self.nu_0,
+                                                        self.rho_1,
+                                                        self.nu_1,
+                                                        self.rho_s,
+                                                        self.nu_s,
+                                                        self.g,
+                                                        phi,
+                                                        n,
+                                                        kappa,
+                                                        phi_s,
+                                                        n_s,
+                                                        c[('u',0)],
+                                                        c[('grad(u)',0)],
+                                                        c[('u',1)],
+                                                        c[('u',2)],
+                                                        c[('u',3)],
+                                                        c[('m',1)],
+                                                        c[('dm',1,1)],
+                                                        c[('m',2)],
+                                                        c[('dm',2,2)],
+                                                        c[('m',3)],
+                                                        c[('dm',3,3)],
+                                                        c[('f',0)],
+                                                        c[('df',0,1)],
+                                                        c[('df',0,2)],
+                                                        c[('df',0,3)],
+                                                        c[('f',1)],
+                                                        c[('df',1,1)],
+                                                        c[('df',1,2)],
+                                                        c[('df',1,3)],
+                                                        c[('f',2)],
+                                                        c[('df',2,1)],
+                                                        c[('df',2,2)],
+                                                        c[('df',2,3)],
+                                                        c[('f',3)],
+                                                        c[('df',3,1)],
+                                                        c[('df',3,2)],
+                                                        c[('df',3,3)],
+                                                        c[('a',1,1)],
+                                                        c[('a',2,2)],
+                                                        c[('a',3,3)],
+                                                        c[('a',1,2)],
+                                                        c[('a',1,3)],
+                                                        c[('a',2,1)],
+                                                        c[('a',2,3)],
+                                                        c[('a',3,1)],
+                                                        c[('a',3,2)],
+                                                        c[('r',1)],
+                                                        c[('dr',1,1)],
+                                                        c[('dr',1,2)],
+                                                        c[('dr',1,3)],
+                                                        c[('r',2)],
+                                                        c[('dr',2,1)],
+                                                        c[('dr',2,2)],
+                                                        c[('dr',2,3)],
+                                                        c[('r',3)],
+                                                        c[('dr',3,1)],
+                                                        c[('dr',3,2)],
+                                                        c[('dr',3,3)],
+                                                        c[('H',1)],
+                                                        c[('dH',1,0)],
+                                                        c[('H',2)],
+                                                        c[('dH',2,0)],
+                                                        c[('H',3)],
+                                                        c[('dH',3,0)])
             if self.stokes:
                 c[('f',1)].flat[:] = 0.0
                 c[('df',1,1)].flat[:] = 0.0
@@ -3020,12 +3018,12 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
 #
 #The level set function, \f$\phi\f$, is provided from some other model that is solved separately (via operator splitting).
 #
+from .ctransportCoefficients import TwophaseStokes_LS_SO_2D_Evaluate
+from .ctransportCoefficients import TwophaseStokes_LS_SO_3D_Evaluate
 class TwophaseStokes_LS_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Stokes equations and seperated by a sharp interface represented by a level set function
     """
-    from .ctransportCoefficients import TwophaseStokes_LS_SO_2D_Evaluate
-    from .ctransportCoefficients import TwophaseStokes_LS_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.005e-6,
@@ -3142,68 +3140,68 @@ class TwophaseStokes_LS_SO(TC_base):
         else:
             phi = self.ebq_phi
         if self.nd==2:
-            self.TwophaseStokes_LS_SO_2D_Evaluate(self.eps,
-                                                  self.rho_0,
-                                                  self.nu_0,
-                                                  self.rho_1,
-                                                  self.nu_1,
-                                                  self.g,
-                                                  phi,
-                                                  c[('u',0)],
-                                                  c[('grad(u)',0)],
-                                                  c[('u',1)],
-                                                  c[('u',2)],
-                                                  c[('m',1)],
-                                                  c[('dm',1,1)],
-                                                  c[('m',2)],
-                                                  c[('dm',2,2)],
-                                                  c[('f',0)],
-                                                  c[('df',0,1)],
-                                                  c[('df',0,2)],
-                                                  c[('a',1,1)],
-                                                  c[('a',2,2)],
-                                                  c[('r',1)],
-                                                  c[('r',2)],
-                                                  c[('H',1)],
-                                                  c[('dH',1,0)],
-                                                  c[('H',2)],
-                                                  c[('dH',2,0)])
+            TwophaseStokes_LS_SO_2D_Evaluate(self.eps,
+                                             self.rho_0,
+                                             self.nu_0,
+                                             self.rho_1,
+                                             self.nu_1,
+                                             self.g,
+                                             phi,
+                                             c[('u',0)],
+                                             c[('grad(u)',0)],
+                                             c[('u',1)],
+                                             c[('u',2)],
+                                             c[('m',1)],
+                                             c[('dm',1,1)],
+                                             c[('m',2)],
+                                             c[('dm',2,2)],
+                                             c[('f',0)],
+                                             c[('df',0,1)],
+                                             c[('df',0,2)],
+                                             c[('a',1,1)],
+                                             c[('a',2,2)],
+                                             c[('r',1)],
+                                             c[('r',2)],
+                                             c[('H',1)],
+                                             c[('dH',1,0)],
+                                             c[('H',2)],
+                                             c[('dH',2,0)])
 
         elif self.nd==3:
-            self.TwophaseStokes_LS_SO_3D_Evaluate(self.eps,
-                                                  self.rho_0,
-                                                  self.nu_0,
-                                                  self.rho_1,
-                                                  self.nu_1,
-                                                  self.g,
-                                                  phi,
-                                                  c[('u',0)],
-                                                  c[('grad(u)',0)],
-                                                  c[('u',1)],
-                                                  c[('u',2)],
-                                                  c[('u',3)],
-                                                  c[('m',1)],
-                                                  c[('dm',1,1)],
-                                                  c[('m',2)],
-                                                  c[('dm',2,2)],
-                                                  c[('m',3)],
-                                                  c[('dm',3,3)],
-                                                  c[('f',0)],
-                                                  c[('df',0,1)],
-                                                  c[('df',0,2)],
-                                                  c[('df',0,3)],
-                                                  c[('a',1,1)],
-                                                  c[('a',2,2)],
-                                                  c[('a',3,3)],
-                                                  c[('r',1)],
-                                                  c[('r',2)],
-                                                  c[('r',3)],
-                                                  c[('H',1)],
-                                                  c[('dH',1,0)],
-                                                  c[('H',2)],
-                                                  c[('dH',2,0)],
-                                                  c[('H',3)],
-                                                  c[('dH',3,0)])
+            TwophaseStokes_LS_SO_3D_Evaluate(self.eps,
+                                             self.rho_0,
+                                             self.nu_0,
+                                             self.rho_1,
+                                             self.nu_1,
+                                             self.g,
+                                             phi,
+                                             c[('u',0)],
+                                             c[('grad(u)',0)],
+                                             c[('u',1)],
+                                             c[('u',2)],
+                                             c[('u',3)],
+                                             c[('m',1)],
+                                             c[('dm',1,1)],
+                                             c[('m',2)],
+                                             c[('dm',2,2)],
+                                             c[('m',3)],
+                                             c[('dm',3,3)],
+                                             c[('f',0)],
+                                             c[('df',0,1)],
+                                             c[('df',0,2)],
+                                             c[('df',0,3)],
+                                             c[('a',1,1)],
+                                             c[('a',2,2)],
+                                             c[('a',3,3)],
+                                             c[('r',1)],
+                                             c[('r',2)],
+                                             c[('r',3)],
+                                             c[('H',1)],
+                                             c[('dH',1,0)],
+                                             c[('H',2)],
+                                             c[('dH',2,0)],
+                                             c[('H',3)],
+                                             c[('dH',3,0)])
 
 ##\brief Two-phase Navier-Stokes equations (volume-of-fluid formulation)
 #
@@ -3224,12 +3222,12 @@ class TwophaseStokes_LS_SO(TC_base):
 #where \f$V\f$ is the fraction of space occupied by the fluid, which
 #is provided from some other model that is solved seperately (via operator splitting).
 #
+from .ctransportCoefficients import TwophaseNavierStokes_VOF_SO_2D_Evaluate
+from .ctransportCoefficients import TwophaseNavierStokes_VOF_SO_3D_Evaluate
 class TwophaseNavierStokes_VOF_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a volume of  fluid (volume fraction) function
     """
-    from .ctransportCoefficients import TwophaseNavierStokes_VOF_SO_2D_Evaluate
-    from .ctransportCoefficients import TwophaseNavierStokes_VOF_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.004e-6,
@@ -3343,85 +3341,85 @@ class TwophaseNavierStokes_VOF_SO(TC_base):
         else:
             vof = self.ebq_vof
         if self.nd==2:
-            self.TwophaseNavierStokes_VOF_SO_2D_Evaluate(self.eps,
-                                                        self.rho_0,
-                                                        self.nu_0,
-                                                        self.rho_1,
-                                                        self.nu_1,
-                                                        self.g,
-                                                        vof,
-                                                        c[('u',0)],
-                                                        c[('grad(u)',0)],
-                                                        c[('u',1)],
-                                                        c[('u',2)],
-                                                        c[('m',1)],
-                                                        c[('dm',1,1)],
-                                                        c[('m',2)],
-                                                        c[('dm',2,2)],
-                                                        c[('f',0)],
-                                                        c[('df',0,1)],
-                                                        c[('df',0,2)],
-                                                        c[('f',1)],
-                                                        c[('df',1,1)],
-                                                        c[('df',1,2)],
-                                                        c[('f',2)],
-                                                        c[('df',2,1)],
-                                                        c[('df',2,2)],
-                                                        c[('a',1,1)],
-                                                        c[('a',2,2)],
-                                                        c[('r',1)],
-                                                        c[('r',2)],
-                                                        c[('H',1)],
-                                                        c[('dH',1,0)],
-                                                        c[('H',2)],
-                                                        c[('dH',2,0)])
+            TwophaseNavierStokes_VOF_SO_2D_Evaluate(self.eps,
+                                                    self.rho_0,
+                                                    self.nu_0,
+                                                    self.rho_1,
+                                                    self.nu_1,
+                                                    self.g,
+                                                    vof,
+                                                    c[('u',0)],
+                                                    c[('grad(u)',0)],
+                                                    c[('u',1)],
+                                                    c[('u',2)],
+                                                    c[('m',1)],
+                                                    c[('dm',1,1)],
+                                                    c[('m',2)],
+                                                    c[('dm',2,2)],
+                                                    c[('f',0)],
+                                                    c[('df',0,1)],
+                                                    c[('df',0,2)],
+                                                    c[('f',1)],
+                                                    c[('df',1,1)],
+                                                    c[('df',1,2)],
+                                                    c[('f',2)],
+                                                    c[('df',2,1)],
+                                                    c[('df',2,2)],
+                                                    c[('a',1,1)],
+                                                    c[('a',2,2)],
+                                                    c[('r',1)],
+                                                    c[('r',2)],
+                                                    c[('H',1)],
+                                                    c[('dH',1,0)],
+                                                    c[('H',2)],
+                                                    c[('dH',2,0)])
         elif  self.nd==3:
-            self.TwophaseNavierStokes_VOF_SO_3D_Evaluate(self.eps,
-                                                        self.rho_0,
-                                                        self.nu_0,
-                                                        self.rho_1,
-                                                        self.nu_1,
-                                                        self.g,
-                                                        vof,
-                                                        c[('u',0)],
-                                                        c[('grad(u)',0)],
-                                                        c[('u',1)],
-                                                        c[('u',2)],
-                                                        c[('u',3)],
-                                                        c[('m',1)],
-                                                        c[('dm',1,1)],
-                                                        c[('m',2)],
-                                                        c[('dm',2,2)],
-                                                        c[('m',3)],
-                                                        c[('dm',3,3)],
-                                                        c[('f',0)],
-                                                        c[('df',0,1)],
-                                                        c[('df',0,2)],
-                                                        c[('df',0,3)],
-                                                        c[('f',1)],
-                                                        c[('df',1,1)],
-                                                        c[('df',1,2)],
-                                                        c[('df',1,3)],
-                                                        c[('f',2)],
-                                                        c[('df',2,1)],
-                                                        c[('df',2,2)],
-                                                        c[('df',2,3)],
-                                                        c[('f',3)],
-                                                        c[('df',3,1)],
-                                                        c[('df',3,2)],
-                                                        c[('df',3,3)],
-                                                        c[('a',1,1)],
-                                                        c[('a',2,2)],
-                                                        c[('a',3,3)],
-                                                        c[('r',1)],
-                                                        c[('r',2)],
-                                                        c[('r',3)],
-                                                        c[('H',0)],
-                                                        c[('dH',1,0)],
-                                                        c[('H',2)],
-                                                        c[('dH',2,0)],
-                                                        c[('H',3)],
-                                                        c[('dH',3,0)])
+            TwophaseNavierStokes_VOF_SO_3D_Evaluate(self.eps,
+                                                    self.rho_0,
+                                                    self.nu_0,
+                                                    self.rho_1,
+                                                    self.nu_1,
+                                                    self.g,
+                                                    vof,
+                                                    c[('u',0)],
+                                                    c[('grad(u)',0)],
+                                                    c[('u',1)],
+                                                    c[('u',2)],
+                                                    c[('u',3)],
+                                                    c[('m',1)],
+                                                    c[('dm',1,1)],
+                                                    c[('m',2)],
+                                                    c[('dm',2,2)],
+                                                    c[('m',3)],
+                                                    c[('dm',3,3)],
+                                                    c[('f',0)],
+                                                    c[('df',0,1)],
+                                                    c[('df',0,2)],
+                                                    c[('df',0,3)],
+                                                    c[('f',1)],
+                                                    c[('df',1,1)],
+                                                    c[('df',1,2)],
+                                                    c[('df',1,3)],
+                                                    c[('f',2)],
+                                                    c[('df',2,1)],
+                                                    c[('df',2,2)],
+                                                    c[('df',2,3)],
+                                                    c[('f',3)],
+                                                    c[('df',3,1)],
+                                                    c[('df',3,2)],
+                                                    c[('df',3,3)],
+                                                    c[('a',1,1)],
+                                                    c[('a',2,2)],
+                                                    c[('a',3,3)],
+                                                    c[('r',1)],
+                                                    c[('r',2)],
+                                                    c[('r',3)],
+                                                    c[('H',0)],
+                                                    c[('dH',1,0)],
+                                                    c[('H',2)],
+                                                    c[('dH',2,0)],
+                                                    c[('H',3)],
+                                                    c[('dH',3,0)])
 
 ##\brief Two-phase Stokes equations (volume-of-fluid formulation)
 #
@@ -3442,12 +3440,12 @@ class TwophaseNavierStokes_VOF_SO(TC_base):
 #where \f$V\f$ is the fraction of space occupied by the fluid, which
 #is provided from some other model that is solved seperately (via operator splitting).
 #
+from .ctransportCoefficients import TwophaseStokes_VOF_SO_2D_Evaluate
+from .ctransportCoefficients import TwophaseStokes_VOF_SO_3D_Evaluate
 class TwophaseStokes_VOF_SO(TC_base):
     """
     The coefficients for two incompresslble fluids governed by the Stokes equations and seperated by a sharp interface represented by a volume of fluid function
     """
-    from .ctransportCoefficients import TwophaseStokes_VOF_SO_2D_Evaluate
-    from .ctransportCoefficients import TwophaseStokes_VOF_SO_3D_Evaluate
     def __init__(self,
                  epsFact=1.5,
                  rho_0=998.2,nu_0=1.005e-6,
@@ -3566,68 +3564,68 @@ class TwophaseStokes_VOF_SO(TC_base):
             else:
                 vof = self.ebq_vof
         if self.nd==2:
-            self.TwophaseStokes_VOF_SO_2D_Evaluate(self.eps,
-                                                  self.rho_0,
-                                                  self.nu_0,
-                                                  self.rho_1,
-                                                  self.nu_1,
-                                                  self.g,
-                                                  vof,
-                                                  c[('u',0)],
-                                                  c[('grad(u)',0)],
-                                                  c[('u',1)],
-                                                  c[('u',2)],
-                                                  c[('m',1)],
-                                                  c[('dm',1,1)],
-                                                  c[('m',2)],
-                                                  c[('dm',2,2)],
-                                                  c[('f',0)],
-                                                  c[('df',0,1)],
-                                                  c[('df',0,2)],
-                                                  c[('a',1,1)],
-                                                  c[('a',2,2)],
-                                                  c[('r',1)],
-                                                  c[('r',2)],
-                                                  c[('H',1)],
-                                                  c[('dH',1,0)],
-                                                  c[('H',2)],
-                                                  c[('dH',2,0)])
+            TwophaseStokes_VOF_SO_2D_Evaluate(self.eps,
+                                              self.rho_0,
+                                              self.nu_0,
+                                              self.rho_1,
+                                              self.nu_1,
+                                              self.g,
+                                              vof,
+                                              c[('u',0)],
+                                              c[('grad(u)',0)],
+                                              c[('u',1)],
+                                              c[('u',2)],
+                                              c[('m',1)],
+                                              c[('dm',1,1)],
+                                              c[('m',2)],
+                                              c[('dm',2,2)],
+                                              c[('f',0)],
+                                              c[('df',0,1)],
+                                              c[('df',0,2)],
+                                              c[('a',1,1)],
+                                              c[('a',2,2)],
+                                              c[('r',1)],
+                                              c[('r',2)],
+                                              c[('H',1)],
+                                              c[('dH',1,0)],
+                                              c[('H',2)],
+                                              c[('dH',2,0)])
 
         elif self.nd==3:
-            self.TwophaseStokes_VOF_SO_3D_Evaluate(self.eps,
-                                                  self.rho_0,
-                                                  self.nu_0,
-                                                  self.rho_1,
-                                                  self.nu_1,
-                                                  self.g,
-                                                  vof,
-                                                  c[('u',0)],
-                                                  c[('grad(u)',0)],
-                                                  c[('u',1)],
-                                                  c[('u',2)],
-                                                  c[('u',3)],
-                                                  c[('m',1)],
-                                                  c[('dm',1,1)],
-                                                  c[('m',2)],
-                                                  c[('dm',2,2)],
-                                                  c[('m',3)],
-                                                  c[('dm',3,3)],
-                                                  c[('f',0)],
-                                                  c[('df',0,1)],
-                                                  c[('df',0,2)],
-                                                  c[('df',0,3)],
-                                                  c[('a',1,1)],
-                                                  c[('a',2,2)],
-                                                  c[('a',3,3)],
-                                                  c[('r',1)],
-                                                  c[('r',2)],
-                                                  c[('r',3)],
-                                                  c[('H',1)],
-                                                  c[('dH',1,0)],
-                                                  c[('H',2)],
-                                                  c[('dH',2,0)],
-                                                  c[('H',3)],
-                                                  c[('dH',3,0)])
+            TwophaseStokes_VOF_SO_3D_Evaluate(self.eps,
+                                              self.rho_0,
+                                              self.nu_0,
+                                              self.rho_1,
+                                              self.nu_1,
+                                              self.g,
+                                              vof,
+                                              c[('u',0)],
+                                              c[('grad(u)',0)],
+                                              c[('u',1)],
+                                              c[('u',2)],
+                                              c[('u',3)],
+                                              c[('m',1)],
+                                              c[('dm',1,1)],
+                                              c[('m',2)],
+                                              c[('dm',2,2)],
+                                              c[('m',3)],
+                                              c[('dm',3,3)],
+                                              c[('f',0)],
+                                              c[('df',0,1)],
+                                              c[('df',0,2)],
+                                              c[('df',0,3)],
+                                              c[('a',1,1)],
+                                              c[('a',2,2)],
+                                              c[('a',3,3)],
+                                              c[('r',1)],
+                                              c[('r',2)],
+                                              c[('r',3)],
+                                              c[('H',1)],
+                                              c[('dH',1,0)],
+                                              c[('H',2)],
+                                              c[('dH',2,0)],
+                                              c[('H',3)],
+                                              c[('dH',3,0)])
 ##\brief The non-conservative form of the level set equation for a moving boundary
 #
 #The equations are formulated as
@@ -3636,8 +3634,8 @@ class TwophaseStokes_VOF_SO(TC_base):
 #u_t + \mathbf{v} \cdot \nabla u = 0
 #\f]
 #
+from .ctransportCoefficients import ncLevelSetCoefficientsEvaluate
 class NCLevelSetCoefficients(TC_base):
-    from .ctransportCoefficients import ncLevelSetCoefficientsEvaluate
 
     def __init__(self,
                  V_model=0,
@@ -3771,16 +3769,16 @@ class NCLevelSetCoefficients(TC_base):
         else:
             raise RuntimeError("don't have v for NC Level set of shape = " +repr(c[('dH',0,0)].shape))
         if v is not None:
-            self.ncLevelSetCoefficientsEvaluate(v,
-                                                c[('u',0)],
-                                                c[('grad(u)',0)],
-                                                c[('m',0)],
-                                                c[('dm',0,0)],
-                                                c[('H',0)],
-                                                c[('dH',0,0)])
+            ncLevelSetCoefficientsEvaluate(v,
+                                           c[('u',0)],
+                                           c[('grad(u)',0)],
+                                           c[('m',0)],
+                                           c[('dm',0,0)],
+                                           c[('H',0)],
+                                           c[('dH',0,0)])
 
+from .ctransportCoefficients import cLevelSetCoefficientsEvaluate
 class CLevelSetCoefficients(TC_base):
-    from .ctransportCoefficients import cLevelSetCoefficientsEvaluate
     def __init__(self,V_model=0,RD_model=-1,ME_model=1,checkMass=True):
         self.variableNames=['vof']
         nc=1
@@ -3874,14 +3872,14 @@ class CLevelSetCoefficients(TC_base):
             v = self.ebqe_v
         else:
             v = self.ebq_v
-        self.cLevelSetCoefficientsEvaluate(v,
-                                           c[('u',0)],
-                                           c[('m',0)],
-                                           c[('dm',0,0)],
-                                           c[('f',0)],
-                                           c[('df',0,0)])
+        cLevelSetCoefficientsEvaluate(v,
+                                      c[('u',0)],
+                                      c[('m',0)],
+                                      c[('dm',0,0)],
+                                      c[('f',0)],
+                                      c[('df',0,0)])
+from .ctransportCoefficients import VOFCoefficientsEvaluate
 class VOFCoefficients(TC_base):
-    from .ctransportCoefficients import VOFCoefficientsEvaluate
     def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,checkMass=True,epsFact=0.0):
         self.variableNames=['vof']
         nc=1
@@ -4013,14 +4011,14 @@ class VOFCoefficients(TC_base):
             v=None
             phi=None
         if v is not None:
-            self.VOFCoefficientsEvaluate(self.eps,
-                                         v,
-                                         phi,
-                                         c[('u',0)],
-                                         c[('m',0)],
-                                         c[('dm',0,0)],
-                                         c[('f',0)],
-                                         c[('df',0,0)])
+            VOFCoefficientsEvaluate(self.eps,
+                                    v,
+                                    phi,
+                                    c[('u',0)],
+                                    c[('m',0)],
+                                    c[('dm',0,0)],
+                                    c[('f',0)],
+                                    c[('df',0,0)])
         if self.checkMass:
             logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
                                                                                self.model.q[('m',0)],
@@ -4097,8 +4095,8 @@ class LevelSetNormalCoefficients(TC_base):
         c[('r',0)].flat[:]=c[('u',0)].flat
         c[('r',0)] -= r
 
+from .ctransportCoefficients import levelSetCurvatureCoefficientsEvaluate    
 class LevelSetCurvatureCoefficients(TC_base):
-    from .ctransportCoefficients import levelSetCurvatureCoefficientsEvaluate
     def __init__(self,epsFact=0.0,LSModel_index=3,grad_phi_func=None,sd=True,nd=None):
         self.sd=sd
         self.grad_phi_func = grad_phi_func
@@ -4188,15 +4186,15 @@ class LevelSetCurvatureCoefficients(TC_base):
             grad_phi = self.ebqe_grad_phi
         else:
             grad_phi = self.ebq_grad_phi
-        self.levelSetCurvatureCoefficientsEvaluate(grad_phi,
-                                                   c[('u',0)],
-                                                   c[('f',0)],
-                                                   c[('r',0)],
-                                                   c[('dr',0,0)])
+        levelSetCurvatureCoefficientsEvaluate(grad_phi,
+                                              c[('u',0)],
+                                              c[('f',0)],
+                                              c[('r',0)],
+                                              c[('dr',0,0)])
 
+from .ctransportCoefficients import levelSetConservationCoefficientsEvaluate
+from .ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
 class LevelSetConservation(TC_base):
-    from .ctransportCoefficients import levelSetConservationCoefficientsEvaluate
-    from .ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
     def __init__(self,applyCorrection=True,epsFactHeaviside=0.0,epsFactDirac=1.0,epsFactDiffusion=2.0,LSModel_index=3,V_model=2,me_model=5,VOFModel_index=4,checkMass=True,sd=True,nd=None,applyCorrectionToDOF=True):
         self.sd=sd
         self.checkMass=checkMass
@@ -4367,23 +4365,23 @@ class LevelSetConservation(TC_base):
         if u_ls is not None and H_vof is not None:
             if self.useC:
                 if self.sd:
-                    self.levelSetConservationCoefficientsEvaluate_sd(self.epsHeaviside,
-                                                                     self.epsDirac,
-                                                                     u_ls,
-                                                                     H_vof,
-                                                                     c[('u',0)],
-                                                                     c[('r',0)],
-                                                                     c[('dr',0,0)])
+                    levelSetConservationCoefficientsEvaluate_sd(self.epsHeaviside,
+                                                                self.epsDirac,
+                                                                u_ls,
+                                                                H_vof,
+                                                                c[('u',0)],
+                                                                c[('r',0)],
+                                                                c[('dr',0,0)])
                 else:
-                    self.levelSetConservationCoefficientsEvaluate(self.epsHeaviside,
-                                                                  self.epsDirac,
-                                                                  self.epsDiffusion,
-                                                                  u_ls,
-                                                                  H_vof,
-                                                                  c[('u',0)],
-                                                                  c[('r',0)],
-                                                                  c[('dr',0,0)],
-                                                                  c[('a',0,0)])
+                    levelSetConservationCoefficientsEvaluate(self.epsHeaviside,
+                                                             self.epsDirac,
+                                                             self.epsDiffusion,
+                                                             u_ls,
+                                                             H_vof,
+                                                             c[('u',0)],
+                                                             c[('r',0)],
+                                                             c[('dr',0,0)],
+                                                             c[('a',0,0)])
         if (self.checkMass and c[('u',0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r',0)]
@@ -4394,9 +4392,9 @@ class LevelSetConservation(TC_base):
                                                                                  self.m_tmp,
                                                                                   self.massCorrModel.mesh.nElements_owned),),level=2)
 
+from .ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHomEvaluate
+from .ctransportCoefficients import  conservativeHeadRichardsL2projBndMualemVanGenuchtenHomEvaluate
 class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
-    from .ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHomEvaluate
-    from .ctransportCoefficients import  conservativeHeadRichardsL2projBndMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4447,22 +4445,22 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
                 detJ_eN = c['abs(det(J))'][eN,0]
                 assert abs(vol-detJ_eN*volFact) < 1.0e-8,  "L2proj coefs eN=%d vol=%g detJ_eN=%g volFact= %g" % (eN,vol,detJ_eN,
                                                                                                       volFact)
-            self.conservativeHeadRichardsL2projMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                             self.gravity,
-                                                                             self.alpha,
-                                                                             self.n,
-                                                                             self.m,
-                                                                             self.thetaR,
-                                                                             self.thetaSR,
-                                                                             self.Ks,
-                                                                             c[('dV_u',0)],
-                                                                             c[('u',0)],
-                                                                             c[('m',0)],
-                                                                             c[('dm',0,0)],
-                                                                             c[('f',0)],
-                                                                             c[('df',0,0)],
-                                                                             c[('a',0,0)],
-                                                                             c[('da',0,0,0)])
+            conservativeHeadRichardsL2projMualemVanGenuchtenHomEvaluate(self.rho,
+                                                                        self.gravity,
+                                                                        self.alpha,
+                                                                        self.n,
+                                                                        self.m,
+                                                                        self.thetaR,
+                                                                        self.thetaSR,
+                                                                        self.Ks,
+                                                                        c[('dV_u',0)],
+                                                                        c[('u',0)],
+                                                                        c[('m',0)],
+                                                                        c[('dm',0,0)],
+                                                                        c[('f',0)],
+                                                                        c[('df',0,0)],
+                                                                        c[('a',0,0)],
+                                                                        c[('da',0,0,0)])
 
         elif ('dS_u',0) in c:
             volFact = 1.0;
@@ -4480,27 +4478,27 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
                                                                                                                        area,
                                                                                                                        detg_ebN)
 
-            self.conservativeHeadRichardsL2projBndMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                             self.gravity,
-                                                                             self.alpha,
-                                                                             self.n,
-                                                                             self.m,
-                                                                             self.thetaR,
-                                                                             self.thetaSR,
-                                                                             self.Ks,
-                                                                             c[('dS_u',0)],
-                                                                             c[('u',0)],
-                                                                             c[('m',0)],
-                                                                             c[('dm',0,0)],
-                                                                             c[('f',0)],
-                                                                             c[('df',0,0)],
-                                                                             c[('a',0,0)],
-                                                                             c[('da',0,0,0)])
+            conservativeHeadRichardsL2projBndMualemVanGenuchtenHomEvaluate(self.rho,
+                                                                           self.gravity,
+                                                                           self.alpha,
+                                                                           self.n,
+                                                                           self.m,
+                                                                           self.thetaR,
+                                                                           self.thetaSR,
+                                                                           self.Ks,
+                                                                           c[('dS_u',0)],
+                                                                           c[('u',0)],
+                                                                           c[('m',0)],
+                                                                           c[('dm',0,0)],
+                                                                           c[('f',0)],
+                                                                           c[('df',0,0)],
+                                                                           c[('a',0,0)],
+                                                                           c[('da',0,0,0)])
         else:
             assert False, "dS_u or dV_u keys not found!"
 
+from .ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate        
 class ConservativeHeadRichardsL2projMualemVanGenuchtenBlockHet(TC_base):
-    from .ctransportCoefficients import  conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4587,25 +4585,25 @@ class ConservativeHeadRichardsL2projMualemVanGenuchtenBlockHet(TC_base):
 
 
 
-        self.conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate(self.rho,
-                                                                         self.gravity,
-                                                                         vgm_alpha,
-                                                                         vgm_n,
-                                                                         thetaR,
-                                                                         thetaSR,
-                                                                         Ks,
-                                                                         dV,
-                                                                         c[('u',0)],
-                                                                         c[('m',0)],
-                                                                         c[('dm',0,0)],
-                                                                         c[('f',0)],
-                                                                         c[('df',0,0)],
-                                                                         c[('a',0,0)],
-                                                                         c[('da',0,0,0)])
+        conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate(self.rho,
+                                                                    self.gravity,
+                                                                    vgm_alpha,
+                                                                    vgm_n,
+                                                                    thetaR,
+                                                                    thetaSR,
+                                                                    Ks,
+                                                                    dV,
+                                                                    c[('u',0)],
+                                                                    c[('m',0)],
+                                                                    c[('dm',0,0)],
+                                                                    c[('f',0)],
+                                                                    c[('df',0,0)],
+                                                                    c[('a',0,0)],
+                                                                    c[('da',0,0,0)])
 
 
+from .ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
 class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
-    from .ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4645,28 +4643,28 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         self.m = m
         self.beta=beta
     def evaluate(self,t,c):
-        self.conservativeHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                   self.beta,
-                                                                   self.gravity,
-                                                                   c[('x')],
-                                                                   self.alpha,
-                                                                   self.n,
-                                                                   self.m,
-                                                                   self.thetaR,
-                                                                   self.thetaSR,
-                                                                   self.Ks,
-                                                                   c[('u',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('f',0)],
-                                                                   c[('df',0,0)],
-                                                                   c[('a',0,0)],
-                                                                   c[('da',0,0,0)],
-                                                                   c[('phi',0)],
-                                                                   c[('dphi',0,0)])
+        conservativeHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
+                                                              self.beta,
+                                                              self.gravity,
+                                                              c[('x')],
+                                                              self.alpha,
+                                                              self.n,
+                                                              self.m,
+                                                              self.thetaR,
+                                                              self.thetaSR,
+                                                              self.Ks,
+                                                              c[('u',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('f',0)],
+                                                              c[('df',0,0)],
+                                                              c[('a',0,0)],
+                                                              c[('da',0,0,0)],
+                                                              c[('phi',0)],
+                                                              c[('dphi',0,0)])
 
+from .ctransportCoefficients import  conservativeSatRichardsMualemVanGenuchtenHomEvaluate
 class ConservativeSatRichardsMualemVanGenuchten(TC_base):
-    from .ctransportCoefficients import  conservativeSatRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4703,27 +4701,27 @@ class ConservativeSatRichardsMualemVanGenuchten(TC_base):
         self.n = n
         self.m = m
     def evaluate(self,t,c):
-        self.conservativeSatRichardsMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                  self.gravity,
-                                                                  c[('x')],
-                                                                  self.alpha,
-                                                                  self.n,
-                                                                  self.m,
-                                                                  self.thetaR,
-                                                                  self.thetaSR,
-                                                                  self.Ks,
-                                                                  c[('u',0)],
-                                                                  c[('m',0)],
-                                                                  c[('dm',0,0)],
-                                                                  c[('f',0)],
-                                                                  c[('df',0,0)],
-                                                                  c[('a',0,0)],
-                                                                  c[('da',0,0,0)],
-                                                                  c[('phi',0)],
-                                                                  c[('dphi',0,0)])
+        conservativeSatRichardsMualemVanGenuchtenHomEvaluate(self.rho,
+                                                             self.gravity,
+                                                             c[('x')],
+                                                             self.alpha,
+                                                             self.n,
+                                                             self.m,
+                                                             self.thetaR,
+                                                             self.thetaSR,
+                                                             self.Ks,
+                                                             c[('u',0)],
+                                                             c[('m',0)],
+                                                             c[('dm',0,0)],
+                                                             c[('f',0)],
+                                                             c[('df',0,0)],
+                                                             c[('a',0,0)],
+                                                             c[('da',0,0,0)],
+                                                             c[('phi',0)],
+                                                             c[('dphi',0,0)])
 
+from .ctransportCoefficients import  conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate
 class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
-    from .ctransportCoefficients import  conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4763,26 +4761,25 @@ class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
         self.n = n
         self.m = m
     def evaluate(self,t,c):
-        self.conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                        self.gravity,
-                                                                        c[('x')],
-                                                                        self.alpha,
-                                                                        self.n,
-                                                                        self.m,
-                                                                        self.thetaR,
-                                                                        self.thetaSR,
-                                                                        self.Ks,
-                                                                        c[('u',0)],
-                                                                        c[('m',0)],
-                                                                        c[('dm',0,0)],
-                                                                        c[('f',0)],
-                                                                        c[('df',0,0)],
-                                                                        c[('a',0,0)],
-                                                                        c[('da',0,0,0)],
-                                                                        c[('phi',0)],
-                                                                        c[('dphi',0,0)])
-
-
+        conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
+                                                                   self.gravity,
+                                                                   c[('x')],
+                                                                   self.alpha,
+                                                                   self.n,
+                                                                   self.m,
+                                                                   self.thetaR,
+                                                                   self.thetaSR,
+                                                                   self.Ks,
+                                                                   c[('u',0)],
+                                                                   c[('m',0)],
+                                                                   c[('dm',0,0)],
+                                                                   c[('f',0)],
+                                                                   c[('df',0,0)],
+                                                                   c[('a',0,0)],
+                                                                   c[('da',0,0,0)],
+                                                                   c[('phi',0)],
+                                                                   c[('dphi',0,0)])
+        
 def VGM_to_BCB_Simple(vgm_alpha,vgm_n):
     bcb_lambda = vgm_n-1
     bcb_pd = old_div(1.0,vgm_alpha)
@@ -4808,8 +4805,8 @@ def VGM_to_BCB_MorelSeytoux(vgm_alpha,vgm_n):
     bcb_lambda = old_div(2.0,(p-3.0))
     return (bcb_lambda,bcb_pd)
 
+from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate
 class ConservativeHeadRichardsBrooksCoreyBurdine(TC_base):
-    from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4846,23 +4843,24 @@ class ConservativeHeadRichardsBrooksCoreyBurdine(TC_base):
         self.pd = pd
         self.beta=beta
     def evaluate(self,t,c):
-        self.conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate(self.rho,
-                                                                   self.beta,
-                                                                   self.gravity,
-                                                                   self.lambdab,
-                                                                   self.pd,
-                                                                   self.thetaR,
-                                                                   self.thetaSR,
-                                                                   self.Ks,
-                                                                   c[('u',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('f',0)],
-                                                                   c[('df',0,0)],
-                                                                   c[('a',0,0)],
-                                                                   c[('da',0,0,0)])
+        conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate(self.rho,
+                                                              self.beta,
+                                                              self.gravity,
+                                                              self.lambdab,
+                                                              self.pd,
+                                                              self.thetaR,
+                                                              self.thetaSR,
+                                                              self.Ks,
+                                                              c[('u',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('f',0)],
+                                                              c[('df',0,0)],
+                                                              c[('a',0,0)],
+                                                              c[('da',0,0,0)])
+
+from .ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
 class ConservativeHeadRichardsMualemVanGenuchtenHet(TC_base):
-    from .ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -4975,23 +4973,23 @@ class ConservativeHeadRichardsMualemVanGenuchtenHet(TC_base):
             thetaR    = self.thetaR_ebq
             thetaSR   = self.thetaSR_ebq
 
-        self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluate(self.rho,
-                                                                   self.gravity,
-                                                                   vgm_alpha,
-                                                                   vgm_n,
-                                                                   thetaR,
-                                                                   thetaSR,
-                                                                   Ks,
-                                                                   c[('u',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('f',0)],
-                                                                   c[('df',0,0)],
-                                                                   c[('a',0,0)],
-                                                                   c[('da',0,0,0)])
+        conservativeHeadRichardsMualemVanGenuchtenHetEvaluate(self.rho,
+                                                              self.gravity,
+                                                              vgm_alpha,
+                                                              vgm_n,
+                                                              thetaR,
+                                                              thetaSR,
+                                                              Ks,
+                                                              c[('u',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('f',0)],
+                                                              c[('df',0,0)],
+                                                              c[('a',0,0)],
+                                                              c[('da',0,0,0)])
 
+from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate
 class ConservativeHeadRichardsBrooksCoreyBurdineHet(TC_base):
-    from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -5074,20 +5072,20 @@ class ConservativeHeadRichardsBrooksCoreyBurdineHet(TC_base):
             thetaS = self.thetaS_ebq
         else:
             raise RuntimeError("nothing of this size in transportCoefficients " +repr(c[('u',0)].shape))
-        self.conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate(self.rho,
-                                                                   self.gravity,
-                                                                   bcb_lambda,
-                                                                   bcb_pd,
-                                                                   thetaR,
-                                                                   thetaS,
-                                                                   Ks,
-                                                                   c[('u',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('f',0)],
-                                                                   c[('df',0,0)],
-                                                                   c[('a',0,0)],
-                                                                   c[('da',0,0,0)])
+        conservativeHeadRichardsBrooksCoreyBurdineHetEvaluate(self.rho,
+                                                              self.gravity,
+                                                              bcb_lambda,
+                                                              bcb_pd,
+                                                              thetaR,
+                                                              thetaS,
+                                                              Ks,
+                                                              c[('u',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('f',0)],
+                                                              c[('df',0,0)],
+                                                              c[('a',0,0)],
+                                                              c[('da',0,0,0)])
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5098,8 +5096,9 @@ class ConservativeHeadRichardsBrooksCoreyBurdineHet(TC_base):
             import pdb
             pdb.set_trace()
 
+
+from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluate                
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHet(TC_base):
-    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -5180,26 +5179,26 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHet(TC_base):
             Ks = self.Ks_ebq
             thetaR = self.thetaR_ebq
             thetaSR = self.thetaSR_ebq
-        self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluate(self.rho,
-                                                                   self.gravity,
-                                                                   vgm_alpha,
-                                                                   vgm_n,
-                                                                   thetaR,
-                                                                   thetaSR,
-                                                                   Ks,
-                                                                   c[('u',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('f',0)],
-                                                                   c[('df',0,0)],
-                                                                   c[('a',0,0)],
-                                                                   c[('da',0,0,0)])
+        conservativeHeadRichardsMualemVanGenuchtenHetEvaluate(self.rho,
+                                                              self.gravity,
+                                                              vgm_alpha,
+                                                              vgm_n,
+                                                              thetaR,
+                                                              thetaSR,
+                                                              Ks,
+                                                              c[('u',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('f',0)],
+                                                              c[('df',0,0)],
+                                                              c[('a',0,0)],
+                                                              c[('da',0,0,0)])
 
+from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
     def __init__(self,
                  Ks_block,
                  vgm_n_block,
@@ -5286,22 +5285,22 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
 #        for em in materialTypes:
 #            print em
-        self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
-                                                                     self.rho,
-                                                                     self.beta,
-                                                                     self.gravity,
-                                                                     self.vgm_alpha_block,
-                                                                     self.vgm_n_block,
-                                                                     self.thetaR_block,
-                                                                     self.thetaSR_block,
-                                                                     self.Ks_block,
-                                                                     c[('u',0)],
-                                                                     c[('m',0)],
-                                                                     c[('dm',0,0)],
-                                                                     c[('f',0)],
-                                                                     c[('df',0,0)],
-                                                                     c[('a',0,0)],
-                                                                     c[('da',0,0,0)])
+        conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
+                                                                self.rho,
+                                                                self.beta,
+                                                                self.gravity,
+                                                                self.vgm_alpha_block,
+                                                                self.vgm_n_block,
+                                                                self.thetaR_block,
+                                                                self.thetaSR_block,
+                                                                self.Ks_block,
+                                                                c[('u',0)],
+                                                                c[('m',0)],
+                                                                c[('dm',0,0)],
+                                                                c[('f',0)],
+                                                                c[('df',0,0)],
+                                                                c[('a',0,0)],
+                                                                c[('da',0,0,0)])
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5312,11 +5311,11 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2(TC_base):
             import pdb
             pdb.set_trace()
 
+from .ctransportCoefficients import seepageBrezis
 class SeepageBrezis(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from .ctransportCoefficients import seepageBrezis
     def __init__(self,
                  Ks_block,
                  vgm_n_block,
@@ -5411,30 +5410,30 @@ class SeepageBrezis(TC_base):
             elementDiameters = self.elementBoundaryDiameters
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        self.seepageBrezis(materialTypes,
-                           self.epsFact,
-                           self.rho,
-                           self.beta,
-                           elementDiameters,
-                           self.gravity,
-                           self.vgm_alpha_block,
-                           self.vgm_n_block,
-                           self.thetaR_block,
-                           self.thetaSR_block,
-                           self.Ks_block,
-                           c[('u',0)],
-                           c[('m',0)],
-                           c[('dm',0,0)],
-                           c[('f',0)],
-                           c[('df',0,0)],
-                           c[('a',0,0)],
-                           c[('da',0,0,0)])
+        seepageBrezis(materialTypes,
+                      self.epsFact,
+                      self.rho,
+                      self.beta,
+                      elementDiameters,
+                      self.gravity,
+                      self.vgm_alpha_block,
+                      self.vgm_n_block,
+                      self.thetaR_block,
+                      self.thetaSR_block,
+                      self.Ks_block,
+                      c[('u',0)],
+                      c[('m',0)],
+                      c[('dm',0,0)],
+                      c[('f',0)],
+                      c[('df',0,0)],
+                      c[('a',0,0)],
+                      c[('da',0,0,0)])
 
+from .ctransportCoefficients import conservativeHeadRichardsJLeverettEvaluate
 class ConservativeHeadRichardsJLeverett(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from .ctransportCoefficients import conservativeHeadRichardsJLeverettEvaluate
     def __init__(self,
                  phi_block,
                  psiD_block,
@@ -5516,24 +5515,24 @@ class ConservativeHeadRichardsJLeverett(TC_base):
                 import pdb
                 print("NaN's on input")
                 pdb.set_trace()
-        self.conservativeHeadRichardsJLeverettEvaluate(materialTypes,
-                                               self.rho,
-                                               self.beta,
-                                               self.gravity,
-                                               self.phi_block,
-                                               self.psiD_block,
-                                               self.ns_block,
-                                               self.nk_block,
-                                               self.S_wirr_block,
-                                               self.S_nwr_block,
-                                               self.kr0_block,
-                                               c[('u',0)],
-                                               c[('m',0)],
-                                               c[('dm',0,0)],
-                                               c[('f',0)],
-                                               c[('df',0,0)],
-                                               c[('a',0,0)],
-                                               c[('da',0,0,0)])
+        conservativeHeadRichardsJLeverettEvaluate(materialTypes,
+                                                  self.rho,
+                                                  self.beta,
+                                                  self.gravity,
+                                                  self.phi_block,
+                                                  self.psiD_block,
+                                                  self.ns_block,
+                                                  self.nk_block,
+                                                  self.S_wirr_block,
+                                                  self.S_nwr_block,
+                                                  self.kr0_block,
+                                                  c[('u',0)],
+                                                  c[('m',0)],
+                                                  c[('dm',0,0)],
+                                                  c[('f',0)],
+                                                  c[('df',0,0)],
+                                                  c[('a',0,0)],
+                                                  c[('da',0,0,0)])
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5546,11 +5545,12 @@ class ConservativeHeadRichardsJLeverett(TC_base):
 
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
+
+from .ctransportCoefficients import conservativeHeadRichardsJLeverettAniEvaluate
 class ConservativeHeadRichardsJLeverettAni(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from .ctransportCoefficients import conservativeHeadRichardsJLeverettAniEvaluate
     def __init__(self,
                  phi_block,
                  psiD_block,
@@ -5636,26 +5636,26 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
                 import pdb
                 print("NaN's on input")
                 pdb.set_trace()
-        self.conservativeHeadRichardsJLeverettAniEvaluate(materialTypes,
-                                               self.rho,
-                                               self.beta,
-                                               self.gravity,
-                                               self.phi_block,
-                                               self.psiD_block,
-                                               self.ns_block,
-                                               self.nk_block,
-                                               self.S_wirr_block,
-                                               self.S_nwr_block,
-                                               self.kr0x_block,
-                                               self.kr0y_block,
-                                               self.kr0z_block,
-                                               c[('u',0)],
-                                               c[('m',0)],
-                                               c[('dm',0,0)],
-                                               c[('f',0)],
-                                               c[('df',0,0)],
-                                               c[('a',0,0)],
-                                               c[('da',0,0,0)])
+        conservativeHeadRichardsJLeverettAniEvaluate(materialTypes,
+                                                     self.rho,
+                                                     self.beta,
+                                                     self.gravity,
+                                                     self.phi_block,
+                                                     self.psiD_block,
+                                                     self.ns_block,
+                                                     self.nk_block,
+                                                     self.S_wirr_block,
+                                                     self.S_nwr_block,
+                                                     self.kr0x_block,
+                                                     self.kr0y_block,
+                                                     self.kr0z_block,
+                                                     c[('u',0)],
+                                                     c[('m',0)],
+                                                     c[('dm',0,0)],
+                                                     c[('f',0)],
+                                                     c[('df',0,0)],
+                                                     c[('a',0,0)],
+                                                     c[('da',0,0,0)])
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('df',0,0)]).any() or
@@ -5668,8 +5668,9 @@ class ConservativeHeadRichardsJLeverettAni(TC_base):
 
         if c[('u',0)].shape == self.q_shape:
             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
+
+from .ctransportCoefficients import constantVelocityLevelSetEvaluate
 class ConstantVelocityLevelSet(TC_base):
-    from .ctransportCoefficients import constantVelocityLevelSetEvaluate
     def __init__(self,b=[1.0,0.0],lsModelId=0):
         self.b=b
         mass={0:{0:'linear'}}
@@ -5693,21 +5694,21 @@ class ConstantVelocityLevelSet(TC_base):
         if len(modelList) > 1:
             self.lsModel = modelList[self.lsModelId]
     def evaluate(self,t,c):
-        self.constantVelocityLevelSetEvaluate(self.b,
-                                              c['x'],
-                                              c[('u',0)],
-                                              c[('grad(u)',0)],
-                                              c[('m',0)],
-                                              c[('dm',0,0)],
-                                              c[('f',0)],
-                                              c[('df',0,0)],
-                                              c[('H',0)],
-                                              c[('dH',0,0)]);
+        constantVelocityLevelSetEvaluate(self.b,
+                                         c['x'],
+                                         c[('u',0)],
+                                         c[('grad(u)',0)],
+                                         c[('m',0)],
+                                         c[('dm',0,0)],
+                                         c[('f',0)],
+                                         c[('df',0,0)],
+                                         c[('H',0)],
+                                         c[('dH',0,0)]);
 
     #end def
 
+from .ctransportCoefficients import unitSquareVortexLevelSetEvaluate
 class UnitSquareVortexLevelSet(TC_base):
-    from .ctransportCoefficients import unitSquareVortexLevelSetEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -5724,21 +5725,21 @@ class UnitSquareVortexLevelSet(TC_base):
                          reaction,
                          hamiltonian)
     def evaluate(self,t,c):
-        self.unitSquareVortexLevelSetEvaluate(t,
-                                              c['x'],
-                                              c[('u',0)],
-                                              c[('grad(u)',0)],
-                                              c[('m',0)],
-                                              c[('dm',0,0)],
-                                              c[('f',0)],
-                                              c[('df',0,0)],
-                                              c[('H',0)],
-                                              c[('dH',0,0)]);
+        unitSquareVortexLevelSetEvaluate(t,
+                                         c['x'],
+                                         c[('u',0)],
+                                         c[('grad(u)',0)],
+                                         c[('m',0)],
+                                         c[('dm',0,0)],
+                                         c[('f',0)],
+                                         c[('df',0,0)],
+                                         c[('H',0)],
+                                         c[('dH',0,0)]);
 
     #end def
 
+from .ctransportCoefficients import unitSquareRotationLevelSetEvaluate
 class RotatingVelocityLevelSet(TC_base):
-    from .ctransportCoefficients import unitSquareRotationLevelSetEvaluate
     def __init__(self):
         mass={0:{0:'linear'}}
         advection={0:{0:'linear'}}
@@ -5755,23 +5756,24 @@ class RotatingVelocityLevelSet(TC_base):
                                              reaction,
                                              hamiltonian)
     def evaluate(self,t,c):
-        self.unitSquareRotationLevelSetEvaluate(t,
-                                                c['x'],
-                                                c[('u',0)],
-                                                c[('grad(u)',0)],
-                                                c[('m',0)],
-                                                c[('dm',0,0)],
-                                                c[('f',0)],
-                                                c[('df',0,0)],
-                                                c[('H',0)],
-                                                c[('dH',0,0)]);
+        unitSquareRotationLevelSetEvaluate(t,
+                                           c['x'],
+                                           c[('u',0)],
+                                           c[('grad(u)',0)],
+                                           c[('m',0)],
+                                           c[('dm',0,0)],
+                                           c[('f',0)],
+                                           c[('df',0,0)],
+                                           c[('H',0)],
+                                           c[('dH',0,0)]);
 
         #make sure r gets set to zero if using general HJ form
         if ('r',0) in list(c.keys()):
             c[('r',0)].flat[:] = 0.0
     #end def
+
+from .ctransportCoefficients import eikonalEquationEvaluate
 class EikonalEquationCoefficients(TC_base):
-    from .ctransportCoefficients import eikonalEquationEvaluate
     def __init__(self,rhsval=1.0):
         mass={0:{0:'linear'}}
         advection={}
@@ -5789,20 +5791,20 @@ class EikonalEquationCoefficients(TC_base):
                          hamiltonian)
         self.rhsval = rhsval
     def evaluate(self,t,c):
-        self.eikonalEquationEvaluate(self.rhsval,
-                                     c[('u',0)],
-                                     c[('grad(u)',0)],
-                                     c[('m',0)],
-                                     c[('dm',0,0)],
-                                     c[('H',0)],
-                                     c[('dH',0,0)],
-                                     c[('r',0)]);
+        eikonalEquationEvaluate(self.rhsval,
+                                c[('u',0)],
+                                c[('grad(u)',0)],
+                                c[('m',0)],
+                                c[('dm',0,0)],
+                                c[('H',0)],
+                                c[('dH',0,0)],
+                                c[('r',0)]);
 
     #end def
 
 
+from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
 class RedistanceLevelSet(TC_base):
-    from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0,penaltyParameter=0.0):
         variableNames=['phid']
         nc=1
@@ -5916,15 +5918,15 @@ class RedistanceLevelSet(TC_base):
             u0 = self.ebq_u0
         assert u0 is not None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
-        self.redistanceLevelSetCoefficientsEvaluate(self.eps,
-                                                    u0,
-                                                    c[('u',0)],
-                                                    c[('grad(u)',0)],
-                                                    c[('m',0)],
-                                                    c[('dm',0,0)],
-                                                    c[('H',0)],
-                                                    c[('dH',0,0)],
-                                                    c[('r',0)])
+        redistanceLevelSetCoefficientsEvaluate(self.eps,
+                                               u0,
+                                               c[('u',0)],
+                                               c[('grad(u)',0)],
+                                               c[('m',0)],
+                                               c[('dm',0,0)],
+                                               c[('H',0)],
+                                               c[('dH',0,0)],
+                                               c[('r',0)])
     #weak Dirichlet conditions on level set (boundary conditions of Eikonal equation)
     ##\todo clean up weak Dirichlet conditions for Eikonal equation in transport coefficents
     def setZeroLSweakDirichletBCs(vt):
@@ -6094,20 +6096,20 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
             u0 = self.ebq_u0
         assert u0 is not None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
-        self.redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(self.eps,
-                                                                   self.penaltyParameter,
-                                                                   u0,
-                                                                   c[('u',0)],
-                                                                   c[('grad(u)',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('H',0)],
-                                                                   c[('dH',0,0)],
-                                                                   c[('r',0)],
-                                                                   c[('dr',0,0)])
+        redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(self.eps,
+                                                              self.penaltyParameter,
+                                                              u0,
+                                                              c[('u',0)],
+                                                              c[('grad(u)',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('H',0)],
+                                                              c[('dH',0,0)],
+                                                              c[('r',0)],
+                                                              c[('dr',0,0)])
 
+from proteus.ctransportCoefficients import redistanceLevelSetSandFCoefficientsEvaluate
 class RedistanceLevelSetSandF(RedistanceLevelSet):
-    from proteus.ctransportCoefficients import redistanceLevelSetSandFCoefficientsEvaluate
     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=1,u0=None,rdModelId=-1,vofModelId=4,massCorrModelId=5,
                  checkMass=True):
         RedistanceLevelSet.__init__(self,applyRedistancing=applyRedistancing,epsFact=epsFact,
@@ -6126,16 +6128,16 @@ class RedistanceLevelSetSandF(RedistanceLevelSet):
         else:
             u0 = self.ebq_u0
             quadWeights = c[('dS_u',0)]
-        self.redistanceLevelSetSandFCoefficientsEvaluate(self.eps,
-                                                         u0,
-                                                         quadWeights,
-                                                         c[('u',0)],
-                                                         c[('grad(u)',0)],
-                                                         c[('m',0)],
-                                                         c[('dm',0,0)],
-                                                         c[('H',0)],
-                                                         c[('dH',0,0)],
-                                                         c[('r',0)])
+        redistanceLevelSetSandFCoefficientsEvaluate(self.eps,
+                                                    u0,
+                                                    quadWeights,
+                                                    c[('u',0)],
+                                                    c[('grad(u)',0)],
+                                                    c[('m',0)],
+                                                    c[('dm',0,0)],
+                                                    c[('H',0)],
+                                                    c[('dH',0,0)],
+                                                    c[('r',0)])
 
 
 # class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
@@ -6180,8 +6182,8 @@ class RedistanceLevelSetSandF(RedistanceLevelSet):
 #                                                                        c[('r',0)],
 #                                                                        c[('dr',0)])
 
+from proteus.ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
 class ConservativeHead2PMualemVanGenuchten(TC_base):
-    from proteus.ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -6218,39 +6220,40 @@ class ConservativeHead2PMualemVanGenuchten(TC_base):
         self.n = n
         self.m = m
     def evaluate(self,t,c):
-        self.conservativeHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                   self.gravity,
-                                                                   self.alpha,
-                                                                   self.n,
-                                                                   self.m,
-                                                                   self.thetaR,
-                                                                   self.thetaSR,
-                                                                   self.Ks,
-                                                                   c[('u',0)],
-                                                                   c[('m',0)],
-                                                                   c[('dm',0,0)],
-                                                                   c[('f',0)],
-                                                                   c[('df',0,0)],
-                                                                   c[('a',0,0)],
-                                                                   c[('da',0,0,0)])
-        self.conservativeHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
-                                                                   self.gravity,
-                                                                   self.alpha,
-                                                                   self.n,
-                                                                   self.m,
-                                                                   self.thetaR,
-                                                                   self.thetaSR,
-                                                                   self.Ks,
-                                                                   c[('u',1)],
-                                                                   c[('m',1)],
-                                                                   c[('dm',1,1)],
-                                                                   c[('f',1)],
-                                                                   c[('df',1,1)],
-                                                                   c[('a',1,1)],
-                                                                   c[('da',1,1,1)])
+        conservativeHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
+                                                              self.gravity,
+                                                              self.alpha,
+                                                              self.n,
+                                                              self.m,
+                                                              self.thetaR,
+                                                              self.thetaSR,
+                                                              self.Ks,
+                                                              c[('u',0)],
+                                                              c[('m',0)],
+                                                              c[('dm',0,0)],
+                                                              c[('f',0)],
+                                                              c[('df',0,0)],
+                                                              c[('a',0,0)],
+                                                              c[('da',0,0,0)])
+        conservativeHeadRichardsMualemVanGenuchtenHomEvaluate(self.rho,
+                                                              self.gravity,
+                                                              self.alpha,
+                                                              self.n,
+                                                              self.m,
+                                                              self.thetaR,
+                                                              self.thetaSR,
+                                                              self.Ks,
+                                                              c[('u',1)],
+                                                              c[('m',1)],
+                                                              c[('dm',1,1)],
+                                                              c[('f',1)],
+                                                              c[('df',1,1)],
+                                                              c[('a',1,1)],
+                                                              c[('da',1,1,1)])
+
+from proteus.ctransportCoefficients import L2projectEvaluate
 
 class PoissonEquationCoefficients(TC_base):
-    from proteus.ctransportCoefficients import L2projectEvaluate
     def __init__(self,aOfX,fOfX,nc=1,nd=2,l2proj=None,
                  timeVaryingCoefficients=False):
         self.aOfX = aOfX
@@ -6290,9 +6293,9 @@ class PoissonEquationCoefficients(TC_base):
             if self.l2proj is not None and self.l2proj[ci] == True:
                 if ('dV_u',ci) in cq:
                     assert cq[('r',ci)].shape == cq[('dV_u',ci)].shape, "wrong scalar shape"
-                    self.L2projectEvaluate(0,cq[('dV_u',ci)],cq[('r',ci)])
-                    self.L2projectEvaluate(1,cq[('dV_u',ci)],cq[('f',ci)])
-                    self.L2projectEvaluate(2,cq[('dV_u',ci)],cq[('a',ci,ci)])
+                    L2projectEvaluate(0,cq[('dV_u',ci)],cq[('r',ci)])
+                    L2projectEvaluate(1,cq[('dV_u',ci)],cq[('f',ci)])
+                    L2projectEvaluate(2,cq[('dV_u',ci)],cq[('a',ci,ci)])
             #ci
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         nd = self.nd
@@ -6305,9 +6308,9 @@ class PoissonEquationCoefficients(TC_base):
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
                     if self.l2proj is not None and self.l2proj[ci] == True:
                         assert c[('r',ci)].shape == c[('dS_u',ci)].shape, "wrong scalar shape"
-                        self.L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
-                        self.L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
-                        self.L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
+                        L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
+                        L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
+                        L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         nd = self.nd
         for c in [cebqe]:
@@ -6319,9 +6322,9 @@ class PoissonEquationCoefficients(TC_base):
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
                     if self.l2proj is not None and self.l2proj[ci] == True:
                         assert c[('r',ci)].shape == c[('dS_u',ci)].shape, "wrong scalar shape"
-                        self.L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
-                        self.L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
-                        self.L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
+                        L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
+                        L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
+                        L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
 
     def evaluate(self,t,c):
         if self.timeVaryingCoefficients:
@@ -6335,24 +6338,24 @@ class PoissonEquationCoefficients(TC_base):
                 if self.l2proj is not None and self.l2proj[ci] == True:
                     if ('dV_u',ci) in c:
                         assert c[('r',ci)].shape == c[('dV_u',ci)].shape, "wrong scalar shape"
-                        self.L2projectEvaluate(0,c[('dV_u',ci)],c[('r',ci)])
-                        self.L2projectEvaluate(1,c[('dV_u',ci)],c[('f',ci)])
-                        self.L2projectEvaluate(2,c[('dV_u',ci)],c[('a',ci,ci)])
+                        L2projectEvaluate(0,c[('dV_u',ci)],c[('r',ci)])
+                        L2projectEvaluate(1,c[('dV_u',ci)],c[('f',ci)])
+                        L2projectEvaluate(2,c[('dV_u',ci)],c[('a',ci,ci)])
                     else:
                         assert c[('r',ci)].shape == c[('dS_u',ci)].shape, "wrong scalar shape"
-                        self.L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
-                        self.L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
-                        self.L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
+                        L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
+                        L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
+                        L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
                 #ci
             #end ci
     #end def
 
 ##\brief Linear Elasticity
 #
+from .ctransportCoefficients import LinearElasticity_1D_Evaluate
+from .ctransportCoefficients import LinearElasticity_2D_Evaluate
+from .ctransportCoefficients import LinearElasticity_3D_Evaluate
 class LinearElasticity(TC_base):
-    from .ctransportCoefficients import LinearElasticity_1D_Evaluate
-    from .ctransportCoefficients import LinearElasticity_2D_Evaluate
-    from .ctransportCoefficients import LinearElasticity_3D_Evaluate
     def __init__(self,E=1.0,nu=0.75,g=[0.0,9.8],nd=2):
         self.E = E
         self.nu = nu
@@ -6428,39 +6431,39 @@ class LinearElasticity(TC_base):
         self.vectorName="displacement"
     def evaluate(self,t,c):
         if self.nd==1:
-            self.LinearElasticity_1D_Evaluate(self.E,
-                                              self.nu,
-                                              self.g,
-                                              c[('u',0)],
-                                              c[('a',0,0)],
-                                              c[('r',0)])
+            LinearElasticity_1D_Evaluate(self.E,
+                                         self.nu,
+                                         self.g,
+                                         c[('u',0)],
+                                         c[('a',0,0)],
+                                         c[('r',0)])
         elif self.nd==2:
-            self.LinearElasticity_2D_Evaluate(self.E,
-                                              self.nu,
-                                              self.g,
-                                              c[('u',0)],
-                                              c[('u',1)],
-                                              c[('a',0,0)],c[('a',0,1)],
-                                              c[('a',1,0)],c[('a',1,1)],
-                                              c[('r',0)],
-                                              c[('r',1)])
+            LinearElasticity_2D_Evaluate(self.E,
+                                         self.nu,
+                                         self.g,
+                                         c[('u',0)],
+                                         c[('u',1)],
+                                         c[('a',0,0)],c[('a',0,1)],
+                                         c[('a',1,0)],c[('a',1,1)],
+                                         c[('r',0)],
+                                         c[('r',1)])
         elif self.nd==3:
-            self.LinearElasticity_3D_Evaluate(self.E,
-                                              self.nu,
-                                              self.g,
-                                              c[('u',0)],
-                                              c[('u',1)],
-                                              c[('u',2)],
-                                              c[('a',0,0)],c[('a',0,1)],c[('a',0,2)],
-                                              c[('a',1,0)],c[('a',1,1)],c[('a',1,2)],
-                                              c[('a',2,0)],c[('a',2,1)],c[('a',2,2)],
-                                              c[('r',0)],
-                                              c[('r',1)],
-                                              c[('r',2)])
+            LinearElasticity_3D_Evaluate(self.E,
+                                         self.nu,
+                                         self.g,
+                                         c[('u',0)],
+                                         c[('u',1)],
+                                         c[('u',2)],
+                                         c[('a',0,0)],c[('a',0,1)],c[('a',0,2)],
+                                         c[('a',1,0)],c[('a',1,1)],c[('a',1,2)],
+                                         c[('a',2,0)],c[('a',2,1)],c[('a',2,2)],
+                                         c[('r',0)],
+                                         c[('r',1)],
+                                         c[('r',2)])
+from .ctransportCoefficients import MovingMesh_1D_Evaluate
+from .ctransportCoefficients import MovingMesh_2D_Evaluate
+from .ctransportCoefficients import MovingMesh_3D_Evaluate
 class MovingMesh(TC_base):
-    from .ctransportCoefficients import MovingMesh_1D_Evaluate
-    from .ctransportCoefficients import MovingMesh_2D_Evaluate
-    from .ctransportCoefficients import MovingMesh_3D_Evaluate
     def __init__(self,E=1.0,nu=0.3,g=[0.0,0.0],nd=2,moveMesh=True):
         self.moveMesh=moveMesh
         self.E = E
@@ -6552,40 +6555,43 @@ class MovingMesh(TC_base):
         else:
             det_J = c['sqrt(det(g))']
         if self.nd==1:
-            self.MovingMesh_1D_Evaluate(self.E,
-                                        self.nu,
-                                        self.g,
-                                        det_J,
-                                        c[('u',0)],
-                                        c[('a',0,0)],
-                                        c[('r',0)])
+            MovingMesh_1D_Evaluate(self.E,
+                                   self.nu,
+                                   self.g,
+                                   det_J,
+                                   c[('u',0)],
+                                   c[('a',0,0)],
+                                   c[('r',0)])
         elif self.nd==2:
-            self.MovingMesh_2D_Evaluate(self.E,
-                                        self.nu,
-                                        self.g,
-                                        det_J,
-                                        c[('u',0)],
-                                        c[('u',1)],
-                                        c[('a',0,0)],c[('a',0,1)],
-                                        c[('a',1,0)],c[('a',1,1)],
-                                        c[('r',0)],
-                                        c[('r',1)])
+            MovingMesh_2D_Evaluate(self.E,
+                                   self.nu,
+                                   self.g,
+                                   det_J,
+                                   c[('u',0)],
+                                   c[('u',1)],
+                                   c[('a',0,0)],c[('a',0,1)],
+                                   c[('a',1,0)],c[('a',1,1)],
+                                   c[('r',0)],
+                                   c[('r',1)])
         elif self.nd==3:
-            self.MovingMesh_3D_Evaluate(self.E,
-                                        self.nu,
-                                        self.g,
-                                        det_J,
-                                        c[('u',0)],
-                                        c[('u',1)],
-                                        c[('u',2)],
-                                        c[('a',0,0)],c[('a',0,1)],c[('a',0,2)],
-                                        c[('a',1,0)],c[('a',1,1)],c[('a',1,2)],
-                                        c[('a',2,0)],c[('a',2,1)],c[('a',2,2)],
-                                        c[('r',0)],
-                                        c[('r',1)],
-                                        c[('r',2)])
+            MovingMesh_3D_Evaluate(self.E,
+                                   self.nu,
+                                   self.g,
+                                   det_J,
+                                   c[('u',0)],
+                                   c[('u',1)],
+                                   c[('u',2)],
+                                   c[('a',0,0)],c[('a',0,1)],c[('a',0,2)],
+                                   c[('a',1,0)],c[('a',1,1)],c[('a',1,2)],
+                                   c[('a',2,0)],c[('a',2,1)],c[('a',2,2)],
+                                   c[('r',0)],
+                                   c[('r',1)],
+                                   c[('r',2)])
 
-
+            
+from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate
+from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
+from proteus.ctransportCoefficients import kEpsilon_3D_Evaluate_sd
 class kEpsilon(TC_base):
     r"""Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
 
@@ -6653,9 +6659,6 @@ class kEpsilon(TC_base):
 
 
 #     """
-    from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate
-    from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
-    from proteus.ctransportCoefficients import kEpsilon_3D_Evaluate_sd
     def __init__(self,
                  flowModelID=0,
                  nd     =2,
@@ -6797,118 +6800,118 @@ class kEpsilon(TC_base):
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
-                self.kEpsilon_2D_Evaluate_sd(self.sigma_k,
-                                             self.sigma_e,
-                                             self.c_1,
-                                             self.c_2,
-                                             self.c_mu,
-                                             self.c_e,
-                                             self.nu,
-                                             velocity,
-                                             gradu,
-                                             gradv,
-                                             c[('u',0)],
-                                             c[('u',1)],
-                                             c[('m',0)],
-                                             c[('dm',0,0)],
-                                             c[('m',1)],
-                                             c[('dm',1,1)],
-                                             c[('phi',0)],   #get rid of nonlinear potential
-                                             c[('dphi',0,0)],
-                                             c[('phi',1)],
-                                             c[('dphi',1,1)],
-                                             c[('f',0)],
-                                             c[('df',0,0)],
-                                             c[('f',1)],
-                                             c[('df',1,1)],
-                                             c[('a',0,0)],
-                                             c[('da',0,0,0)],
-                                             c[('da',0,0,1)],
-                                             c[('a',1,1)],
-                                             c[('da',1,1,0)],
-                                             c[('da',1,1,1)],
-                                             c[('r',0)],
-                                             c[('dr',0,0)],
-                                             c[('dr',0,1)],
-                                             c[('r',1)],
-                                             c[('dr',1,0)],
-                                             c[('dr',1,1)])
+                kEpsilon_2D_Evaluate_sd(self.sigma_k,
+                                        self.sigma_e,
+                                        self.c_1,
+                                        self.c_2,
+                                        self.c_mu,
+                                        self.c_e,
+                                        self.nu,
+                                        velocity,
+                                        gradu,
+                                        gradv,
+                                        c[('u',0)],
+                                        c[('u',1)],
+                                        c[('m',0)],
+                                        c[('dm',0,0)],
+                                        c[('m',1)],
+                                        c[('dm',1,1)],
+                                        c[('phi',0)],   #get rid of nonlinear potential
+                                        c[('dphi',0,0)],
+                                        c[('phi',1)],
+                                        c[('dphi',1,1)],
+                                        c[('f',0)],
+                                        c[('df',0,0)],
+                                        c[('f',1)],
+                                        c[('df',1,1)],
+                                        c[('a',0,0)],
+                                        c[('da',0,0,0)],
+                                        c[('da',0,0,1)],
+                                        c[('a',1,1)],
+                                        c[('da',1,1,0)],
+                                        c[('da',1,1,1)],
+                                        c[('r',0)],
+                                        c[('dr',0,0)],
+                                        c[('dr',0,1)],
+                                        c[('r',1)],
+                                        c[('dr',1,0)],
+                                        c[('dr',1,1)])
             else:
-                self.kEpsilon_2D_Evaluate(self.sigma_k,
-                                          self.sigma_e,
-                                          self.c_1,
-                                          self.c_2,
-                                          self.c_mu,
-                                          self.c_e,
-                                          self.nu,
-                                          velocity,
-                                          gradu,
-                                          gradv,
-                                          c[('u',0)],
-                                          c[('u',1)],
-                                          c[('m',0)],
-                                          c[('dm',0,0)],
-                                          c[('m',1)],
-                                          c[('dm',1,1)],
-                                          c[('phi',0)],   #get rid of nonlinear potential
-                                          c[('dphi',0,0)],
-                                          c[('phi',1)],
-                                          c[('dphi',1,1)],
-                                          c[('f',0)],
-                                          c[('df',0,0)],
-                                          c[('f',1)],
-                                          c[('df',1,1)],
-                                          c[('a',0,0)],
-                                          c[('da',0,0,0)],
-                                          c[('da',0,0,1)],
-                                          c[('a',1,1)],
-                                          c[('da',1,1,0)],
-                                          c[('da',1,1,1)],
-                                          c[('r',0)],
-                                          c[('dr',0,0)],
-                                          c[('dr',0,1)],
-                                          c[('r',1)],
-                                          c[('dr',1,0)],
-                                          c[('dr',1,1)])
+                kEpsilon_2D_Evaluate(self.sigma_k,
+                                     self.sigma_e,
+                                     self.c_1,
+                                     self.c_2,
+                                     self.c_mu,
+                                     self.c_e,
+                                     self.nu,
+                                     velocity,
+                                     gradu,
+                                     gradv,
+                                     c[('u',0)],
+                                     c[('u',1)],
+                                     c[('m',0)],
+                                     c[('dm',0,0)],
+                                     c[('m',1)],
+                                     c[('dm',1,1)],
+                                     c[('phi',0)],   #get rid of nonlinear potential
+                                     c[('dphi',0,0)],
+                                     c[('phi',1)],
+                                     c[('dphi',1,1)],
+                                     c[('f',0)],
+                                     c[('df',0,0)],
+                                     c[('f',1)],
+                                     c[('df',1,1)],
+                                     c[('a',0,0)],
+                                     c[('da',0,0,0)],
+                                     c[('da',0,0,1)],
+                                     c[('a',1,1)],
+                                     c[('da',1,1,0)],
+                                     c[('da',1,1,1)],
+                                     c[('r',0)],
+                                     c[('dr',0,0)],
+                                     c[('dr',0,1)],
+                                     c[('r',1)],
+                                     c[('dr',1,0)],
+                                     c[('dr',1,1)])
         elif self.nd == 3:
             if self.sd == True:
-                self.kEpsilon_3D_Evaluate_sd(self.sigma_k,
-                                             self.sigma_e,
-                                             self.c_1,
-                                             self.c_2,
-                                             self.c_mu,
-                                             self.c_e,
-                                             self.nu,
-                                             velocity,
-                                             gradu,
-                                             gradv,
-                                             gradw,
-                                             c[('u',0)],
-                                             c[('u',1)],
-                                             c[('m',0)],
-                                             c[('dm',0,0)],
-                                             c[('m',1)],
-                                             c[('dm',1,1)],
-                                             c[('phi',0)],   #get rid of nonlinear potential
-                                             c[('dphi',0,0)],
-                                             c[('phi',1)],
-                                             c[('dphi',1,1)],
-                                             c[('f',0)],
-                                             c[('df',0,0)],
-                                             c[('f',1)],
-                                             c[('df',1,1)],
-                                             c[('a',0,0)],
-                                             c[('da',0,0,0)],
-                                             c[('da',0,0,1)],
-                                             c[('a',1,1)],
-                                             c[('da',1,1,0)],
-                                             c[('da',1,1,1)],
-                                             c[('r',0)],
-                                             c[('dr',0,0)],
-                                             c[('dr',0,1)],
-                                             c[('r',1)],
-                                             c[('dr',1,0)],
-                                             c[('dr',1,1)])
+                kEpsilon_3D_Evaluate_sd(self.sigma_k,
+                                        self.sigma_e,
+                                        self.c_1,
+                                        self.c_2,
+                                        self.c_mu,
+                                        self.c_e,
+                                        self.nu,
+                                        velocity,
+                                        gradu,
+                                        gradv,
+                                        gradw,
+                                        c[('u',0)],
+                                        c[('u',1)],
+                                        c[('m',0)],
+                                        c[('dm',0,0)],
+                                        c[('m',1)],
+                                        c[('dm',1,1)],
+                                        c[('phi',0)],   #get rid of nonlinear potential
+                                        c[('dphi',0,0)],
+                                        c[('phi',1)],
+                                        c[('dphi',1,1)],
+                                        c[('f',0)],
+                                        c[('df',0,0)],
+                                        c[('f',1)],
+                                        c[('df',1,1)],
+                                        c[('a',0,0)],
+                                        c[('da',0,0,0)],
+                                        c[('da',0,0,1)],
+                                        c[('a',1,1)],
+                                        c[('da',1,1,0)],
+                                        c[('da',1,1,1)],
+                                        c[('r',0)],
+                                        c[('dr',0,0)],
+                                        c[('dr',0,1)],
+                                        c[('r',1)],
+                                        c[('dr',1,0)],
+                                        c[('dr',1,1)])
             else:
                 assert False, "k-epsilon 3d non sd not implemented"
 
@@ -6920,6 +6923,8 @@ class kEpsilon(TC_base):
                 c[('dr',1,0)].flat[:] = 0.0
                 c[('dr',1,1)].flat[:] = 0.0
 
+from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
+from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
 class kEpsilon_k(TC_base):
     r"""Basic k-epsilon model for incompressible flow from Hutter etal
     Chaper 11 but solves for just k assuming epsilon computed
@@ -6985,8 +6990,6 @@ class kEpsilon_k(TC_base):
        c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
     """
-    from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
-    from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
     def __init__(self,
                  flowModelID=0,
                  epsilonModelID=2,
@@ -7143,48 +7146,48 @@ class kEpsilon_k(TC_base):
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
-                self.kEpsilon_k_2D_Evaluate_sd(self.sigma_k,
-                                               self.c_mu,
-                                               self.nu,
-                                               velocity,
-                                               gradu,
-                                               gradv,
-                                               c[('u',0)],
-                                               epsilon,
-                                               c[('m',0)],
-                                               c[('dm',0,0)],
-                                               c[('phi',0)],   #get rid of nonlinear potential
-                                               c[('dphi',0,0)],
-                                               c[('f',0)],
-                                               c[('df',0,0)],
-                                               c[('a',0,0)],
-                                               c[('da',0,0,0)],
-                                               c[('r',0)],
-                                               c[('dr',0,0)])
+                kEpsilon_k_2D_Evaluate_sd(self.sigma_k,
+                                          self.c_mu,
+                                          self.nu,
+                                          velocity,
+                                          gradu,
+                                          gradv,
+                                          c[('u',0)],
+                                          epsilon,
+                                          c[('m',0)],
+                                          c[('dm',0,0)],
+                                          c[('phi',0)],   #get rid of nonlinear potential
+                                          c[('dphi',0,0)],
+                                          c[('f',0)],
+                                          c[('df',0,0)],
+                                          c[('a',0,0)],
+                                          c[('da',0,0,0)],
+                                          c[('r',0)],
+                                          c[('dr',0,0)])
 
             else:
                 raise NotImplementedError
         else:
             if self.sd == True:
-                self.kEpsilon_k_3D_Evaluate_sd(self.sigma_k,
-                                               self.c_mu,
-                                               self.nu,
-                                               velocity,
-                                               gradu,
-                                               gradv,
-                                               gradw,
-                                               c[('u',0)],
-                                               epsilon,
-                                               c[('m',0)],
-                                               c[('dm',0,0)],
-                                               c[('phi',0)],   #get rid of nonlinear potential
-                                               c[('dphi',0,0)],
-                                               c[('f',0)],
-                                               c[('df',0,0)],
-                                               c[('a',0,0)],
-                                               c[('da',0,0,0)],
-                                               c[('r',0)],
-                                               c[('dr',0,0)])
+                kEpsilon_k_3D_Evaluate_sd(self.sigma_k,
+                                          self.c_mu,
+                                          self.nu,
+                                          velocity,
+                                          gradu,
+                                          gradv,
+                                          gradw,
+                                          c[('u',0)],
+                                          epsilon,
+                                          c[('m',0)],
+                                          c[('dm',0,0)],
+                                          c[('phi',0)],   #get rid of nonlinear potential
+                                          c[('dphi',0,0)],
+                                          c[('f',0)],
+                                          c[('df',0,0)],
+                                          c[('a',0,0)],
+                                          c[('da',0,0,0)],
+                                          c[('r',0)],
+                                          c[('dr',0,0)])
 
             else:
                 raise NotImplementedError
@@ -7193,6 +7196,8 @@ class kEpsilon_k(TC_base):
             c[('r',0)].flat[:] = 0.0
             c[('dr',0,0)].flat[:] = 0.0
 
+from proteus.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd
+from proteus.ctransportCoefficients import kEpsilon_epsilon_3D_Evaluate_sd
 class kEpsilon_epsilon(TC_base):
     r"""Basic k-epsilon model for incompressible flow from Hutter etal
     Chaper 11 but solves for just epsilon assuming k lagged
@@ -7255,8 +7260,6 @@ class kEpsilon_epsilon(TC_base):
     :math:c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07`
 
     """
-    from proteus.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd
-    from proteus.ctransportCoefficients import kEpsilon_epsilon_3D_Evaluate_sd
     def __init__(self,
                  flowModelID=0,
                  kModelID=1,
@@ -7419,54 +7422,54 @@ class kEpsilon_epsilon(TC_base):
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
-                self.kEpsilon_epsilon_2D_Evaluate_sd(self.sigma_e,
-                                                     self.c_1,
-                                                     self.c_2,
-                                                     self.c_mu,
-                                                     self.c_e,
-                                                     self.nu,
-                                                     velocity,
-                                                     gradu,
-                                                     gradv,
-                                                     k,
-                                                     c[('u',0)],
-                                                     c[('m',0)],
-                                                     c[('dm',0,0)],
-                                                     c[('phi',0)],   #get rid of nonlinear potential
-                                                     c[('dphi',0,0)],
-                                                     c[('f',0)],
-                                                     c[('df',0,0)],
-                                                     c[('a',0,0)],
-                                                     c[('da',0,0,0)],
-                                                     c[('r',0)],
-                                                     c[('dr',0,0)])
+                kEpsilon_epsilon_2D_Evaluate_sd(self.sigma_e,
+                                                self.c_1,
+                                                self.c_2,
+                                                self.c_mu,
+                                                self.c_e,
+                                                self.nu,
+                                                velocity,
+                                                gradu,
+                                                gradv,
+                                                k,
+                                                c[('u',0)],
+                                                c[('m',0)],
+                                                c[('dm',0,0)],
+                                                c[('phi',0)],   #get rid of nonlinear potential
+                                                c[('dphi',0,0)],
+                                                c[('f',0)],
+                                                c[('df',0,0)],
+                                                c[('a',0,0)],
+                                                c[('da',0,0,0)],
+                                                c[('r',0)],
+                                                c[('dr',0,0)])
 
             else:
                 raise NotImplementedError
         else:
             if self.sd == True:
-                self.kEpsilon_epsilon_3D_Evaluate_sd(self.sigma_e,
-                                                     self.c_1,
-                                                     self.c_2,
-                                                     self.c_mu,
-                                                     self.c_e,
-                                                     self.nu,
-                                                     velocity,
-                                                     gradu,
-                                                     gradv,
-                                                     gradw,
-                                                     k,
-                                                     c[('u',0)],
-                                                     c[('m',0)],
-                                                     c[('dm',0,0)],
-                                                     c[('phi',0)],   #get rid of nonlinear potential
-                                                     c[('dphi',0,0)],
-                                                     c[('f',0)],
-                                                     c[('df',0,0)],
-                                                     c[('a',0,0)],
-                                                     c[('da',0,0,0)],
-                                                     c[('r',0)],
-                                                     c[('dr',0,0)])
+                kEpsilon_epsilon_3D_Evaluate_sd(self.sigma_e,
+                                                self.c_1,
+                                                self.c_2,
+                                                self.c_mu,
+                                                self.c_e,
+                                                self.nu,
+                                                velocity,
+                                                gradu,
+                                                gradv,
+                                                gradw,
+                                                k,
+                                                c[('u',0)],
+                                                c[('m',0)],
+                                                c[('dm',0,0)],
+                                                c[('phi',0)],   #get rid of nonlinear potential
+                                                c[('dphi',0,0)],
+                                                c[('f',0)],
+                                                c[('df',0,0)],
+                                                c[('a',0,0)],
+                                                c[('da',0,0,0)],
+                                                c[('r',0)],
+                                                c[('dr',0,0)])
 
             else:
                 raise NotImplementedError
@@ -7476,6 +7479,8 @@ class kEpsilon_epsilon(TC_base):
             c[('dr',0,0)].flat[:] = 0.0
 
 
+from .ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update
+from .ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd
 class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
     """
     The coefficients for incompresslble fluid governed by the Navier-Stokes equations
@@ -7484,8 +7489,6 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
     KEmodelID = [m1,m2] if using two separate models for k and epsilon
     otherwise should be just an integer id
     """
-    from .ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update
-    from .ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -7628,71 +7631,71 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
             raise TypeError("c['x'].shape= not recognized ")
         if self.nd == 2:
             if self.sd == True:
-                self.ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd(self.rho,
-                                                                        self.nu,
-                                                                        self.c_mu,
-                                                                        k,
-                                                                        grad_k,
-                                                                        epsilon,
-                                                                        c[('a',1,1)],
-                                                                        c[('a',2,2)],
-                                                                        c[('a',1,2)],
-                                                                        c[('a',2,1)],
-                                                                        c[('r',1)],
-                                                                        c[('r',2)])
+                ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd(self.rho,
+                                                                   self.nu,
+                                                                   self.c_mu,
+                                                                   k,
+                                                                   grad_k,
+                                                                   epsilon,
+                                                                   c[('a',1,1)],
+                                                                   c[('a',2,2)],
+                                                                   c[('a',1,2)],
+                                                                   c[('a',2,1)],
+                                                                   c[('r',1)],
+                                                                   c[('r',2)])
             else:
-                self.ReynoldsAveragedNavierStokes_kEpsilon_2D_Update(self.rho,
-                                                                     self.nu,
-                                                                     self.c_mu,
-                                                                     k,
-                                                                     grad_k,
-                                                                     epsilon,
-                                                                     c[('a',1,1)],
-                                                                     c[('a',2,2)],
-                                                                     c[('a',1,2)],
-                                                                     c[('a',2,1)],
-                                                                     c[('r',1)],
-                                                                     c[('r',2)])
+                ReynoldsAveragedNavierStokes_kEpsilon_2D_Update(self.rho,
+                                                                self.nu,
+                                                                self.c_mu,
+                                                                k,
+                                                                grad_k,
+                                                                epsilon,
+                                                                c[('a',1,1)],
+                                                                c[('a',2,2)],
+                                                                c[('a',1,2)],
+                                                                c[('a',2,1)],
+                                                                c[('r',1)],
+                                                                c[('r',2)])
 
         else:
             if self.sd == True:
-                self.ReynoldsAveragedNavierStokes_kEpsilon_3D_Update_sd(self.rho,
-                                                                        self.nu,
-                                                                        self.c_mu,
-                                                                        k,
-                                                                        grad_k,
-                                                                        epsilon,
-                                                                        c[('a',1,1)],
-                                                                        c[('a',2,2)],
-                                                                        c[('a',3,3)],
-                                                                        c[('a',1,2)],
-                                                                        c[('a',1,3)],
-                                                                        c[('a',2,1)],
-                                                                        c[('a',2,3)],
-                                                                        c[('a',3,1)],
-                                                                        c[('a',3,2)],
-                                                                        c[('r',1)],
-                                                                        c[('r',2)],
-                                                                        c[('r',3)])
+                ReynoldsAveragedNavierStokes_kEpsilon_3D_Update_sd(self.rho,
+                                                                   self.nu,
+                                                                   self.c_mu,
+                                                                   k,
+                                                                   grad_k,
+                                                                   epsilon,
+                                                                   c[('a',1,1)],
+                                                                   c[('a',2,2)],
+                                                                   c[('a',3,3)],
+                                                                   c[('a',1,2)],
+                                                                   c[('a',1,3)],
+                                                                   c[('a',2,1)],
+                                                                   c[('a',2,3)],
+                                                                   c[('a',3,1)],
+                                                                   c[('a',3,2)],
+                                                                   c[('r',1)],
+                                                                   c[('r',2)],
+                                                                   c[('r',3)])
             else:
-                self.ReynoldsAveragedNavierStokes_kEpsilon_3D_Update(self.rho,
-                                                                     self.nu,
-                                                                     self.c_mu,
-                                                                     k,
-                                                                     grad_k,
-                                                                     epsilon,
-                                                                     c[('a',1,1)],
-                                                                     c[('a',2,2)],
-                                                                     c[('a',3,3)],
-                                                                     c[('a',1,2)],
-                                                                     c[('a',1,3)],
-                                                                     c[('a',2,1)],
-                                                                     c[('a',2,3)],
-                                                                     c[('a',3,1)],
-                                                                     c[('a',3,2)],
-                                                                     c[('r',1)],
-                                                                     c[('r',2)],
-                                                                     c[('r',3)])
+                ReynoldsAveragedNavierStokes_kEpsilon_3D_Update(self.rho,
+                                                                self.nu,
+                                                                self.c_mu,
+                                                                k,
+                                                                grad_k,
+                                                                epsilon,
+                                                                c[('a',1,1)],
+                                                                c[('a',2,2)],
+                                                                c[('a',3,3)],
+                                                                c[('a',1,2)],
+                                                                c[('a',1,3)],
+                                                                c[('a',2,1)],
+                                                                c[('a',2,3)],
+                                                                c[('a',3,1)],
+                                                                c[('a',3,2)],
+                                                                c[('r',1)],
+                                                                c[('r',2)],
+                                                                c[('r',3)])
 
 class ReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes_ST_LS_SO):
     """
@@ -7721,17 +7724,17 @@ class ReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes_ST_LS_S
         for term in ['q','ebq','ebqe','ebq_global']:
             setattr(self,term,None)
 
+from .ctransportCoefficients import eddyViscosity_2D_Update_sd,eddyViscosity_2D_Update
+from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky_2D
+from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_2D
+from .ctransportCoefficients import eddyViscosity_3D_Update_sd,eddyViscosity_3D_Update
+from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky_3D
+from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_3D
 class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes_ST_LS_SO):
     """
     The coefficients for incompresslble fluid governed by the Navier-Stokes equations
     assuming k-epsilon model for turbulence
     """
-    from .ctransportCoefficients import eddyViscosity_2D_Update_sd,eddyViscosity_2D_Update
-    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky_2D
-    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_2D
-    from .ctransportCoefficients import eddyViscosity_3D_Update_sd,eddyViscosity_3D_Update
-    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky_3D
-    from .ctransportCoefficients import calculateEddyViscosity_Smagorinsky2P_3D
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -7868,50 +7871,50 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
                     #print "before Smagorinsky eval t=%s nu_t: min=%s max=%s " % (t,nu_t.min(),nu_t.max())
                     #print "                           a(1,1): min=%s max=%s " % (c[('a',1,1)].min(),c[('a',1,1)].max())
 
-                    self.eddyViscosity_2D_Update_sd(nu_t,
-                                                    c[('a',1,1)],
-                                                    c[('a',2,2)],
-                                                    c[('a',1,2)],
-                                                    c[('a',2,1)])
+                    eddyViscosity_2D_Update_sd(nu_t,
+                                               c[('a',1,1)],
+                                               c[('a',2,2)],
+                                               c[('a',1,2)],
+                                               c[('a',2,1)])
                     #print "after Smagorinsky eval t=%s a(1,1): min=%s max=%s " % (t,c[('a',1,1)].min(),c[('a',1,1)].max())
                 else:
-                    self.eddyViscosity_2D_Update(nu_t,
-                                                 c[('a',1,1)],
-                                                 c[('a',2,2)],
-                                                 c[('a',1,2)],
-                                                 c[('a',2,1)])
+                    eddyViscosity_2D_Update(nu_t,
+                                            c[('a',1,1)],
+                                            c[('a',2,2)],
+                                            c[('a',1,2)],
+                                            c[('a',2,1)])
             elif self.nd == 3:
                 if self.sd == True:
                     #print "before Smagorinsky eval t=%s nu_t: min=%s max=%s " % (t,nu_t.min(),nu_t.max())
                     #print "                           a(1,1): min=%s max=%s " % (c[('a',1,1)].min(),c[('a',1,1)].max())
 
-                    self.eddyViscosity_3D_Update_sd(nu_t,
-                                                    c[('a',1,1)],
-                                                    c[('a',2,2)],
-                                                    c[('a',3,3)],
-                                                    c[('a',1,2)],
-                                                    c[('a',1,3)],
-                                                    c[('a',2,1)],
-                                                    c[('a',2,3)],
-                                                    c[('a',3,1)],
-                                                    c[('a',3,2)])
+                    eddyViscosity_3D_Update_sd(nu_t,
+                                               c[('a',1,1)],
+                                               c[('a',2,2)],
+                                               c[('a',3,3)],
+                                               c[('a',1,2)],
+                                               c[('a',1,3)],
+                                               c[('a',2,1)],
+                                               c[('a',2,3)],
+                                               c[('a',3,1)],
+                                               c[('a',3,2)])
                     #print "after Smagorinsky eval t=%s a(1,1): min=%s max=%s " % (t,c[('a',1,1)].min(),c[('a',1,1)].max())
                 else:
-                    self.eddyViscosity_2D_Update(nu_t,
-                                                 c[('a',1,1)],
-                                                 c[('a',2,2)],
-                                                 c[('a',3,3)],
-                                                 c[('a',1,2)],
-                                                 c[('a',1,3)],
-                                                 c[('a',2,1)],
-                                                 c[('a',2,3)],
-                                                 c[('a',3,1)],
-                                                 c[('a',3,2)])
+                    eddyViscosity_2D_Update(nu_t,
+                                            c[('a',1,1)],
+                                            c[('a',2,2)],
+                                            c[('a',3,3)],
+                                            c[('a',1,2)],
+                                            c[('a',1,3)],
+                                            c[('a',2,1)],
+                                            c[('a',2,3)],
+                                            c[('a',3,1)],
+                                            c[('a',3,2)])
             else:
                 assert False, "nd != 2,3 not done yet"
 
+from proteus.ctransportCoefficients import burgersDiagonalVelEvaluate,burgersDiagonalVelHJEvaluate
 class ViscousBurgersEqn(TC_base):
-    from proteus.ctransportCoefficients import burgersDiagonalVelEvaluate,burgersDiagonalVelHJEvaluate
     def __init__(self,v=[1.0,0.0,0.0],nu=0.0,nc=1,nd=3,useHJ=False):
         mass={}
         advection={}
@@ -7948,29 +7951,29 @@ class ViscousBurgersEqn(TC_base):
         if self.useC:
             if not self.useHJ:
                 for ci in range(self.nc):
-                    self.burgersDiagonalVelEvaluate(self.nu[0,0],
-                                                    self.v,
-                                                    c[('u',ci)],
-                                                    c[('m',ci)],
-                                                    c[('dm',ci,ci)],
-                                                    c[('f',ci)],
-                                                    c[('df',ci,ci)],
-                                                    c[('a',ci,ci)],
-                                                    c[('phi',ci)],
-                                                    c[('dphi',ci,ci)])
+                    burgersDiagonalVelEvaluate(self.nu[0,0],
+                                               self.v,
+                                               c[('u',ci)],
+                                               c[('m',ci)],
+                                               c[('dm',ci,ci)],
+                                               c[('f',ci)],
+                                               c[('df',ci,ci)],
+                                               c[('a',ci,ci)],
+                                               c[('phi',ci)],
+                                               c[('dphi',ci,ci)])
             else:
                 for ci in range(self.nc):
-                    self.burgersDiagonalVelHJEvaluate(self.nu[0,0],
-                                                      self.v,
-                                                      c[('u',ci)],
-                                                      c[('grad(u)',ci)],
-                                                      c[('m',ci)],
-                                                      c[('dm',ci,ci)],
-                                                      c[('H',ci)],
-                                                      c[('dH',ci,ci)],
-                                                      c[('a',ci,ci)],
-                                                      c[('phi',ci)],
-                                                      c[('dphi',ci,ci)])
+                    burgersDiagonalVelHJEvaluate(self.nu[0,0],
+                                                 self.v,
+                                                 c[('u',ci)],
+                                                 c[('grad(u)',ci)],
+                                                 c[('m',ci)],
+                                                 c[('dm',ci,ci)],
+                                                 c[('H',ci)],
+                                                 c[('dH',ci,ci)],
+                                                 c[('a',ci,ci)],
+                                                 c[('phi',ci)],
+                                                 c[('dphi',ci,ci)])
 
         else:
             nd = self.nd
@@ -7992,7 +7995,7 @@ class ViscousBurgersEqn(TC_base):
             #ci
         #useC
     #ci
-
+from proteus.ctransportCoefficients import evaluateBuckleyLeverettLiuExample
 class BuckleyLeverettLiuExample(TC_base):
     """
     5 spot example from Liu 93 Siam paper.
@@ -8009,7 +8012,6 @@ class BuckleyLeverettLiuExample(TC_base):
     S=0 injecting into S=1 background saturation using his definition of f
 
     """
-    from proteus.ctransportCoefficients import evaluateBuckleyLeverettLiuExample
     def __init__(self,nu=0.0,nc=1,nd=2):
         mass={}
         advection={}
@@ -8039,13 +8041,13 @@ class BuckleyLeverettLiuExample(TC_base):
     def evaluate(self,t,c):
         if self.useC:
             for ci in range(self.nc):
-                self.evaluateBuckleyLeverettLiuExample(c['x'],
-                                                       c[('u',ci)],
-                                                       c[('m',ci)],
-                                                       c[('dm',ci,ci)],
-                                                       c[('f',ci)],
-                                                       c[('df',ci,ci)],
-                                                       c[('a',ci,ci)]);
+                evaluateBuckleyLeverettLiuExample(c['x'],
+                                                  c[('u',ci)],
+                                                  c[('m',ci)],
+                                                  c[('dm',ci,ci)],
+                                                  c[('f',ci)],
+                                                  c[('df',ci,ci)],
+                                                  c[('a',ci,ci)]);
         #useC
     #ci
 ##\brief Incompressible Navier-Stokes equations for porous domain
@@ -8078,13 +8080,13 @@ class BuckleyLeverettLiuExample(TC_base):
 #
 #The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
+from .ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_2D_Evaluate
+from .ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_3D_Evaluate
 class VolumeAveragedNavierStokesFullDevStress(TC_base):
     """
     The coefficients for incompressible fluid in a porous domain governed by the Navier-Stokes equations
 
     """
-    from .ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_2D_Evaluate
-    from .ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_3D_Evaluate
     def __init__(self,
                  rho=998.2,mu=1.0e-3,
                  g=[0.0,-9.8],
@@ -8297,107 +8299,107 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
             meanGrain= self.ebq_meanGrain
 
         if self.nd==2:
-            self.VolumeAveragedNavierStokesFullDevStress_2D_Evaluate(self.rho,
-                                                                     self.mu,
-                                                                     meanGrain,
-                                                                     self.g,
-                                                                     c[('u',0)],
-                                                                     c[('grad(u)',0)],
-                                                                     c[('u',1)],
-                                                                     c[('u',2)],
-                                                                     porosity,
-                                                                     c[('m',1)],
-                                                                     c[('dm',1,1)],
-                                                                     c[('m',2)],
-                                                                     c[('dm',2,2)],
-                                                                     c[('f',0)],
-                                                                     c[('df',0,1)],
-                                                                     c[('df',0,2)],
-                                                                     c[('f',1)],
-                                                                     c[('df',1,1)],
-                                                                     c[('df',1,2)],
-                                                                     c[('f',2)],
-                                                                     c[('df',2,1)],
-                                                                     c[('df',2,2)],
-                                                                     c[('a',1,1)],
-                                                                     c[('a',2,2)],
-                                                                     c[('a',1,2)],
-                                                                     c[('a',2,1)],
-                                                                     c[('r',1)],
-                                                                     c[('r',2)],
-                                                                     c[('dr',1,1)],
-                                                                     c[('dr',1,2)],
-                                                                     c[('dr',2,1)],
-                                                                     c[('dr',2,2)],
-                                                                     c[('H',1)],
-                                                                     c[('dH',1,0)],
-                                                                     c[('H',2)],
-                                                                     c[('dH',2,0)])
+            VolumeAveragedNavierStokesFullDevStress_2D_Evaluate(self.rho,
+                                                                self.mu,
+                                                                meanGrain,
+                                                                self.g,
+                                                                c[('u',0)],
+                                                                c[('grad(u)',0)],
+                                                                c[('u',1)],
+                                                                c[('u',2)],
+                                                                porosity,
+                                                                c[('m',1)],
+                                                                c[('dm',1,1)],
+                                                                c[('m',2)],
+                                                                c[('dm',2,2)],
+                                                                c[('f',0)],
+                                                                c[('df',0,1)],
+                                                                c[('df',0,2)],
+                                                                c[('f',1)],
+                                                                c[('df',1,1)],
+                                                                c[('df',1,2)],
+                                                                c[('f',2)],
+                                                                c[('df',2,1)],
+                                                                c[('df',2,2)],
+                                                                c[('a',1,1)],
+                                                                c[('a',2,2)],
+                                                                c[('a',1,2)],
+                                                                c[('a',2,1)],
+                                                                c[('r',1)],
+                                                                c[('r',2)],
+                                                                c[('dr',1,1)],
+                                                                c[('dr',1,2)],
+                                                                c[('dr',2,1)],
+                                                                c[('dr',2,2)],
+                                                                c[('H',1)],
+                                                                c[('dH',1,0)],
+                                                                c[('H',2)],
+                                                                c[('dH',2,0)])
 
             if self.stokesOnly:
                 c[('f',1)].flat[:]=0.0; c[('f',2)].flat[:]=0.0;
                 c[('df',1,1)].flat[:]=0.0;c[('df',1,2)].flat[:]=0.0;
                 c[('df',2,2)].flat[:]=0.0;c[('df',2,1)].flat[:]=0.0;
         elif  self.nd==3:
-            self.VolumeAveragedNavierStokesFullDevStress_3D_Evaluate(self.rho,
-                                                                     self.mu,
-                                                                     meanGrain,
-                                                                     self.g,
-                                                                     c[('u',0)],
-                                                                     c[('grad(u)',0)],
-                                                                     c[('u',1)],
-                                                                     c[('u',2)],
-                                                                     c[('u',3)],
-                                                                     porosity,
-                                                                     c[('m',1)],
-                                                                     c[('dm',1,1)],
-                                                                     c[('m',2)],
-                                                                     c[('dm',2,2)],
-                                                                     c[('m',3)],
-                                                                     c[('dm',3,3)],
-                                                                     c[('f',0)],
-                                                                     c[('df',0,1)],
-                                                                     c[('df',0,2)],
-                                                                     c[('df',0,3)],
-                                                                     c[('f',1)],
-                                                                     c[('df',1,1)],
-                                                                     c[('df',1,2)],
-                                                                     c[('df',1,3)],
-                                                                     c[('f',2)],
-                                                                     c[('df',2,1)],
-                                                                     c[('df',2,2)],
-                                                                     c[('df',2,3)],
-                                                                     c[('f',3)],
-                                                                     c[('df',3,1)],
-                                                                     c[('df',3,2)],
-                                                                     c[('df',3,3)],
-                                                                     c[('a',1,1)],
-                                                                     c[('a',2,2)],
-                                                                     c[('a',3,3)],
-                                                                     c[('a',1,2)],
-                                                                     c[('a',1,3)],
-                                                                     c[('a',2,1)],
-                                                                     c[('a',2,3)],
-                                                                     c[('a',3,1)],
-                                                                     c[('a',3,2)],
-                                                                     c[('r',1)],
-                                                                     c[('r',2)],
-                                                                     c[('r',3)],
-                                                                     c[('dr',1,1)],
-                                                                     c[('dr',1,2)],
-                                                                     c[('dr',1,3)],
-                                                                     c[('dr',2,1)],
-                                                                     c[('dr',2,2)],
-                                                                     c[('dr',2,3)],
-                                                                     c[('dr',3,1)],
-                                                                     c[('dr',3,2)],
-                                                                     c[('dr',3,3)],
-                                                                     c[('H',1)],
-                                                                     c[('dH',1,0)],
-                                                                     c[('H',2)],
-                                                                     c[('dH',2,0)],
-                                                                     c[('H',3)],
-                                                                     c[('dH',3,0)])
+            VolumeAveragedNavierStokesFullDevStress_3D_Evaluate(self.rho,
+                                                                self.mu,
+                                                                meanGrain,
+                                                                self.g,
+                                                                c[('u',0)],
+                                                                c[('grad(u)',0)],
+                                                                c[('u',1)],
+                                                                c[('u',2)],
+                                                                c[('u',3)],
+                                                                porosity,
+                                                                c[('m',1)],
+                                                                c[('dm',1,1)],
+                                                                c[('m',2)],
+                                                                c[('dm',2,2)],
+                                                                c[('m',3)],
+                                                                c[('dm',3,3)],
+                                                                c[('f',0)],
+                                                                c[('df',0,1)],
+                                                                c[('df',0,2)],
+                                                                c[('df',0,3)],
+                                                                c[('f',1)],
+                                                                c[('df',1,1)],
+                                                                c[('df',1,2)],
+                                                                c[('df',1,3)],
+                                                                c[('f',2)],
+                                                                c[('df',2,1)],
+                                                                c[('df',2,2)],
+                                                                c[('df',2,3)],
+                                                                c[('f',3)],
+                                                                c[('df',3,1)],
+                                                                c[('df',3,2)],
+                                                                c[('df',3,3)],
+                                                                c[('a',1,1)],
+                                                                c[('a',2,2)],
+                                                                c[('a',3,3)],
+                                                                c[('a',1,2)],
+                                                                c[('a',1,3)],
+                                                                c[('a',2,1)],
+                                                                c[('a',2,3)],
+                                                                c[('a',3,1)],
+                                                                c[('a',3,2)],
+                                                                c[('r',1)],
+                                                                c[('r',2)],
+                                                                c[('r',3)],
+                                                                c[('dr',1,1)],
+                                                                c[('dr',1,2)],
+                                                                c[('dr',1,3)],
+                                                                c[('dr',2,1)],
+                                                                c[('dr',2,2)],
+                                                                c[('dr',2,3)],
+                                                                c[('dr',3,1)],
+                                                                c[('dr',3,2)],
+                                                                c[('dr',3,3)],
+                                                                c[('H',1)],
+                                                                c[('dH',1,0)],
+                                                                c[('H',2)],
+                                                                c[('dH',2,0)],
+                                                                c[('H',3)],
+                                                                c[('dH',3,0)])
 
             if self.stokesOnly:
                 c[('f',1)].flat[:]=0.0; c[('f',2)].flat[:]=0.0; c[('f',3)].flat[:]=0.0;
@@ -8443,14 +8445,14 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
 #
 #The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
+from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate
+from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
+from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate
+from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
 class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure):
     """
     The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
     """
-    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
-    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate
-    from .ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -8631,97 +8633,97 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             pdb.set_trace()
         if self.nd==2:
             if self.sd:
-                self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.killNonlinearDrag,
-                                                                                self.eps_density,
-                                                                                self.eps_viscosity,
-                                                                                self.sigma,
-                                                                                self.rho_0,
-                                                                                self.nu_0,
-                                                                                self.rho_1,
-                                                                                self.nu_1,
-                                                                                meanGrain,
-                                                                                self.g,
-                                                                                phi,
-                                                                                n,
-                                                                                kappa,
-                                                                                c[('u',0)],
-                                                                                c[('grad(u)',0)],
-                                                                                c[('u',1)],
-                                                                                c[('u',2)],
-                                                                                porosity,
-                                                                                c[('m',1)],
-                                                                                c[('dm',1,1)],
-                                                                                c[('m',2)],
-                                                                                c[('dm',2,2)],
-                                                                                c[('f',0)],
-                                                                                c[('df',0,1)],
-                                                                                c[('df',0,2)],
-                                                                                c[('f',1)],
-                                                                                c[('df',1,1)],
-                                                                                c[('df',1,2)],
-                                                                                c[('f',2)],
-                                                                                c[('df',2,1)],
-                                                                                c[('df',2,2)],
-                                                                                c[('a',1,1)],
-                                                                                c[('a',2,2)],
-                                                                                c[('a',1,2)],
-                                                                                c[('a',2,1)],
-                                                                                c[('r',1)],
-                                                                                c[('r',2)],
-                                                                                c[('dr',1,1)],
-                                                                                c[('dr',1,2)],
-                                                                                c[('dr',2,1)],
-                                                                                c[('dr',2,2)],
-                                                                                c[('H',1)],
-                                                                                c[('dH',1,0)],
-                                                                                c[('H',2)],
-                                                                                c[('dH',2,0)])
+                VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd(self.killNonlinearDrag,
+                                                                           self.eps_density,
+                                                                           self.eps_viscosity,
+                                                                           self.sigma,
+                                                                           self.rho_0,
+                                                                           self.nu_0,
+                                                                           self.rho_1,
+                                                                           self.nu_1,
+                                                                           meanGrain,
+                                                                           self.g,
+                                                                           phi,
+                                                                           n,
+                                                                           kappa,
+                                                                           c[('u',0)],
+                                                                           c[('grad(u)',0)],
+                                                                           c[('u',1)],
+                                                                           c[('u',2)],
+                                                                           porosity,
+                                                                           c[('m',1)],
+                                                                           c[('dm',1,1)],
+                                                                           c[('m',2)],
+                                                                           c[('dm',2,2)],
+                                                                           c[('f',0)],
+                                                                           c[('df',0,1)],
+                                                                           c[('df',0,2)],
+                                                                           c[('f',1)],
+                                                                           c[('df',1,1)],
+                                                                           c[('df',1,2)],
+                                                                           c[('f',2)],
+                                                                           c[('df',2,1)],
+                                                                           c[('df',2,2)],
+                                                                           c[('a',1,1)],
+                                                                           c[('a',2,2)],
+                                                                           c[('a',1,2)],
+                                                                           c[('a',2,1)],
+                                                                           c[('r',1)],
+                                                                           c[('r',2)],
+                                                                           c[('dr',1,1)],
+                                                                           c[('dr',1,2)],
+                                                                           c[('dr',2,1)],
+                                                                           c[('dr',2,2)],
+                                                                           c[('H',1)],
+                                                                           c[('dH',1,0)],
+                                                                           c[('H',2)],
+                                                                           c[('dH',2,0)])
             else:
-                self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate(self.killNonlinearDrag,
-                                                                             self.eps_density,
-                                                                             self.eps_viscosity,
-                                                                             self.sigma,
-                                                                             self.rho_0,
-                                                                             self.nu_0,
-                                                                             self.rho_1,
-                                                                             self.nu_1,
-                                                                             meanGrain,
-                                                                             self.g,
-                                                                             phi,
-                                                                             n,
-                                                                             kappa,
-                                                                             c[('u',0)],
-                                                                             c[('grad(u)',0)],
-                                                                             c[('u',1)],
-                                                                             c[('u',2)],
-                                                                             porosity,
-                                                                             c[('m',1)],
-                                                                             c[('dm',1,1)],
-                                                                             c[('m',2)],
-                                                                             c[('dm',2,2)],
-                                                                             c[('f',0)],
-                                                                             c[('df',0,1)],
-                                                                             c[('df',0,2)],
-                                                                             c[('f',1)],
-                                                                             c[('df',1,1)],
-                                                                             c[('df',1,2)],
-                                                                             c[('f',2)],
-                                                                             c[('df',2,1)],
-                                                                             c[('df',2,2)],
-                                                                             c[('a',1,1)],
-                                                                             c[('a',2,2)],
-                                                                             c[('a',1,2)],
-                                                                             c[('a',2,1)],
-                                                                             c[('r',1)],
-                                                                             c[('r',2)],
-                                                                             c[('dr',1,1)],
-                                                                             c[('dr',1,2)],
-                                                                             c[('dr',2,1)],
-                                                                             c[('dr',2,2)],
-                                                                             c[('H',1)],
-                                                                             c[('dH',1,0)],
-                                                                             c[('H',2)],
-                                                                             c[('dH',2,0)])
+                VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate(self.killNonlinearDrag,
+                                                                        self.eps_density,
+                                                                        self.eps_viscosity,
+                                                                        self.sigma,
+                                                                        self.rho_0,
+                                                                        self.nu_0,
+                                                                        self.rho_1,
+                                                                        self.nu_1,
+                                                                        meanGrain,
+                                                                        self.g,
+                                                                        phi,
+                                                                        n,
+                                                                        kappa,
+                                                                        c[('u',0)],
+                                                                        c[('grad(u)',0)],
+                                                                        c[('u',1)],
+                                                                        c[('u',2)],
+                                                                        porosity,
+                                                                        c[('m',1)],
+                                                                        c[('dm',1,1)],
+                                                                        c[('m',2)],
+                                                                        c[('dm',2,2)],
+                                                                        c[('f',0)],
+                                                                        c[('df',0,1)],
+                                                                        c[('df',0,2)],
+                                                                        c[('f',1)],
+                                                                        c[('df',1,1)],
+                                                                        c[('df',1,2)],
+                                                                        c[('f',2)],
+                                                                        c[('df',2,1)],
+                                                                        c[('df',2,2)],
+                                                                        c[('a',1,1)],
+                                                                        c[('a',2,2)],
+                                                                        c[('a',1,2)],
+                                                                        c[('a',2,1)],
+                                                                        c[('r',1)],
+                                                                        c[('r',2)],
+                                                                        c[('dr',1,1)],
+                                                                        c[('dr',1,2)],
+                                                                        c[('dr',2,1)],
+                                                                        c[('dr',2,2)],
+                                                                        c[('H',1)],
+                                                                        c[('dH',1,0)],
+                                                                        c[('H',2)],
+                                                                        c[('dH',2,0)])
 
             #
             if self.stokes:
@@ -8731,143 +8733,143 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             #
         elif  self.nd==3:
             if self.sd:
-                self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd(self.killNonlinearDrag,
-                                                                                self.eps_density,
-                                                                                self.eps_viscosity,
-                                                                                self.sigma,
-                                                                                self.rho_0,
-                                                                                self.nu_0,
-                                                                                self.rho_1,
-                                                                                self.nu_1,
-                                                                                meanGrain,
-                                                                                self.g,
-                                                                                phi,
-                                                                                n,
-                                                                                kappa,
-                                                                                c[('u',0)],
-                                                                                c[('grad(u)',0)],
-                                                                                c[('u',1)],
-                                                                                c[('u',2)],
-                                                                                c[('u',3)],
-                                                                                porosity,
-                                                                                c[('m',1)],
-                                                                                c[('dm',1,1)],
-                                                                                c[('m',2)],
-                                                                                c[('dm',2,2)],
-                                                                                c[('m',3)],
-                                                                                c[('dm',3,3)],
-                                                                                c[('f',0)],
-                                                                                c[('df',0,1)],
-                                                                                c[('df',0,2)],
-                                                                                c[('df',0,3)],
-                                                                                c[('f',1)],
-                                                                                c[('df',1,1)],
-                                                                                c[('df',1,2)],
-                                                                                c[('df',1,3)],
-                                                                                c[('f',2)],
-                                                                                c[('df',2,1)],
-                                                                                c[('df',2,2)],
-                                                                                c[('df',2,3)],
-                                                                                c[('f',3)],
-                                                                                c[('df',3,1)],
-                                                                                c[('df',3,2)],
-                                                                                c[('df',3,3)],
-                                                                                c[('a',1,1)],
-                                                                                c[('a',2,2)],
-                                                                                c[('a',3,3)],
-                                                                                c[('a',1,2)],
-                                                                                c[('a',1,3)],
-                                                                                c[('a',2,1)],
-                                                                                c[('a',2,3)],
-                                                                                c[('a',3,1)],
-                                                                                c[('a',3,2)],
-                                                                                c[('r',1)],
-                                                                                c[('r',2)],
-                                                                                c[('r',3)],
-                                                                                c[('dr',1,1)],
-                                                                                c[('dr',1,2)],
-                                                                                c[('dr',1,3)],
-                                                                                c[('dr',2,1)],
-                                                                                c[('dr',2,2)],
-                                                                                c[('dr',2,3)],
-                                                                                c[('dr',3,1)],
-                                                                                c[('dr',3,2)],
-                                                                                c[('dr',3,3)],
-                                                                                c[('H',1)],
-                                                                                c[('dH',1,0)],
-                                                                                c[('H',2)],
-                                                                                c[('dH',2,0)],
-                                                                                c[('H',3)],
-                                                                                c[('dH',3,0)])
+                VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd(self.killNonlinearDrag,
+                                                                           self.eps_density,
+                                                                           self.eps_viscosity,
+                                                                           self.sigma,
+                                                                           self.rho_0,
+                                                                           self.nu_0,
+                                                                           self.rho_1,
+                                                                           self.nu_1,
+                                                                           meanGrain,
+                                                                           self.g,
+                                                                           phi,
+                                                                           n,
+                                                                           kappa,
+                                                                           c[('u',0)],
+                                                                           c[('grad(u)',0)],
+                                                                           c[('u',1)],
+                                                                           c[('u',2)],
+                                                                           c[('u',3)],
+                                                                           porosity,
+                                                                           c[('m',1)],
+                                                                           c[('dm',1,1)],
+                                                                           c[('m',2)],
+                                                                           c[('dm',2,2)],
+                                                                           c[('m',3)],
+                                                                           c[('dm',3,3)],
+                                                                           c[('f',0)],
+                                                                           c[('df',0,1)],
+                                                                           c[('df',0,2)],
+                                                                           c[('df',0,3)],
+                                                                           c[('f',1)],
+                                                                           c[('df',1,1)],
+                                                                           c[('df',1,2)],
+                                                                           c[('df',1,3)],
+                                                                           c[('f',2)],
+                                                                           c[('df',2,1)],
+                                                                           c[('df',2,2)],
+                                                                           c[('df',2,3)],
+                                                                           c[('f',3)],
+                                                                           c[('df',3,1)],
+                                                                           c[('df',3,2)],
+                                                                           c[('df',3,3)],
+                                                                           c[('a',1,1)],
+                                                                           c[('a',2,2)],
+                                                                           c[('a',3,3)],
+                                                                           c[('a',1,2)],
+                                                                           c[('a',1,3)],
+                                                                           c[('a',2,1)],
+                                                                           c[('a',2,3)],
+                                                                           c[('a',3,1)],
+                                                                           c[('a',3,2)],
+                                                                           c[('r',1)],
+                                                                           c[('r',2)],
+                                                                           c[('r',3)],
+                                                                           c[('dr',1,1)],
+                                                                           c[('dr',1,2)],
+                                                                           c[('dr',1,3)],
+                                                                           c[('dr',2,1)],
+                                                                           c[('dr',2,2)],
+                                                                           c[('dr',2,3)],
+                                                                           c[('dr',3,1)],
+                                                                           c[('dr',3,2)],
+                                                                           c[('dr',3,3)],
+                                                                           c[('H',1)],
+                                                                           c[('dH',1,0)],
+                                                                           c[('H',2)],
+                                                                           c[('dH',2,0)],
+                                                                           c[('H',3)],
+                                                                           c[('dH',3,0)])
             else:
-                self.VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate(self.killNonlinearDrag,
-                                                                             self.eps_density,
-                                                                             self.eps_viscosity,
-                                                                             self.sigma,
-                                                                             self.rho_0,
-                                                                             self.nu_0,
-                                                                             self.rho_1,
-                                                                             self.nu_1,
-                                                                             meanGrain,
-                                                                             self.g,
-                                                                             phi,
-                                                                             n,
-                                                                             kappa,
-                                                                             c[('u',0)],
-                                                                             c[('grad(u)',0)],
-                                                                             c[('u',1)],
-                                                                             c[('u',2)],
-                                                                             c[('u',3)],
-                                                                             porosity,
-                                                                             c[('m',1)],
-                                                                             c[('dm',1,1)],
-                                                                             c[('m',2)],
-                                                                             c[('dm',2,2)],
-                                                                             c[('m',3)],
-                                                                             c[('dm',3,3)],
-                                                                             c[('f',0)],
-                                                                             c[('df',0,1)],
-                                                                             c[('df',0,2)],
-                                                                             c[('df',0,3)],
-                                                                             c[('f',1)],
-                                                                             c[('df',1,1)],
-                                                                             c[('df',1,2)],
-                                                                             c[('df',1,3)],
-                                                                             c[('f',2)],
-                                                                             c[('df',2,1)],
-                                                                             c[('df',2,2)],
-                                                                             c[('df',2,3)],
-                                                                             c[('f',3)],
-                                                                             c[('df',3,1)],
-                                                                             c[('df',3,2)],
-                                                                             c[('df',3,3)],
-                                                                             c[('a',1,1)],
-                                                                             c[('a',2,2)],
-                                                                             c[('a',3,3)],
-                                                                             c[('a',1,2)],
-                                                                             c[('a',1,3)],
-                                                                             c[('a',2,1)],
-                                                                             c[('a',2,3)],
-                                                                             c[('a',3,1)],
-                                                                             c[('a',3,2)],
-                                                                             c[('r',1)],
-                                                                             c[('r',2)],
-                                                                             c[('r',3)],
-                                                                             c[('dr',1,1)],
-                                                                             c[('dr',1,2)],
-                                                                             c[('dr',1,3)],
-                                                                             c[('dr',2,1)],
-                                                                             c[('dr',2,2)],
-                                                                             c[('dr',2,3)],
-                                                                             c[('dr',3,1)],
-                                                                             c[('dr',3,2)],
-                                                                             c[('dr',3,3)],
-                                                                             c[('H',1)],
-                                                                             c[('dH',1,0)],
-                                                                             c[('H',2)],
-                                                                             c[('dH',2,0)],
-                                                                             c[('H',3)],
-                                                                             c[('dH',3,0)])
+                VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate(self.killNonlinearDrag,
+                                                                        self.eps_density,
+                                                                        self.eps_viscosity,
+                                                                        self.sigma,
+                                                                        self.rho_0,
+                                                                        self.nu_0,
+                                                                        self.rho_1,
+                                                                        self.nu_1,
+                                                                        meanGrain,
+                                                                        self.g,
+                                                                        phi,
+                                                                        n,
+                                                                        kappa,
+                                                                        c[('u',0)],
+                                                                        c[('grad(u)',0)],
+                                                                        c[('u',1)],
+                                                                        c[('u',2)],
+                                                                        c[('u',3)],
+                                                                        porosity,
+                                                                        c[('m',1)],
+                                                                        c[('dm',1,1)],
+                                                                        c[('m',2)],
+                                                                        c[('dm',2,2)],
+                                                                        c[('m',3)],
+                                                                        c[('dm',3,3)],
+                                                                        c[('f',0)],
+                                                                        c[('df',0,1)],
+                                                                        c[('df',0,2)],
+                                                                        c[('df',0,3)],
+                                                                        c[('f',1)],
+                                                                        c[('df',1,1)],
+                                                                        c[('df',1,2)],
+                                                                        c[('df',1,3)],
+                                                                        c[('f',2)],
+                                                                        c[('df',2,1)],
+                                                                        c[('df',2,2)],
+                                                                        c[('df',2,3)],
+                                                                        c[('f',3)],
+                                                                        c[('df',3,1)],
+                                                                        c[('df',3,2)],
+                                                                        c[('df',3,3)],
+                                                                        c[('a',1,1)],
+                                                                        c[('a',2,2)],
+                                                                        c[('a',3,3)],
+                                                                        c[('a',1,2)],
+                                                                        c[('a',1,3)],
+                                                                        c[('a',2,1)],
+                                                                        c[('a',2,3)],
+                                                                        c[('a',3,1)],
+                                                                        c[('a',3,2)],
+                                                                        c[('r',1)],
+                                                                        c[('r',2)],
+                                                                        c[('r',3)],
+                                                                        c[('dr',1,1)],
+                                                                        c[('dr',1,2)],
+                                                                        c[('dr',1,3)],
+                                                                        c[('dr',2,1)],
+                                                                        c[('dr',2,2)],
+                                                                        c[('dr',2,3)],
+                                                                        c[('dr',3,1)],
+                                                                        c[('dr',3,2)],
+                                                                        c[('dr',3,3)],
+                                                                        c[('H',1)],
+                                                                        c[('dH',1,0)],
+                                                                        c[('H',2)],
+                                                                        c[('dH',2,0)],
+                                                                        c[('H',3)],
+                                                                        c[('dH',3,0)])
 
         #update viscosity with eddy viscosity
         if self.turbulenceClosureFlag is not None:
@@ -8934,9 +8936,9 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
 ########################################################################
 #VOF coefficients when have variable porosity term
 ########################################################################
+from .ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
+from .cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
 class VolumeAveragedVOFCoefficients(VOFCoefficients):
-    from .ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
-    from .cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
     def __init__(self,LS_model=-1,V_model=0,RD_model=-1,ME_model=1,checkMass=True,epsFact=0.0,
                  setParamsFunc=None):
         VOFCoefficients.__init__(self,
@@ -9002,15 +9004,15 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
             phi=None
             porosity=None
         if v is not None:
-            self.VolumeAveragedVOFCoefficientsEvaluate(self.eps,
-                                                       v,
-                                                       phi,
-                                                       porosity,
-                                                       c[('u',0)],
-                                                       c[('m',0)],
-                                                       c[('dm',0,0)],
-                                                       c[('f',0)],
-                                                       c[('df',0,0)])
+            VolumeAveragedVOFCoefficientsEvaluate(self.eps,
+                                                  v,
+                                                  phi,
+                                                  porosity,
+                                                  c[('u',0)],
+                                                  c[('m',0)],
+                                                  c[('dm',0,0)],
+                                                  c[('f',0)],
+                                                  c[('df',0,0)])
         else:
             import pdb
             pdb.set_trace()
@@ -9024,8 +9026,8 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
 
     #
 #
+from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
 class GroundwaterTransportCoefficients(TC_base):
-    from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
     groundwater advection-dispersion equation with constant coefficients but variable
     velocity
@@ -9086,17 +9088,17 @@ class GroundwaterTransportCoefficients(TC_base):
             print("no v---------------------")
             raise RuntimeError
         if self.useC:
-            self.groundwaterTransportCoefficientsEvaluate(self.omega,
-                                                          self.d,
-                                                          self.alpha_L,
-                                                          self.alpha_T,
-                                                          v,
-                                                          c[('u',0)],
-                                                          c[('m',0)],
-                                                          c[('dm',0,0)],
-                                                          c[('f',0)],
-                                                          c[('df',0,0)],
-                                                          c[('a',0,0)])
+            groundwaterTransportCoefficientsEvaluate(self.omega,
+                                                     self.d,
+                                                     self.alpha_L,
+                                                     self.alpha_T,
+                                                     v,
+                                                     c[('u',0)],
+                                                     c[('m',0)],
+                                                     c[('dm',0,0)],
+                                                     c[('f',0)],
+                                                     c[('df',0,0)],
+                                                     c[('a',0,0)])
             if v.shape == self.q_v.shape:
                 for i in range(len(c[('u',0)].flat)):
                     if c['x'].flat[3*i+0] > 100.0-2.5 and c['x'].flat[3*i+1] < 2.5 and c[('u',0)].flat[i] < -1.0e-1:
@@ -9104,9 +9106,8 @@ class GroundwaterTransportCoefficients(TC_base):
                         pdb.set_trace()
 
 
-
+from proteus.ctransportCoefficients import groundwaterBiodegradation01EvaluateFC
 class GroundwaterBiodegradation01Coefficients(TC_base):
-    from proteus.ctransportCoefficients import groundwaterBiodegradation01EvaluateFC
     """
     groundwater advection-dispersion equation with constant coefficients but variable
     velocity and simple 3 component biodegradation system
@@ -9185,48 +9186,48 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
             print(self.ebq_global_v.shape)
             raise RuntimeError("no v---------------------")
         if self.useC:
-            self.groundwaterBiodegradation01EvaluateFC(self.omega,
-                                                       self.d_c,
-                                                       self.d_e,
-                                                       self.alpha_L,
-                                                       self.alpha_T,
-                                                       self.Kox_max,
-                                                       self.Kox_C,
-                                                       self.Kox_E,
-                                                       self.Kox_X,
-                                                       self.Yield,
-                                                       self.k_d,
-                                                       v,
-                                                       c[('u',0)],
-                                                       c[('u',1)],
-                                                       c[('u',2)],
-                                                       c[('m',0)],
-                                                       c[('dm',0,0)],
-                                                       c[('m',1)],
-                                                       c[('dm',1,1)],
-                                                       c[('m',2)],
-                                                       c[('dm',2,2)],
-                                                       c[('f',0)],
-                                                       c[('df',0,0)],
-                                                       c[('f',1)],
-                                                       c[('df',1,1)],
-                                                       c[('a',0,0)],
-                                                       c[('a',1,1)],
-                                                       c[('r',0)],
-                                                       c[('dr',0,0)],
-                                                       c[('dr',0,1)],
-                                                       c[('dr',0,2)],
-                                                       c[('r',1)],
-                                                       c[('dr',1,0)],
-                                                       c[('dr',1,1)],
-                                                       c[('dr',1,2)],
-                                                       c[('r',2)],
-                                                       c[('dr',2,0)],
-                                                       c[('dr',2,1)],
-                                                       c[('dr',2,2)])
+            groundwaterBiodegradation01EvaluateFC(self.omega,
+                                                  self.d_c,
+                                                  self.d_e,
+                                                  self.alpha_L,
+                                                  self.alpha_T,
+                                                  self.Kox_max,
+                                                  self.Kox_C,
+                                                  self.Kox_E,
+                                                  self.Kox_X,
+                                                  self.Yield,
+                                                  self.k_d,
+                                                  v,
+                                                  c[('u',0)],
+                                                  c[('u',1)],
+                                                  c[('u',2)],
+                                                  c[('m',0)],
+                                                  c[('dm',0,0)],
+                                                  c[('m',1)],
+                                                  c[('dm',1,1)],
+                                                  c[('m',2)],
+                                                  c[('dm',2,2)],
+                                                  c[('f',0)],
+                                                  c[('df',0,0)],
+                                                  c[('f',1)],
+                                                  c[('df',1,1)],
+                                                  c[('a',0,0)],
+                                                  c[('a',1,1)],
+                                                  c[('r',0)],
+                                                  c[('dr',0,0)],
+                                                  c[('dr',0,1)],
+                                                  c[('dr',0,2)],
+                                                  c[('r',1)],
+                                                  c[('dr',1,0)],
+                                                  c[('dr',1,1)],
+                                                  c[('dr',1,2)],
+                                                  c[('r',2)],
+                                                  c[('dr',2,0)],
+                                                  c[('dr',2,1)],
+                                                  c[('dr',2,2)])
 
+from proteus.ctransportCoefficients import groundwaterBryantDawsonIonExEvaluateFC
 class GroundwaterBryantDawsonIonExCoefficients(TC_base):
-    from proteus.ctransportCoefficients import groundwaterBryantDawsonIonExEvaluateFC
     """
     groundwater advection-dispersion equation with constant coefficients but variable
     velocity and competitive ion exchange problem from Bryant, Dawson etal 00
@@ -9301,47 +9302,47 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
             print(self.ebq_global_v.shape)
             raise RuntimeError("no v---------------------")
         if self.useC:
-            self.groundwaterBryantDawsonIonExEvaluateFC(self.omega,
-                                                        self.d_m,
-                                                        self.d_h,
-                                                        self.alpha_L,
-                                                        self.alpha_T,
-                                                        self.K_m,
-                                                        self.K_h,
-                                                        self.K_w,
-                                                        self.Z_tot,
-                                                        v,
-                                                        c[('u',0)],
-                                                        c[('u',1)],
-                                                        c[('m',0)],
-                                                        c[('dm',0,0)],
-                                                        c[('dm',0,1)],
-                                                        c[('m',1)],
-                                                        c[('dm',1,0)],
-                                                        c[('dm',1,1)],
-                                                        c[('f',0)],
-                                                        c[('df',0,0)],
-                                                        c[('f',1)],
-                                                        c[('df',1,1)],
-                                                        c[('a',0,0)],
-                                                        c[('a',1,1)],
-                                                        c[('phi',1)],
-                                                        c[('dphi',1,1)],
-                                                        c[('r',0)],
-                                                        c[('dr',0,0)],
-                                                        c[('dr',0,1)],
-                                                        c[('r',1)],
-                                                        c[('dr',1,0)],
-                                                        c[('dr',1,1)])
+            groundwaterBryantDawsonIonExEvaluateFC(self.omega,
+                                                   self.d_m,
+                                                   self.d_h,
+                                                   self.alpha_L,
+                                                   self.alpha_T,
+                                                   self.K_m,
+                                                   self.K_h,
+                                                   self.K_w,
+                                                   self.Z_tot,
+                                                   v,
+                                                   c[('u',0)],
+                                                   c[('u',1)],
+                                                   c[('m',0)],
+                                                   c[('dm',0,0)],
+                                                   c[('dm',0,1)],
+                                                   c[('m',1)],
+                                                   c[('dm',1,0)],
+                                                   c[('dm',1,1)],
+                                                   c[('f',0)],
+                                                   c[('df',0,0)],
+                                                   c[('f',1)],
+                                                   c[('df',1,1)],
+                                                   c[('a',0,0)],
+                                                   c[('a',1,1)],
+                                                   c[('phi',1)],
+                                                   c[('dphi',1,1)],
+                                                   c[('r',0)],
+                                                   c[('dr',0,0)],
+                                                   c[('dr',0,1)],
+                                                   c[('r',1)],
+                                                   c[('dr',1,0)],
+                                                   c[('dr',1,1)])
 
+from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
+from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind
+from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm
+from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
     """
     version of Re where element material type id's used in evals
     """
-    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
-    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind
-    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm
-    from .ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd
 
     def __init__(self,
                  nd,
@@ -9476,22 +9477,22 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
         if self.upwindFlag == 0:
-            self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
-                                                                         self.rho,
-                                                                         self.beta,
-                                                                         self.gravity,
-                                                                         self.vgm_alpha_block,
-                                                                         self.vgm_n_block,
-                                                                         self.thetaR_block,
-                                                                         self.thetaSR_block,
-                                                                         self.Ks_block,
-                                                                         c[('u',0)],
-                                                                         c[('m',0)],
-                                                                         c[('dm',0,0)],
-                                                                         c[('f',0)],
-                                                                         c[('df',0,0)],
-                                                                         c[('a',0,0)],
-                                                                         c[('da',0,0,0)])
+            conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
+                                                                    self.rho,
+                                                                    self.beta,
+                                                                    self.gravity,
+                                                                    self.vgm_alpha_block,
+                                                                    self.vgm_n_block,
+                                                                    self.thetaR_block,
+                                                                    self.thetaSR_block,
+                                                                    self.Ks_block,
+                                                                    c[('u',0)],
+                                                                    c[('m',0)],
+                                                                    c[('dm',0,0)],
+                                                                    c[('f',0)],
+                                                                    c[('df',0,0)],
+                                                                    c[('a',0,0)],
+                                                                    c[('da',0,0,0)])
         elif self.upwindFlag >= 1:
             quad_avg = None; quad2bnd = None; dV = None
             computeAverages = 0;
@@ -9512,95 +9513,95 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
             else:
                 assert False, "no quad maps found to match c[('u',0)].shape= %s " % c[('u',0)].shape
             if self.useOrigUpwind:
-                self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind(self.upwindFlag,
-                                                                                       computeAverages,
-                                                                                       self.mesh.elementBoundaryElementsArray,
-                                                                                       quad2bnd,
-                                                                                       materialTypes,
-                                                                                       self.rho,
-                                                                                       self.beta,
-                                                                                       self.gravity,
-                                                                                       self.vgm_alpha_block,
-                                                                                       self.vgm_n_block,
-                                                                                       self.thetaR_block,
-                                                                                       self.thetaSR_block,
-                                                                                       self.Ks_block,
-                                                                                       c[('u',0)],
-                                                                                       c[('grad(u)',0)],
-                                                                                       self.ebq_global_n,
-                                                                                       dV,
-                                                                                       c[('m',0)],
-                                                                                       c[('dm',0,0)],
-                                                                                       quad_avg[('f',0)],
-                                                                                       quad_avg[('df',0,0)],
-                                                                                       quad_avg[('a',0,0)],
-                                                                                       quad_avg[('da',0,0,0)],
-                                                                                       c[('f',0)],
-                                                                                       c[('df',0,0)],
-                                                                                       c[('a',0,0)],
-                                                                                       c[('da',0,0,0)])
+                conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind(self.upwindFlag,
+                                                                                  computeAverages,
+                                                                                  self.mesh.elementBoundaryElementsArray,
+                                                                                  quad2bnd,
+                                                                                  materialTypes,
+                                                                                  self.rho,
+                                                                                  self.beta,
+                                                                                  self.gravity,
+                                                                                  self.vgm_alpha_block,
+                                                                                  self.vgm_n_block,
+                                                                                  self.thetaR_block,
+                                                                                  self.thetaSR_block,
+                                                                                  self.Ks_block,
+                                                                                  c[('u',0)],
+                                                                                  c[('grad(u)',0)],
+                                                                                  self.ebq_global_n,
+                                                                                  dV,
+                                                                                  c[('m',0)],
+                                                                                  c[('dm',0,0)],
+                                                                                  quad_avg[('f',0)],
+                                                                                  quad_avg[('df',0,0)],
+                                                                                  quad_avg[('a',0,0)],
+                                                                                  quad_avg[('da',0,0,0)],
+                                                                                  c[('f',0)],
+                                                                                  c[('df',0,0)],
+                                                                                  c[('a',0,0)],
+                                                                                  c[('da',0,0,0)])
             else:
                 if self.sd:
-                    self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd(useUpwindApprox,
-                                                                                                  computeAverages,
-                                                                                                  self.sdInfo[(0,0)][0],
-                                                                                                  self.sdInfo[(0,0)][1],
-                                                                                                  self.mesh.elementBoundaryElementsArray,
-                                                                                                  quad2bnd,
-                                                                                                  materialTypes,
-                                                                                                  self.rho,
-                                                                                                  self.beta,
-                                                                                                  self.gravity,
-                                                                                                  self.vgm_alpha_block,
-                                                                                                  self.vgm_n_block,
-                                                                                                  self.thetaR_block,
-                                                                                                  self.thetaSR_block,
-                                                                                                  self.Ks_block,
-                                                                                                  c[('u',0)],
-                                                                                                  c[('grad(u)',0)],
-                                                                                                  self.ebq_global_n,
-                                                                                                  dV,
-                                                                                                  c[('m',0)],
-                                                                                                  c[('dm',0,0)],
-                                                                                                  quad_avg[('f',0)],
-                                                                                                  quad_avg[('df',0,0)],
-                                                                                                  quad_avg[('a',0,0)],
-                                                                                                  quad_avg[('da',0,0,0)],
-                                                                                                  c[('f',0)],
-                                                                                                  c[('df',0,0)],
-                                                                                                  c[('a',0,0)],
-                                                                                                  c[('da',0,0,0)])
+                    conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd(useUpwindApprox,
+                                                                                                computeAverages,
+                                                                                                self.sdInfo[(0,0)][0],
+                                                                                                self.sdInfo[(0,0)][1],
+                                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                                quad2bnd,
+                                                                                                materialTypes,
+                                                                                                self.rho,
+                                                                                                self.beta,
+                                                                                                self.gravity,
+                                                                                                self.vgm_alpha_block,
+                                                                                                self.vgm_n_block,
+                                                                                                self.thetaR_block,
+                                                                                                self.thetaSR_block,
+                                                                                                self.Ks_block,
+                                                                                                c[('u',0)],
+                                                                                                c[('grad(u)',0)],
+                                                                                                self.ebq_global_n,
+                                                                                                dV,
+                                                                                                c[('m',0)],
+                                                                                                c[('dm',0,0)],
+                                                                                                quad_avg[('f',0)],
+                                                                                                quad_avg[('df',0,0)],
+                                                                                                quad_avg[('a',0,0)],
+                                                                                                quad_avg[('da',0,0,0)],
+                                                                                                c[('f',0)],
+                                                                                                c[('df',0,0)],
+                                                                                                c[('a',0,0)],
+                                                                                                c[('da',0,0,0)])
                 else:
-                    self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm(useUpwindApprox,
-                                                                                                  computeAverages,
-                                                                                                  self.mesh.elementBoundaryElementsArray,
-                                                                                                  quad2bnd,
-                                                                                                  materialTypes,
-                                                                                                  self.rho,
-                                                                                                  self.beta,
-                                                                                                  self.gravity,
-                                                                                                  self.vgm_alpha_block,
-                                                                                                  self.vgm_n_block,
-                                                                                                  self.thetaR_block,
-                                                                                                  self.thetaSR_block,
-                                                                                                  self.Ks_block,
-                                                                                                  c[('u',0)],
-                                                                                                  c[('grad(u)',0)],
-                                                                                                  self.ebq_global_n,
-                                                                                                  dV,
-                                                                                                  c[('m',0)],
-                                                                                                  c[('dm',0,0)],
-                                                                                                  quad_avg[('f',0)],
-                                                                                                  quad_avg[('df',0,0)],
-                                                                                                  quad_avg[('a',0,0)],
-                                                                                                  quad_avg[('da',0,0,0)],
-                                                                                                  c[('f',0)],
-                                                                                                  c[('df',0,0)],
-                                                                                                  c[('a',0,0)],
-                                                                                                  c[('da',0,0,0)])
+                    conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm(useUpwindApprox,
+                                                                                             computeAverages,
+                                                                                             self.mesh.elementBoundaryElementsArray,
+                                                                                             quad2bnd,
+                                                                                             materialTypes,
+                                                                                             self.rho,
+                                                                                             self.beta,
+                                                                                             self.gravity,
+                                                                                             self.vgm_alpha_block,
+                                                                                             self.vgm_n_block,
+                                                                                             self.thetaR_block,
+                                                                                             self.thetaSR_block,
+                                                                                             self.Ks_block,
+                                                                                             c[('u',0)],
+                                                                                             c[('grad(u)',0)],
+                                                                                             self.ebq_global_n,
+                                                                                             dV,
+                                                                                             c[('m',0)],
+                                                                                             c[('dm',0,0)],
+                                                                                             quad_avg[('f',0)],
+                                                                                             quad_avg[('df',0,0)],
+                                                                                             quad_avg[('a',0,0)],
+                                                                                             quad_avg[('da',0,0,0)],
+                                                                                             c[('f',0)],
+                                                                                             c[('df',0,0)],
+                                                                                             c[('a',0,0)],
+                                                                                             c[('da',0,0,0)])
 
+from .ctransportCoefficients import diffusiveWave1DCoefficientsEvaluate
 class DiffusiveWave_1D(TC_base):
-    from .ctransportCoefficients import diffusiveWave1DCoefficientsEvaluate
 
     """
     A class implementing the coefficients of the diffusive wave equation in 1D.
@@ -9693,21 +9694,21 @@ class DiffusiveWave_1D(TC_base):
         """
 
 
-        self.diffusiveWave1DCoefficientsEvaluate(self.alpha,
-                                                 self.gamma,
-                                                 self.epsilon,
-                                                 c['x'],
-                                                 c[('u',0)],
-                                                 c[('grad(u)',0)],
-                                                 c[('m',0)],
-                                                 c[('dm',0,0)],
-                                                 c[('a',0,0)],
-                                                 c[('da',0,0,0)])
+        diffusiveWave1DCoefficientsEvaluate(self.alpha,
+                                            self.gamma,
+                                            self.epsilon,
+                                            c['x'],
+                                            c[('u',0)],
+                                            c[('grad(u)',0)],
+                                            c[('m',0)],
+                                            c[('dm',0,0)],
+                                            c[('a',0,0)],
+                                            c[('da',0,0,0)])
 
 
 
+from .ctransportCoefficients import diffusiveWave2DCoefficientsEvaluate
 class DiffusiveWave_2D(TC_base):
-    from .ctransportCoefficients import diffusiveWave2DCoefficientsEvaluate
 
     """
     A class implementing the coefficients of the diffusive wave equation in 2D.
@@ -9800,18 +9801,20 @@ class DiffusiveWave_2D(TC_base):
         Evaluated the coefficients of the 2D diffusive wave model.
         """
 
-        self.diffusiveWave2DCoefficientsEvaluate(self.nd,
-                                                 self.alpha,
-                                                 self.gamma,
-                                                 self.epsilon,
-                                                 c['x'],
-                                                 c[('u',0)],
-                                                 c[('grad(u)',0)],
-                                                 c[('m',0)],
-                                                 c[('dm',0,0)],
-                                                 c[('a',0,0)],
-                                                 c[('da',0,0,0)])
+        diffusiveWave2DCoefficientsEvaluate(self.nd,
+                                            self.alpha,
+                                            self.gamma,
+                                            self.epsilon,
+                                            c['x'],
+                                            c[('u',0)],
+                                            c[('grad(u)',0)],
+                                            c[('m',0)],
+                                            c[('dm',0,0)],
+                                            c[('a',0,0)],
+                                            c[('da',0,0,0)])
 
+from .ctransportCoefficients import Mass_2D_Evaluate
+from .ctransportCoefficients import Mass_3D_Evaluate
 class DiscreteMassMatrix(TC_base):
     r"""Coefficients class for the discrete Mass Operator.
     
@@ -9825,8 +9828,6 @@ class DiscreteMassMatrix(TC_base):
     for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
     :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
     """
-    from .ctransportCoefficients import Mass_2D_Evaluate
-    from .ctransportCoefficients import Mass_3D_Evaluate
     def __init__(self,rho=1.0,nd=2):
         self.rho = rho
         self.nd = nd
@@ -9870,31 +9871,32 @@ class DiscreteMassMatrix(TC_base):
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:
-            self.Mass_2D_Evaluate(self.rho,
-                                  c[('u',0)],
-                                  c[('u',1)],
-                                  c[('u',2)],
-                                  c[('m',0)],
-                                  c[('m',1)],
-                                  c[('m',2)],
-                                  c[('dm',0,0)],
-                                  c[('dm',1,1)],
-                                  c[('dm',2,2)])
+            Mass_2D_Evaluate(self.rho,
+                             c[('u',0)],
+                             c[('u',1)],
+                             c[('u',2)],
+                             c[('m',0)],
+                             c[('m',1)],
+                             c[('m',2)],
+                             c[('dm',0,0)],
+                             c[('dm',1,1)],
+                             c[('dm',2,2)])
         elif self.nd==3:
-            self.Mass_3D_Evaluate(self.rho,
-                                  c[('u',0)],
-                                  c[('u',1)],
-                                  c[('u',2)],
-                                  c[('u',3)],
-                                  c[('m',0)],
-                                  c[('m',1)],
-                                  c[('m',2)],
-                                  c[('m',3)],
-                                  c[('dm',0,0)],
-                                  c[('dm',1,1)],
-                                  c[('dm',2,2)],
-                                  c[('dm',3,3)])
+            Mass_3D_Evaluate(self.rho,
+                             c[('u',0)],
+                             c[('u',1)],
+                             c[('u',2)],
+                             c[('u',3)],
+                             c[('m',0)],
+                             c[('m',1)],
+                             c[('m',2)],
+                             c[('m',3)],
+                             c[('dm',0,0)],
+                             c[('dm',1,1)],
+                             c[('dm',2,2)],
+                             c[('dm',3,3)])
 
+from .ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
 class DiscreteTwoPhaseAdvectionOperator(TC_base):
     r""" A coefficient class to build the discrete advection operator.
 
@@ -9919,7 +9921,6 @@ class DiscreteTwoPhaseAdvectionOperator(TC_base):
         An array of arrays with the advective field evaluated at the 
         quadrature points.
     """
-    from .ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
 #    from ctransportCoefficients import TwoPhaseAdvection_3D_Evaluate
     def __init__(self,
                  u,
