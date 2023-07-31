@@ -1,5 +1,5 @@
 os: linux
-dist: focal
+dist: jammy
 language: minimal
 
 notifications:
@@ -12,7 +12,7 @@ jobs:
   - stage: test
     name: "conda linux"
     os: linux
-    dist: focal
+    dist: jammy
     env: TEST_PROFILE="proteus-conda"
     install:
       - git lfs pull
@@ -26,7 +26,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - make develop-conda
+      - PROTEUS_OPT="-g0 -O0 -UNDEBUG" make develop-conda
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py
@@ -54,8 +54,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - pip install gmsh
-      - make develop-conda
+      - PROTEUS_OPT="-g0 -O0 -UNDEBUG" make develop-conda
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
