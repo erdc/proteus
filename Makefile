@@ -221,6 +221,7 @@ develop-conda:
 	@echo "************************************"
 	$(call show_info)
 	${PROTEUS_DEVELOP_CMD}
+	pip install pytest-xdist-forked
 	@echo "************************"
 	@echo "Development installation complete"
 	@echo "************************"
