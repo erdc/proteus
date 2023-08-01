@@ -547,9 +547,9 @@ def cos2s(theta,f,s=10):
     numpy.ndarray
         2D Numpy array of cos-2s spectrum
     """
-    fun = np.zeros((len(theta),len(f)),)
+    fun = np.zeros((len(theta),len(f)),'d')
     for ii in range(len(fun[0,:])):
-        fun[:,ii] = np.cos(old_div(theta,2))**(2*s)
+        fun[:,ii] = np.cos(theta/2.0)**(2*s)
     return fun
 def mitsuyasu(theta,fi,f0,smax=10):
     """The cos2s wave directional spread with wave frequency dependency
@@ -573,12 +573,12 @@ def mitsuyasu(theta,fi,f0,smax=10):
         2D Numpy array of Mitsuyashu-type spectrum
     """
 
-    s = smax * (old_div(fi,f0))**(5)
+    s = smax * (fi/f0)**(5)
     ii = np.where(fi>f0)[0][0]
-    s[ii:] = smax * (old_div(fi[ii:],f0))**(-2.5)
-    fun = np.zeros((len(theta),len(fi)),)
+    s[ii:] = smax * (fi[ii:]/f0)**(-2.5)
+    fun = np.zeros((len(theta),len(fi)),'d')
     for ii in range(len(fun[0,:])):
-        fun[:,ii] = np.cos(old_div(theta,2))**(2.*s[ii])
+        fun[:,ii] = np.cos(theta/2.0)**(2*s[ii])
     return fun
 
 

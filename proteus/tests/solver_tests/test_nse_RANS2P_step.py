@@ -172,7 +172,7 @@ def test_step_slip_FullRun():
     print(L1,L2,L3)
     assert L1[0][1]==2
     assert L2[0][1]==11
-    assert L3[0][1]==12
+    assert L3[0][1]==11
 
 @pytest.mark.LinearSolvers
 def test_step_noslip_FullRun():

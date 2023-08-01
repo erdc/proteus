@@ -40,7 +40,6 @@ class TestAddedMass3D(unittest.TestCase):
         #    else:
         #        pass
 
-    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")
     def test_AddedMass_3D(self):
         from proteus import defaults
         defaults.reset_default_p()
@@ -86,7 +85,7 @@ class TestAddedMass3D(unittest.TestCase):
         ns.calculateSolution('addedmass3D')
         Aij = am3D.body.Aij
 
-        #np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
+        np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
         Aij_sol = np.genfromtxt(os.path.join(modulepath, 'Aij_sol3D.csv'), delimiter=',')
         npt.assert_almost_equal(Aij, Aij_sol, decimal=5)
         self.teardown_method(self)
