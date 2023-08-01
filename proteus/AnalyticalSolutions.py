@@ -14,7 +14,7 @@ from math import *
 from .EGeometry import *
 from .LinearAlgebraTools import *
 from .Profiling import logEvent
-
+import .canalyticalSolutions
 
 class AS_base(object):
     """
@@ -571,8 +571,6 @@ class PlaneCouetteFlow_u(SteadyState):
     """
     The exact solution for the u component of  velocity in plane Couette Flow
     """
-    from .canalyticalSolutions import PlaneCouetteFlow_u
-
     def __init__(self,
                  plateSeperation=1.0,
                  upperPlateVelocity=0.01,
@@ -589,7 +587,7 @@ class PlaneCouetteFlow_u(SteadyState):
         xList = numpy.array([x])
         t = 0.0
         nPoints = 1
-        self.PlaneCouetteFlow_u(self.iwork, self.rwork, t, xList, uList)
+        canalyticalSolutions.PlaneCouetteFlow_u(self.iwork, self.rwork, t, xList, uList)
         return uList.flat[0]
 
 
@@ -624,7 +622,6 @@ class PlaneCouetteFlow_p(SteadyState):
 
 
 class PlanePoiseuilleFlow_u(SteadyState):
-    from .canalyticalSolutions import PlanePoiseuilleFlow_u
     """
     The exact solution for the u component of  velocity in plane Poiseuille Flow
     """
@@ -657,7 +654,7 @@ class PlanePoiseuilleFlow_u(SteadyState):
         t = 0.0
         nPoints = 1  # just a single point
         # make call to wrapped C function
-        self.PlanePoiseuilleFlow_u(self.iwork, self.rwork, t, xList, uList)
+        canalyticalSolutions.PlanePoiseuilleFlow_u(self.iwork, self.rwork, t, xList, uList)
         return uList[0]  # return value  of solution at this point
 
 
