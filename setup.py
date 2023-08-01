@@ -14,6 +14,7 @@ from Cython.Distutils import build_ext
 
 class custom_build_ext(build_ext):
     def build_extensions(self):
+        self.parallel=True
         try:
             self.compiler.linker_so.remove('-Wl,-pie')
             self.compiler.compiler_so.remove('-fPIE')
