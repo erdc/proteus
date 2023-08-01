@@ -14,7 +14,7 @@ from math import *
 from .EGeometry import *
 from .LinearAlgebraTools import *
 from .Profiling import logEvent
-import canalyticalSolutions
+from . import canalyticalSolutions
 
 class AS_base(object):
     """
