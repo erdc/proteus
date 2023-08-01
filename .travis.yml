@@ -26,7 +26,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - PROTEUS_OPT="-g0 -O0 -UNDEBUG" make develop-conda
+      - PROTEUS_OPT="-g0 -O1 -UNDEBUG" make develop-conda
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py
@@ -54,7 +54,7 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - PROTEUS_OPT="-g0 -O0 -UNDEBUG" make develop-conda
+      - PROTEUS_OPT="-g0 -O1 -UNDEBUG" make develop-conda
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
