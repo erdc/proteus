@@ -611,3 +611,5 @@ if opts.viewer:
             pass
     if 'viewerType' in dir(Viewers) and Viewers.viewerType == 'matlab':
         Viewers.viewerPipe.write("quit \n")
+
+sys.exit(0)

@@ -13,8 +13,8 @@ import os
 comm = Comm.init()
 from proteus import Context
 
-Profiling.verbose=True
-Profiling.logLevel=7
+#Profiling.verbose=True
+#Profiling.logLevel=7
 #Profiling.logAllProcesses=True
 #Profiling.openLog("proteus.log",7)
 
@@ -120,7 +120,7 @@ else:
         Model = testDir + '/../Couette.null'
         Mesh = testDir + '/../Couette.msh'
 
-        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(Model.encode(),Mesh.encode())
+        domain.AdaptManager.PUMIAdapter.loadModelAndMesh(Model.encode('ascii'),Mesh.encode('ascii'))
 
         domain.AdaptManager.sizeInputs = [b'error_vms']
         domain.AdaptManager.adapt = 1
