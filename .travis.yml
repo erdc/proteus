@@ -26,10 +26,10 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - PROTEUS_OPT="-O1" make develop-conda
+      - PROTEUS_OPT="-g0 -O1" make develop-conda
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD --ignore proteus/tests/solver_tests/test_nse_RANS2P_step.py
+      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD
       - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
       - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set
       - py.test -n 1 --forked -v proteus/tests/FSI
@@ -54,12 +54,12 @@ jobs:
       - conda info -a
       - conda env create -f environment-dev.yml
       - conda activate proteus-dev
-      - PROTEUS_OPT="-O1" make develop-conda
+      - PROTEUS_OPT="-g0 -O1" make develop-conda
     script:
       - export MPLBACKEND="AGG"
       - git lfs install
       - git lfs pull
-      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/solver_tests --ignore proteus/tests/POD --ignore=proteus/tests/MoveMeshMonitor --ignore proteus/tests/periodic
+      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD
       - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
       - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py
       - py.test -n 1 --forked -v proteus/tests/FSI
