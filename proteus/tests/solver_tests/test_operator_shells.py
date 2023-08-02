@@ -113,6 +113,7 @@ def create_simple_saddle_point_problem(request):
 
 def setup_LSC_shell(petsc_options, fixture_data):
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('innerLSCsolver_BTinvBt_ksp_type','preonly')
     petsc_options.setValue('innerLSCsolver_T_ksp_type','preonly')
     petsc_options.setValue('innerLSCsolver_BTinvBt_pc_type','lu')
@@ -139,6 +140,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
     def setup_method(self,method):
         self.petsc_options = PETSc.Options()
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
         self._scriptdir = os.path.dirname(__file__)
 
     def teardown_method(self,method):
@@ -151,6 +153,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         for name in aux_names:
             rm_lst.extend([name+g for g in ['ksp_type','pc_type']])
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
 
     def test_lsc_shell(self, create_simple_saddle_point_problem):
         ''' Test for the lsc operator shell '''
@@ -175,6 +178,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         delta_t = 0.001
         x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
@@ -207,6 +211,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         delta_t = 0.001
         x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
@@ -233,6 +238,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         """Test :math:`S_{p}` shell has correct behavior. """
         fixture_data = create_simple_saddle_point_problem
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
         self.petsc_options.setValue('innerSpsolver_ksp_type', 'preonly')
         self.petsc_options.setValue('innerSpsolver_pc_type', 'hypre')
         self.petsc_options.setValue('innerSpsolver_pc_hypre_type', 'boomeramg')
@@ -260,6 +266,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         delta_t = 0.001
         x_vec = LAT.petsc_load_vector(os.path.join(self._scriptdir,'import_modules/input_vec_tppcd.bin'))
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_constant_null_space', '')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','hypre')
@@ -305,6 +312,7 @@ def test_create_petsc_ksp_obj(create_simple_petsc_matrix):
 
     petsc_options = PETSc.Options()
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('test_F_ksp_type','preonly')
     petsc_options.setValue('test_F_pc_type','lu')
     petsc_matF = create_simple_petsc_matrix

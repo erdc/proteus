@@ -41,7 +41,8 @@ def clean_up_directory():
 @pytest.fixture()
 def initialize_tp_pcd_options(request):
     petsc_options = PETSc.Options()
-    petsc_options.clear()
+    petsc_options.clear()#doesn't really clear all options 
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('rans2p_ksp_type','gmres')
     petsc_options.setValue('rans2p_ksp_gmres_restart',500)
     petsc_options.setValue('rans2p_ksp_atol',1e-12)

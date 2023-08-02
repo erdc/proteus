@@ -39,8 +39,8 @@ def create_petsc_vecs(matrix_A):
     """
     b = PETSc.Vec().create()
     x = PETSc.Vec().create()
-    b.createWithArray(np.ones(matrix_A.getSizes()[0][0]))
-    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0]))
+    b.createWithArray(np.ones(matrix_A.getSizes()[0][0],'d'))
+    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0],'d'))
     return (b, x)
 
 @pytest.mark.LinearSolvers
@@ -68,6 +68,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
 
     def _setPETSc(self):
         self.nList[0].OptDB.clear()
+        for k in self.nList[0].OptDB.getAll(): self.nList[0].OptDB.delValue(k)
         self.nList[0].OptDB.setValue("ksp_type","fgmres")
         self.nList[0].OptDB.setValue("ksp_atol",1e-20)
         self.nList[0].OptDB.setValue("ksp_atol",1e-12)
@@ -80,6 +81,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
 
     def _setPETSc_LU(self):
         self.nList[0].OptDB.clear()
+        for k in self.nList[0].OptDB.getAll(): self.nList[0].OptDB.delValue(k)
         self.nList[0].OptDB.setValue("ksp_type","preonly")
         self.nList[0].OptDB.setValue("pc_type","lu")
         self.nList[0].OptDB.setValue("pc_factor_mat_solver_package","superlu_dist")
@@ -184,6 +186,7 @@ def initialize_petsc_options(request):
     """Initializes schur complement petsc options. """
     petsc_options = PETSc.Options()
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',500)
     petsc_options.setValue('ksp_atol',1e-16)

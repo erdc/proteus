@@ -45,8 +45,8 @@ def create_petsc_vecs(matrix_A):
     """
     b = PETSc.Vec().create()
     x = PETSc.Vec().create()
-    b.createWithArray(np.ones(matrix_A.getSizes()[0][0]))
-    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0]))
+    b.createWithArray(np.ones(matrix_A.getSizes()[0][0],'d'))
+    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0],'d'))
     return (b, x)
 
 
@@ -149,6 +149,7 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
     def setup_method(self,method):
         self.petsc_options = PETSc.Options()
         self.petsc_options.clear()
+        for k in self.petsc_options.getAll(): self.petsc_options.delValue(k)
         self._scriptdir = os.path.dirname(__file__)
         self.quad_mass_matrix = np.load(os.path.join(self._scriptdir,
                                         'import_modules/quad_mass_matrix.npy'))
