@@ -74,6 +74,7 @@ def initialize_petsc_options():
     """Initializes schur complement petsc options. """
     petsc_options = PETSc.Options()
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('ksp_type', 'fgmres')
     petsc_options.setValue('ksp_rtol', 1.0e-8)
     petsc_options.setValue('ksp_atol', 1.0e-8)
@@ -234,8 +235,8 @@ def create_petsc_vecs(matrix_A):
     """
     b = PETSc.Vec().create()
     x = PETSc.Vec().create()
-    b.createWithArray(np.ones(matrix_A.getSizes()[0][0]))
-    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0]))
+    b.createWithArray(np.ones(matrix_A.getSizes()[0][0],'d'))
+    x.createWithArray(np.zeros(matrix_A.getSizes()[0][0],'d'))
     return (b, x)
 
 def initialize_asm_ksp_obj(matrix_A):
@@ -302,11 +303,14 @@ def build_amg_index_sets(L_sizes):
     return [isvelocity, isu, isv]
 
 def clear_petsc_options():
-    PETSc.Options().clear()
+    petsc_options = PETSc.Options()
+    petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
 
 def initialize_velocity_block_petsc_options():
     petsc_options = PETSc.Options()
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
 #    petsc_options.setValue('ksp_pc_side','right')
@@ -314,18 +318,22 @@ def initialize_velocity_block_petsc_options():
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
+    return petsc_options
 
 def initialize_velocity_block_petsc_options_2():
     petsc_options = PETSc.Options()
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
     petsc_options.setValue('ksp_atol',1e-8)
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
+    return petsc_options
 
 def initialize_velocity_block_petsc_options_3():
     petsc_options = PETSc.Options()
     petsc_options.clear()
+    for k in petsc_options.getAll(): petsc_options.delValue(k)
     petsc_options.setValue('ksp_type','gmres')
     petsc_options.setValue('ksp_gmres_restart',100)
     petsc_options.setValue('ksp_pc_side','right')
@@ -333,6 +341,7 @@ def initialize_velocity_block_petsc_options_3():
     petsc_options.setValue('ksp_gmres_modifiedgramschmidt','')
     petsc_options.setValue('pc_type','hypre')
     petsc_options.setValue('pc_type_hypre_type','boomeramg')
+    return petsc_options
 
 def load_matrix_step_slip():
     """
@@ -381,7 +390,7 @@ def test_amg_iteration_matrix_noslip():
                                                    index_sets[0]))
 
     F_ksp.solve(b,x)
-    assert F_ksp.its == 88
+    assert F_ksp.its == 77
 
     clear_petsc_options()
     initialize_velocity_block_petsc_options()
@@ -449,6 +458,7 @@ def test_amg_iteration_performance():
                                                 index_sets[0]))
 
     F_ksp.solve(b,x)
+    petsc_options.view()
     assert F_ksp.its == 174
 
 @pytest.mark.amg
