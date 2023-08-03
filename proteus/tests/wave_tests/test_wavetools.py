@@ -357,34 +357,35 @@ class TestWaveParameters(unittest.TestCase):
 
     def testCos2s(self):
         from proteus.WaveTools import cos2s
+        from math import cos
         f0 = random.random() + 1.
         f = np.linspace(f0/2.,2.*f0,10)
         thetas = np.linspace(-pi/2.,pi/2.,11)
-        s = 10. + 10. * np.random.random()
+        s = 10. + 10. * random.random()
         S_PM = np.zeros((len(thetas),len(f)),'d')
         for ii in range(len(thetas)):
             for jj in range(len(f)):
-                S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2*s)
+                S_PM[ii,jj]= cos(thetas[ii]/2.0)**(2*s)
         S_PM2 =  cos2s(thetas,f,s)
         SCOMP = S_PM2/S_PM
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
     def testMitsuyasu(self):
         from proteus.WaveTools import mitsuyasu
+        from math import cos
         f0 = random.random() + 1.
         f = np.linspace(f0/2.,2.*f0,10)
         thetas = np.linspace(-pi/2.,pi/2.,11)
-        s = 10 + 10. * np.random.random()
+        smax = 10 + 10. * random.random()
         ss = np.zeros(len(f),)
-        ss = (old_div(f,f0))**5
+        ss = smax*(f/f0)**5
         i = np.where(f>f0)[0][0]
-        ss[i:] = (f[i:]/f0)**(-2.5)
-        ss[:] *= s
+        ss[i:] = smax*(f[i:]/f0)**(-2.5)
         S_PM = np.zeros((len(thetas),len(f)),'d')
         for ii in range(len(thetas)):
             for jj in range(len(f)):
-                S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2*ss[jj])
-        S_PM2 =  mitsuyasu(thetas,f,f0,s)
+                S_PM[ii,jj]= cos(thetas[ii]/2.)**(2*ss[jj])
+        S_PM2 =  mitsuyasu(thetas,f,f0,smax)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
 class VerifySteadyCurrent(unittest.TestCase):
