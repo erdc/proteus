@@ -368,7 +368,7 @@ class TestWaveParameters(unittest.TestCase):
                 S_PM[ii,jj]= cos(thetas[ii]/2.0)**(2*s)
         S_PM2 =  cos2s(thetas,f,s)
         SCOMP = S_PM2/S_PM
-        self.assertTrue(np.array_equal(S_PM,S_PM2))
+        npt.assert_array_almost_equal(S_PM,S_PM2)
 
     def testMitsuyasu(self):
         from proteus.WaveTools import mitsuyasu
@@ -386,7 +386,7 @@ class TestWaveParameters(unittest.TestCase):
             for jj in range(len(f)):
                 S_PM[ii,jj]= cos(thetas[ii]/2.)**(2*ss[jj])
         S_PM2 =  mitsuyasu(thetas,f,f0,smax)
-        self.assertTrue(np.array_equal(S_PM,S_PM2))
+        npt.assert_array_equal(S_PM,S_PM2)
 
 class VerifySteadyCurrent(unittest.TestCase):
     def testCurrent(self):
