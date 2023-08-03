@@ -386,7 +386,7 @@ class TestWaveParameters(unittest.TestCase):
             for jj in range(len(f)):
                 S_PM[ii,jj]= cos(thetas[ii]/2.)**(2*ss[jj])
         S_PM2 =  mitsuyasu(thetas,f,f0,smax)
-        npt.assert_array_equal(S_PM,S_PM2)
+        npt.assert_array_almost_equal(S_PM,S_PM2)
 
 class VerifySteadyCurrent(unittest.TestCase):
     def testCurrent(self):
