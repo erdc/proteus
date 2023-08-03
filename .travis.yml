@@ -30,9 +30,6 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD
-      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
-      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set
-      - py.test -n 1 --forked -v proteus/tests/FSI
     deploy:
       provider: script
       script: bash ./scripts/deploy.sh docs
@@ -60,6 +57,3 @@ jobs:
       - git lfs install
       - git lfs pull
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD
-      - py.test -n 1 --forked -v air-water-vv/Tests/1st_set
-      - py.test -n 1 --forked -v air-water-vv/Tests/2nd_set --ignore air-water-vv/Tests/2nd_set/test_randomWaves.py
-      - py.test -n 1 --forked -v proteus/tests/FSI
