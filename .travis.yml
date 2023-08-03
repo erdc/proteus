@@ -30,9 +30,3 @@ jobs:
     script:
       - export MPLBACKEND="AGG"
       - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD
-    deploy:
-      provider: script
-      script: bash ./scripts/deploy.sh docs
-      skip_cleanup: true
-      on:
-        branch: main
