@@ -124,10 +124,6 @@ stack:
 	@echo "Updating stack submodule"
 	git submodule update --init stack
 
-air-water-vv:
-	@echo "Updating air-water-vv submodule"
-	git submodule update --init air-water-vv
-
 bld_cache: stack/hit/bin/hit
 	@echo "Trying to add build cache for your arch"
 	HASHSTACK_BLD = $(shell lsb_release -ir | python3 -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print('{Distributor}_{Release}'.format(**rel))")
@@ -284,7 +280,7 @@ docs:
 	@echo "**********************************"
 	-sensible-browser ./docs/build/index.html &
 
-test: air-water-vv check
+test: check
 	@echo "**************************************************"
 	@echo "Running git-lfs to get regression test data files."
 	-git lfs fetch
@@ -301,14 +297,9 @@ else
 	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --ignore=proteus/tests/solver_tests/test_nse_RANS2P_step.py --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	@echo "Running air-water-vv test set 1"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	@echo "************************************"
-	@echo "Running air-water-vv test set 2"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 endif
 
-test-conda: air-water-vv check
+test-conda: check
 	@echo "**************************************************"
 	@echo "Running git-lfs to get regression test data files."
 	-git lfs fetch
@@ -320,11 +311,6 @@ test-conda: air-water-vv check
 	-MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v proteus/tests -m ${TEST_MARKER} --ignore proteus/tests/POD --ignore proteus/tests/MeshAdaptPUMI --cov=proteus
 	@echo "Basic tests complete "
 	@echo "************************************"
-	@echo "Running air-water-vv test set 1"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/1st_set -m ${TEST_MARKER}
-	@echo "************************************"
-	@echo "Running air-water-vv test set 2"
-	-source ${PROTEUS_PREFIX}/bin/proteus_env.sh; MPLBACKEND=Agg py.test -n ${N} --dist=loadfile --forked -v air-water-vv/Tests/2nd_set -m ${TEST_MARKER}
 
 jupyter:
 	@echo "************************************"
