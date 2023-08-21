@@ -760,7 +760,6 @@ class PlanarStraightLineGraphDomain(D_base):
             #write the vertices
             for vN,v in enumerate(self.vertices):
                 pf.write('%d %21.16e %21.16e ' % (vN+1,v[0],v[1]))
-                print(self.vertexFlags)
                 if self.vertexFlags :#write vertex flag if we have vertexFlags
                     pf.write('%d\n' % (self.vertexFlags[vN],))
                 else:
