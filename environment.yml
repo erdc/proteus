@@ -4,12 +4,3 @@ channels:
   - defaults
 dependencies:
   - proteus
-  - petsc4py
-  - notebook
-  - future
-  - ipyparallel
-  - cython
-  - pillow
-  - pip
-  - xtensor-python
-  - scorec
