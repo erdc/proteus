@@ -279,6 +279,7 @@ cdef class cCoefficients:
         comm = Comm.get().comm.tompi4py()
         comm.barrier()
         cdef int my_rank = comm.rank
+        cdef int rank=0
         cdef int comm_size = comm.size
         cdef int[:] counts_local = np.zeros(comm_size, dtype=np.int32)
         cdef int[:,:] counts_total = np.zeros((comm_size, comm_size), dtype=np.int32)
@@ -957,6 +958,7 @@ cdef double[:] cppRecoveryAtNodes(double[:] scalars,
     """
     cdef double[:] recovered_scalars = np.zeros(len(nodeElementOffsets)-1)
     cdef int nb_el
+    cdef int eOffset
     cdef double var_sum
     for node in range(len(nodeElementOffsets)-1):
         nb_el = 0

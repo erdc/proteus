@@ -923,5 +923,8 @@ extern void calculateElementResidualPWL(int nElements,
                                         double* alpha,
                                         double* elementResidual,
                                         double* elementResidualPWL);
+void calculateConservationFluxPWL_noNeumannFix(int nNodes_global,
+					       int* nElements_node,
+					       NodeStarFactorStruct* nodeStarFactor);
 /** @}*/
 #endif

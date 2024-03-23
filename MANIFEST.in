@@ -1,4 +1,4 @@
 graft proteus
-graft doc
+graft docs
 graft scripts
-global-exclude .gitignore Dockerfile MANIFEST.in doc/* *.log *.xmf *.h5
+global-exclude .gitignore MANIFEST.in docs/* *.log *.xmf *.h5

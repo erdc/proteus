@@ -22,27 +22,23 @@ from .Profiling import logEvent as log
 
 from libc.math cimport sqrt
 
-DEF X=0
-DEF Y=1
-DEF Z=2
-
 cdef np.ndarray[np.float64_t,ndim=1] EVec(double x=0.0, double y=0.0, double z=0.0):
     cdef  np.ndarray [np.float64_t, ndim=1] v = np.zeros((3,),'d')
-    v[X] = x
-    v[Y] = y
-    v[Z] = z
+    v[0] = x
+    v[1] = y
+    v[2] = z
     return v
 
 cdef double enorm(np.ndarray[np.float64_t, ndim=1] v):
-    return sqrt(v[X]**2 + v[Y]**2 + v[Z]**2)
+    return sqrt(v[0]**2 + v[1]**2 + v[2]**2)
 
 cdef double edot(np.ndarray[np.float64_t, ndim=1] v0, np.ndarray[np.float64_t, ndim=1] v1):
-    return v0[X]*v1[X] + v0[Y]*v1[Y] + v0[Z]*v1[Z]
+    return v0[0]*v1[0] + v0[1]*v1[1] + v0[2]*v1[2]
 
 cdef np.ndarray[np.float64_t, ndim=1] ecross(np.ndarray[np.float64_t, ndim=1] v0,  np.ndarray[np.float64_t, ndim=1] v1):
-    return EVec(v0[Y]*v1[Z] - v0[Z]*v1[Y],
-                v0[Z]*v1[X] - v0[X]*v1[Z],
-                v0[X]*v1[Y] - v0[Y]*v1[X])
+    return EVec(v0[1]*v1[2] - v0[2]*v1[1],
+                v0[2]*v1[0] - v0[0]*v1[2],
+                v0[0]*v1[1] - v0[1]*v1[0])
 
 cdef double etriple(np.ndarray[np.float64_t, ndim=1] v0, np.ndarray[np.float64_t, ndim=1] v1, np.ndarray[np.float64_t, ndim=1] v2):
     return edot(v0,ecross(v1,v2))

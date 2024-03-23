@@ -211,7 +211,7 @@ extern "C"
     t[2][1] = nodeArray[n3*3+1] - nodeArray[n0*3+1];
     t[2][2] = nodeArray[n3*3+2] - nodeArray[n0*3+2];
     
-    register double det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   
+    double det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   
       t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +       
       t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]);
     
@@ -633,7 +633,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<2;ebN++)
         {
-          register int nodes[1];
+          int nodes[1];
           nodes[0] = mesh.elementNodesArray[eN*2+(ebN+1)%2];
           NodeTuple<1> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
@@ -791,7 +791,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<3;ebN++)
         {
-          register int nodes[2];
+          int nodes[2];
           nodes[0] = mesh.elementNodesArray[eN*3+(ebN+1)%3];
           nodes[1] = mesh.elementNodesArray[eN*3+(ebN+2)%3];
           NodeTuple<2> ebt(nodes);
@@ -960,7 +960,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<4;ebN++)
         {
-          register int nodes[2];
+          int nodes[2];
           nodes[0] = mesh.elementNodesArray[eN*4+ebN];
           nodes[1] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
           NodeTuple<2> ebt(nodes);
@@ -1130,7 +1130,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-          register int nodes[3];
+          int nodes[3];
           nodes[0] = mesh.elementNodesArray[eN*4+((ebN+1)%4)];
           nodes[1] = mesh.elementNodesArray[eN*4+((ebN+2)%4)];
           nodes[2] = mesh.elementNodesArray[eN*4+((ebN+3)%4)];
@@ -1325,7 +1325,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-          register int nodes[4];
+          int nodes[4];
           nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
           nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
           nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
@@ -1550,7 +1550,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-          register int nodes[4];
+          int nodes[4];
           nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
           nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
           nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
@@ -1770,8 +1770,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
-          register int nodes[4];
+	  int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
+          int nodes[4];
           nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
           nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
           nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
@@ -1956,8 +1956,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<2;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*2+ebN];
-          register int nodes[1];
+	  int ebN_global = mesh.elementBoundariesArray[eN*2+ebN];
+          int nodes[1];
           nodes[0] = mesh.elementNodesArray[eN*2+(ebN+1)%2];
           NodeTuple<1> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
@@ -2117,8 +2117,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<3;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*3+ebN];
-          register int nodes[2];
+	  int ebN_global = mesh.elementBoundariesArray[eN*3+ebN];
+          int nodes[2];
           nodes[0] = mesh.elementNodesArray[eN*3+(ebN+1)%3];
           nodes[1] = mesh.elementNodesArray[eN*3+(ebN+2)%3];
           NodeTuple<2> ebt(nodes);
@@ -2291,8 +2291,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<4;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*4+ebN];
-          register int nodes[2];
+	  int ebN_global = mesh.elementBoundariesArray[eN*4+ebN];
+          int nodes[2];
           nodes[0] = mesh.elementNodesArray[eN*4+ebN];
           nodes[1] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
           NodeTuple<2> ebt(nodes);
@@ -2464,8 +2464,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
-          register int nodes[3];
+	  int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
+          int nodes[3];
           nodes[0] = mesh.elementNodesArray[eN*4+((ebN+1)%4)];
           nodes[1] = mesh.elementNodesArray[eN*4+((ebN+2)%4)];
           nodes[2] = mesh.elementNodesArray[eN*4+((ebN+3)%4)];
@@ -2644,8 +2644,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<2;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*2+ebN];
-          register int nodes[1];
+	  int ebN_global = mesh.elementBoundariesArray[eN*2+ebN];
+          int nodes[1];
           nodes[0] = mesh.elementNodesArray[eN*2+(ebN+1)%2];
           NodeTuple<1> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
@@ -2799,8 +2799,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<3;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*3+ebN];
-          register int nodes[2];
+	  int ebN_global = mesh.elementBoundariesArray[eN*3+ebN];
+          int nodes[2];
           nodes[0] = mesh.elementNodesArray[eN*3+(ebN+1)%3];
           nodes[1] = mesh.elementNodesArray[eN*3+(ebN+2)%3];
           NodeTuple<2> ebt(nodes);
@@ -2974,8 +2974,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<4;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*4+ebN];
-          register int nodes[2];
+	  int ebN_global = mesh.elementBoundariesArray[eN*4+ebN];
+	  int nodes[2];
           nodes[0] = mesh.elementNodesArray[eN*4+ebN];
           nodes[1] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
           NodeTuple<2> ebt(nodes);
@@ -3129,8 +3129,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
-          register int nodes[3];
+	  int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
+          int nodes[3];
           nodes[0] = mesh.elementNodesArray[eN*4+((ebN+1)%4)];
           nodes[1] = mesh.elementNodesArray[eN*4+((ebN+2)%4)];
           nodes[2] = mesh.elementNodesArray[eN*4+((ebN+3)%4)];
@@ -3316,8 +3316,8 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-	  register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
-          register int nodes[4];
+	  int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
+          int nodes[4];
           nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
           nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
           nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
@@ -3484,7 +3484,7 @@ extern "C"
 
   inline double edgeLength(int nL,int nR, const double* nodeArray)
   {
-    register double dx,dy,dz;
+    double dx,dy,dz;
     dx = nodeArray[nL*3+0] - nodeArray[nR*3+0];
     dy = nodeArray[nL*3+1] - nodeArray[nR*3+1];
     dz = nodeArray[nL*3+2] - nodeArray[nR*3+2];
@@ -3493,7 +3493,7 @@ extern "C"
 
   inline double triangleArea(int n0, int n1, int n2, const double* nodeArray)
   {
-    register double va[3],vb[3];
+    double va[3],vb[3];
     va[0] = nodeArray[n1*3+0] - nodeArray[n0*3+0];
     va[1] = nodeArray[n1*3+1] - nodeArray[n0*3+1];
     va[2] = nodeArray[n1*3+2] - nodeArray[n0*3+2];
@@ -3505,7 +3505,7 @@ extern "C"
 
   inline double tetrahedronVolume(int n0, int n1, int n2, int n3, const double* nodeArray)
   {
-    register double t[3][3];
+    double t[3][3];
     t[0][0] = nodeArray[n1*3+0] - nodeArray[n0*3+0];
     t[0][1] = nodeArray[n1*3+1] - nodeArray[n0*3+1];
     t[0][2] = nodeArray[n1*3+2] - nodeArray[n0*3+2];
@@ -3629,7 +3629,7 @@ extern "C"
   }
   inline double hexahedronVolume(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, const double* nodeArray)
   {
-    register double t[3];
+    double t[3];
     t[0] = nodeArray[n0*3+0] - nodeArray[n1*3+0];
     t[1] = nodeArray[n0*3+1] - nodeArray[n3*3+1];
     t[2] = nodeArray[n0*3+2] - nodeArray[n4*3+2];
@@ -4464,8 +4464,8 @@ extern "C"
 	//         //cout<<"re-ordeing nodes llllllllllllllllllll"<<endl;
 	//         for (int eN=0;eN<multilevelMesh.meshArray[i].nElements_global;eN++)
 	//           {
-	//             register int n0,n1,n2,n3;
-	//             register double t[3][3],det;
+	//             int n0,n1,n2,n3;
+	//             double t[3][3],det;
             
 	//             n0 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+0];
 	//             n1 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+1];
@@ -5098,7 +5098,7 @@ int readTriangleElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, i
   //brute force
   for (int ebN = 0; ebN < nElementBoundaries_file; ebN++)
     {
-      register int nodes[2];
+      int nodes[2];
       nodes[0] = elementBoundaryNodesArray_file[ebN*2+0];
       nodes[1] = elementBoundaryNodesArray_file[ebN*2+1];
       NodeTuple<2> ttuple(nodes);
@@ -5106,7 +5106,7 @@ int readTriangleElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, i
     }
   for (int ebN = 0; ebN < mesh.nElementBoundaries_global; ebN++)
     {
-      register int nodes[2];
+      int nodes[2];
       nodes[0] = mesh.elementBoundaryNodesArray[ebN*2+0];
       nodes[1] = mesh.elementBoundaryNodesArray[ebN*2+1];
       NodeTuple<2> ttuple(nodes);
@@ -5221,7 +5221,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
 	for(int eN=0;eN<mesh.nElements_global;eN++)
 	  for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
 	    {
-	      register int nodes[3];
+	      int nodes[3];
 	      nodes[0] = mesh.elementNodesArray[eN*4+((ebN+1)%4)];
 	      nodes[1] = mesh.elementNodesArray[eN*4+((ebN+2)%4)];
 	      nodes[2] = mesh.elementNodesArray[eN*4+((ebN+3)%4)];
@@ -5402,7 +5402,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
       //brute force
       for (int ebN = 0; ebN < nElementBoundaries_file; ebN++)
 	{
-	  register int nodes[3];
+	  int nodes[3];
 	  nodes[0] = elementBoundaryNodesArray_file[ebN*3+0];
 	  nodes[1] = elementBoundaryNodesArray_file[ebN*3+1];
 	  nodes[2] = elementBoundaryNodesArray_file[ebN*3+2];
@@ -5411,7 +5411,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
 	}
       for (int ebN = 0; ebN < mesh.nElementBoundaries_global; ebN++)
 	{
-	  register int nodes[3];
+	  int nodes[3];
 	  nodes[0] = mesh.elementBoundaryNodesArray[ebN*3+0];
 	  nodes[1] = mesh.elementBoundaryNodesArray[ebN*3+1];
 	  nodes[2] = mesh.elementBoundaryNodesArray[ebN*3+2];
@@ -5428,7 +5428,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
       //brute force
       for (int ebNE = 0; ebNE < nElementBoundaries_file; ebNE++)
 	{
-	  register int nodes[3];
+	  int nodes[3];
 	  nodes[0] = elementBoundaryNodesArray_file[ebNE*3+0];
 	  nodes[1] = elementBoundaryNodesArray_file[ebNE*3+1];
 	  nodes[2] = elementBoundaryNodesArray_file[ebNE*3+2];
@@ -5438,7 +5438,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
       for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
 	{
 	  int ebN = mesh.exteriorElementBoundariesArray[ebNE];
-	  register int nodes[3];
+	  int nodes[3];
 	  nodes[0] = mesh.elementBoundaryNodesArray[ebN*3+0];
 	  nodes[1] = mesh.elementBoundaryNodesArray[ebN*3+1];
 	  nodes[2] = mesh.elementBoundaryNodesArray[ebN*3+2];

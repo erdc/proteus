@@ -198,7 +198,7 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_calculate_C()
   {
-    register double b_H[nDOF], b_ImH[nDOF], b_dH[nDOF*nSpace], b_D[nDOF*nSpace];
+    double b_H[nDOF], b_ImH[nDOF], b_dH[nDOF*nSpace], b_D[nDOF*nSpace];
     if (quad_cut)
       {
 	_calculate_b<nP>(THETA_01,THETA_02,THETA_31,THETA_32,
@@ -237,7 +237,7 @@ namespace equivalent_polynomials
       {
 	_calculate_b<nSpace,nP>(X_0, b_H, b_ImH, b_dH);
 	
-	register double Jt_dphi_dx[nSpace];
+	double Jt_dphi_dx[nSpace];
 	for (unsigned int I=0; I < nSpace; I++)
 	  {
 	    Jt_dphi_dx[I] = 0.0;
@@ -503,7 +503,7 @@ namespace equivalent_polynomials
   template<int nSpace, int nP, int nQ, int nEBQ>
   inline void Simplex<nSpace,nP,nQ,nEBQ>::_correct_phi(const double* phi_dof, const double* phi_nodes)
   {
-    register double cut_barycenter[3] ={0.,0.,0.};
+    double cut_barycenter[3] ={0.,0.,0.};
     const double one_by_nNm1 = 1.0/(nN-1.0);
     if (quad_cut)
       {
@@ -688,7 +688,7 @@ namespace equivalent_polynomials
       {
         //Due to the permutation, the quadrature points on the reference may be rotated
         //map reference to physical simplex, then back to permuted reference
-        register double x[nSpace], xi[nSpace];
+        double x[nSpace], xi[nSpace];
         //to physical coordinates
         for (unsigned int I=0; I < nSpace; I++)
           {
@@ -725,7 +725,7 @@ namespace equivalent_polynomials
       {
         //Due to the permutation, the quadrature points on the reference may be rotated
         //map reference to physical simplex, then back to permuted reference
-        register double x[nSpace], xi[nSpace];
+        double x[nSpace], xi[nSpace];
         //to physical coordinates
         for (unsigned int I=0; I < nSpace; I++)
           {

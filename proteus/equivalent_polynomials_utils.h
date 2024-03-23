@@ -108,10 +108,10 @@ namespace equivalent_polynomials
     _ImH = 0.0;
     _D   = 0.0;
     unsigned int iDOF    = 0;
-    register double x_pow_i=1.0;
+    double x_pow_i=1.0;
     for(unsigned int i=0; i < nP+1; i++, iDOF++)
       {
-        register double psi=x_pow_i;
+        double psi=x_pow_i;
         _H   += C_H[iDOF]*psi;
         _ImH += C_ImH[iDOF]*psi;
         _D   += C_D[iDOF]*psi;
@@ -126,13 +126,13 @@ namespace equivalent_polynomials
     _ImH = 0.0;
     _D   = 0.0;
     unsigned int iDOF    = 0;
-    register double x_pow_i=1.0;
+    double x_pow_i=1.0;
     for(unsigned int i=0; i < nP+1; i++)
       {
-        register double y_pow_j=1.0;
+        double y_pow_j=1.0;
         for(unsigned int j=0; j < nP+1-i; j++, iDOF++)
           {
-            register double psi=x_pow_i*y_pow_j;
+            double psi=x_pow_i*y_pow_j;
             _H   += C_H[iDOF]*psi;
             _ImH += C_ImH[iDOF]*psi;
             _D   += C_D[iDOF]*psi;
@@ -149,16 +149,16 @@ namespace equivalent_polynomials
     _ImH = 0.0;
     _D   = 0.0;
     unsigned int iDOF    = 0;
-    register double x_pow_i=1.0;
+    double x_pow_i=1.0;
     for(unsigned int i=0; i < nP+1; i++)
       {
-        register double y_pow_j=1.0;
+        double y_pow_j=1.0;
         for(unsigned int j=0; j < nP+1-i; j++)
           {
-            register double x_pow_i_y_pow_j=x_pow_i*y_pow_j, z_pow_k=1.0;
+            double x_pow_i_y_pow_j=x_pow_i*y_pow_j, z_pow_k=1.0;
             for(unsigned int k=0; k < nP+1-i-j; k++, iDOF++)
               {
-                register double psi=x_pow_i_y_pow_j*z_pow_k;
+                double psi=x_pow_i_y_pow_j*z_pow_k;
                 _H   += C_H[iDOF]*psi;
                 _ImH += C_ImH[iDOF]*psi;
                 _D   += C_D[iDOF]*psi;
