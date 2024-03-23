@@ -335,7 +335,9 @@ def petsc_create_diagonal_inv_matrix(sparse_petsc):
     diag_inv.setSizes(sparse_petsc.getSizes())
     diag_inv.setType('aij')
     diag_inv.setUp()
-    diag_inv.setDiagonal(old_div(1.,sparse_petsc.getDiagonal()))
+    oneByD = sparse_petsc.getDiagonal()
+    oneByD.reciprocal()
+    diag_inv.setDiagonal(oneByD)
     return diag_inv
 
 def dense_numpy_2_petsc4py(dense_numpy, eps = 1.e-12):
