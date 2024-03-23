@@ -973,7 +973,7 @@ namespace proteus
                             for(int eN=0;eN<nElements_global;eN++)
                             {
                                 //declare local storage for element residual and initialize
-                                register double
+                                double
                                     elementResidual_u[nDOF_test_element],
                                     elementResidual_v[nDOF_test_element],
                                     elementResidual_w[nDOF_test_element];
@@ -989,11 +989,11 @@ namespace proteus
                                     for(int k=0;k<nQuadraturePoints_element;k++)
                                     {
                                         //compute indices and declare local storage
-                                        register int eN_k = eN*nQuadraturePoints_element+k,
+                                        int eN_k = eN*nQuadraturePoints_element+k,
                                                  eN_k_nSpace=eN_k*nSpace,
                                                  eN_nDOF_trial_element = eN*nDOF_trial_element,
                                                  eN_nDOF_mesh_trial_element = eN*nDOF_mesh_trial_element; //index to a vector at a quadrature point
-                                        register double u=0.0,v=0.0,w=0.0,
+                                        double u=0.0,v=0.0,w=0.0,
                                                  D[nSpace*nSpace],
                                                  *grad_u(&D[0]),
                                                  *grad_v(&D[nSpace]),
@@ -1110,7 +1110,7 @@ namespace proteus
                                                  //
                                                  for(int i=0;i<nDOF_test_element;i++)
                                                  {
-                                                     register int i_nSpace=i*nSpace;
+                                                     int i_nSpace=i*nSpace;
                                                      elementResidual_u[i] += ck.Stress_u_weak(stress,&disp_grad_test_dV[i_nSpace]) +
                                                          ck.Reaction_weak(-bodyForce.data()[eN_k_nSpace+0],disp_test_dV[i]);
                                                      elementResidual_v[i] += ck.Stress_v_weak(stress,&disp_grad_test_dV[i_nSpace]) +
@@ -1131,7 +1131,7 @@ namespace proteus
                                     //
                                     for(int i=0;i<nDOF_test_element;i++)
                                     {
-                                        register int eN_i=eN*nDOF_test_element+i;
+                                        int eN_i=eN*nDOF_test_element+i;
 
                                         globalResidual.data()[offset_u+stride_u*disp_l2g.data()[eN_i]] += elementResidual_u[i];
                                         globalResidual.data()[offset_v+stride_v*disp_l2g.data()[eN_i]] += elementResidual_v[i];
@@ -1146,12 +1146,12 @@ namespace proteus
                             //eN is the element index
                             for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
                             {
-                                register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+                                int ebN = exteriorElementBoundariesArray.data()[ebNE],
                                 eN  = elementBoundaryElementsArray.data()[ebN*2+0],
                                 ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
                                 eN_nDOF_trial_element = eN*nDOF_trial_element,
                                 eN_nDOF_mesh_trial_element = eN*nDOF_mesh_trial_element;
-                                register double elementResidual_u[nDOF_test_element],
+                                double elementResidual_u[nDOF_test_element],
                                 elementResidual_v[nDOF_test_element],
                                 elementResidual_w[nDOF_test_element];
                                 for (int i=0;i<nDOF_test_element;i++)
@@ -1162,10 +1162,10 @@ namespace proteus
                                 }
                                 for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                                 {
-                                    register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                                    int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
                                              ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                                              ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-                                    register double u_ext=0.0,
+                                    double u_ext=0.0,
                                              v_ext=0.0,
                                              w_ext=0.0,
                                              D[nSpace*nSpace],
@@ -1427,7 +1427,7 @@ namespace proteus
                             //
                             for(int eN=0;eN<nElements_global;eN++)
                             {
-                                register double
+                                double
                                     elementJacobian_u_u[nDOF_test_element][nDOF_trial_element],
                                     elementJacobian_u_v[nDOF_test_element][nDOF_trial_element],
                                     elementJacobian_u_w[nDOF_test_element][nDOF_trial_element],
@@ -1457,7 +1457,7 @@ namespace proteus
                                               eN_nDOF_mesh_trial_element = eN*nDOF_mesh_trial_element; //index to a vector at a quadrature point
 
                                         //declare local storage
-                                        register double u=0.0,v=0.0,w=0.0,
+                                        double u=0.0,v=0.0,w=0.0,
                                                  D[nSpace*nSpace],
                                                  *grad_u(&D[0]),
                                                  *grad_v(&D[nSpace]),
@@ -1560,10 +1560,10 @@ namespace proteus
                                     //
                                     for(int i=0;i<nDOF_test_element;i++)
                                     {
-                                        register int i_nSpace = i*nSpace;
+                                        int i_nSpace = i*nSpace;
                                         for(int j=0;j<nDOF_trial_element;j++)
                                         {
-                                            register int j_nSpace = j*nSpace;
+                                            int j_nSpace = j*nSpace;
 
                                             elementJacobian_u_u[i][j] += ck.StressJacobian_u_u_weak(dstress,&disp_grad_trial[j_nSpace],&disp_grad_test_dV[i_nSpace]);
                                             elementJacobian_u_v[i][j] += ck.StressJacobian_u_v_weak(dstress,&disp_grad_trial[j_nSpace],&disp_grad_test_dV[i_nSpace]);
@@ -1584,10 +1584,10 @@ namespace proteus
                             //
                             for (int i=0;i<nDOF_test_element;i++)
                             {
-                                register int eN_i = eN*nDOF_test_element+i;
+                                int eN_i = eN*nDOF_test_element+i;
                                 for (int j=0;j<nDOF_trial_element;j++)
                                 {
-                                    register int eN_i_j = eN_i*nDOF_trial_element+j;
+                                    int eN_i_j = eN_i*nDOF_trial_element+j;
                                     // std::cout<<"i "<<i<<"j "<<j<<std::endl
                                     //            <<elementJacobian_u_u[i][j]<<'\t'
                                     //            <<elementJacobian_u_v[i][j]<<'\t'
@@ -1618,18 +1618,18 @@ namespace proteus
                 //
                 for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
                 {
-                    register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+                    int ebN = exteriorElementBoundariesArray.data()[ebNE],
                     eN  = elementBoundaryElementsArray.data()[ebN*2+0],
                     eN_nDOF_trial_element = eN*nDOF_trial_element,
                     eN_nDOF_mesh_trial_element = eN*nDOF_mesh_trial_element,
                     ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0];
                     for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                     {
-                        register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                        int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
                                  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                                  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 
-                        register double
+                        double
                             u_ext=0.0,
                             v_ext=0.0,
                             w_ext=0.0,
@@ -1755,7 +1755,7 @@ namespace proteus
                             h_penalty=(E/(1.0+nu))*(1.0 + (nu/(1.0-2.0*nu)))*ebqe_penalty.data()[ebNE_kb];
                             for (int j=0;j<nDOF_trial_element;j++)
                             {
-                                register int j_nSpace = j*nSpace;
+                                int j_nSpace = j*nSpace;
 
                                 exteriorNumericalStressFluxJacobian(isDOFBoundary_u.data()[ebNE_kb],
                                         isDOFBoundary_v.data()[ebNE_kb],
@@ -1780,10 +1780,10 @@ namespace proteus
                             //
                             for (int i=0;i<nDOF_test_element;i++)
                             {
-                                register int eN_i = eN*nDOF_test_element+i;
+                                int eN_i = eN*nDOF_test_element+i;
                                 for (int j=0;j<nDOF_trial_element;j++)
                                 {
-                                    register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
+                                    int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
 
                                     globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*disp_test_dS[i];
                                     globalJacobian.data()[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] += fluxJacobian_u_v[j]*disp_test_dS[i];

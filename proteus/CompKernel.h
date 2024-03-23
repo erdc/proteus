@@ -241,7 +241,7 @@ public:
 				       double& y,
 				       double& z)
   {
-    register double Grad_x[3],Grad_y[3],Grad_z[3],oneOverJacDet;
+    double Grad_x[3],Grad_y[3],Grad_z[3],oneOverJacDet;
     
     //
     //mapping of reference element to physical element
@@ -359,7 +359,7 @@ public:
     const int ebN_local_kb_nSpace = ebN_local_kb*3,
       ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
   
-    register double Grad_x_ext[3],Grad_y_ext[3],Grad_z_ext[3],oneOverJacDet,norm_normal=0.0;
+    double Grad_x_ext[3],Grad_y_ext[3],Grad_z_ext[3],oneOverJacDet,norm_normal=0.0;
     // 
     //calculate mapping from the reference element to the physical element
     // 
@@ -676,7 +676,7 @@ public:
 				       double& x,
 				       double& y)
   {
-    register double Grad_x[2],Grad_y[2],oneOverJacDet;
+    double Grad_x[2],Grad_y[2],oneOverJacDet;
     
     //
     //mapping of reference element to physical element
@@ -783,7 +783,7 @@ public:
     const int ebN_local_kb_nSpace = ebN_local_kb*2,
       ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*2*1;
   
-    register double Grad_x_ext[2],Grad_y_ext[2],oneOverJacDet,norm_normal=0.0;
+    double Grad_x_ext[2],Grad_y_ext[2],oneOverJacDet,norm_normal=0.0;
     // 
     //calculate mapping from the reference element to the physical element
     // 
@@ -1064,7 +1064,7 @@ public:
 				       double* jacInv,
 				       double& x)
   {
-    register double Grad_x[1],Grad_y[1],oneOverJacDet;
+    double Grad_x[1],Grad_y[1],oneOverJacDet;
     
     //
     //mapping of reference element to physical element
@@ -1145,7 +1145,7 @@ public:
   {
     const int ebN_local_kb_nSpace = ebN_local_kb*1;
   
-    register double Grad_x_ext[1],oneOverJacDet,norm_normal=0.0;
+    double Grad_x_ext[1],oneOverJacDet,norm_normal=0.0;
     // 
     //calculate mapping from the reference element to the physical element
     // 

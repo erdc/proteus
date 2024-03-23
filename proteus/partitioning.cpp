@@ -2718,8 +2718,8 @@ int partitionNodesFromTetgenFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const char
       for(int eN=0;eN<newMesh.subdomainp->nElements_global;eN++)
         for(int ebN=0;ebN<newMesh.subdomainp->nElementBoundaries_element;ebN++)
           {
-            register int ebN_global = newMesh.subdomainp->elementBoundariesArray[eN*newMesh.subdomainp->nElementBoundaries_element+ebN];
-            register int nodes[3];
+            int ebN_global = newMesh.subdomainp->elementBoundariesArray[eN*newMesh.subdomainp->nElementBoundaries_element+ebN];
+            int nodes[3];
             nodes[0] = newMesh.subdomainp->elementNodesArray[eN*4+((ebN+1)%4)];
             nodes[1] = newMesh.subdomainp->elementNodesArray[eN*4+((ebN+2)%4)];
             nodes[2] = newMesh.subdomainp->elementNodesArray[eN*4+((ebN+3)%4)];
@@ -4210,8 +4210,8 @@ int partitionNodesFromTriangleFiles(const MPI_Comm& PROTEUS_COMM_WORLD, const ch
       for(int eN=0;eN<newMesh.subdomainp->nElements_global;eN++)
         for(int ebN=0;ebN<newMesh.subdomainp->nElementBoundaries_element;ebN++)
           {
-            register int ebN_global = newMesh.subdomainp->elementBoundariesArray[eN*newMesh.subdomainp->nElementBoundaries_element+ebN];
-            register int nodes[3];
+            int ebN_global = newMesh.subdomainp->elementBoundariesArray[eN*newMesh.subdomainp->nElementBoundaries_element+ebN];
+            int nodes[3];
             nodes[0] = newMesh.subdomainp->elementNodesArray[eN*4+((ebN+1)%4)];
             nodes[1] = newMesh.subdomainp->elementNodesArray[eN*4+((ebN+2)%4)];
             nodes[2] = newMesh.subdomainp->elementNodesArray[eN*4+((ebN+3)%4)];
@@ -6294,7 +6294,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(const MPI_Comm& PROTEUS_COMM_W
   map<NodeTuple<2>, int> nodesEdgeMap_subdomain;
   for (int i=0; i < mesh.subdomainp->nEdges_global; i++)
     {
-      register int nodes[2];
+      int nodes[2];
       nodes[0] = mesh.subdomainp->edgeNodesArray[2*i+0];
       nodes[1] = mesh.subdomainp->edgeNodesArray[2*i+1];
       NodeTuple<2> nt(nodes);
@@ -6305,7 +6305,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(const MPI_Comm& PROTEUS_COMM_W
   for (int i=0; i < mesh.subdomainp->nElementBoundaries_global; i++)
     {
 
-      register int nodes[4];
+      int nodes[4];
       nodes[0] = mesh.subdomainp->elementBoundaryNodesArray[i*4+0];
       nodes[1] = mesh.subdomainp->elementBoundaryNodesArray[i*4+1];
       nodes[2] = mesh.subdomainp->elementBoundaryNodesArray[i*4+2];
@@ -6345,7 +6345,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(const MPI_Comm& PROTEUS_COMM_W
       local_offset += mesh.subdomainp->nNodes_element;
       for (int nN = 0; nN < nEdges_element; nN++)
         {
-          register int nodes[2];
+          int nodes[2];
           nodes[0] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + ledge[nN][0]];
           nodes[1] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + ledge[nN][1]];
           NodeTuple<2> nt(nodes);
@@ -6374,7 +6374,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(const MPI_Comm& PROTEUS_COMM_W
       for (int nN = 0; nN <  mesh.subdomainp->nElementBoundaries_element; nN++)
         {
 
-          register int nodes[4];
+          int nodes[4];
           nodes[0] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][0]];
           nodes[1] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][1]];
           nodes[2] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][2]];

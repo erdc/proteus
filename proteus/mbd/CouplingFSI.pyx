@@ -356,7 +356,7 @@ cdef class ProtChBody:
             # rotate back
             # ang_last = -self.ang_vel_norm_last*dt_half_last
             ang_last = -self.h_ang_predict_last
-            if ang > 0:
+            if ang_last > 0:
                 d_rot_last = (st.rotation3D(points=x+h,  # (translated back)
                                             rot=ang_last,
                                             axis=self.h_ang_vel_predict_last,

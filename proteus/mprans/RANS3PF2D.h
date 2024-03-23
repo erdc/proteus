@@ -1838,7 +1838,7 @@ namespace proteus
         surrogate_boundary_elements.clear();
         surrogate_boundary_particle.clear();
         double cut_cell_boundary_length=0.0, p_force_x=0.0, p_force_y=0.0;
-	register double element_uStar_He[nElements_global], element_vStar_He[nElements_global];
+	double element_uStar_He[nElements_global], element_vStar_He[nElements_global];
 	uStar_hi.resize(numDOFs_1D,0.0);
 	vStar_hi.resize(numDOFs_1D,0.0);
 	den_hi.resize(numDOFs_1D,0.0);
@@ -1888,10 +1888,10 @@ namespace proteus
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         for(int eN=0;eN<nElements_global;eN++)
           {
-	    register double  elementTransport[nDOF_test_element][nDOF_trial_element];
-	    register double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
+	    double  elementTransport[nDOF_test_element][nDOF_trial_element];
+	    double  elementTransposeTransport[nDOF_test_element][nDOF_trial_element];
             //declare local storage for element residual and initialize
-            register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
+            double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
               mom_u_source_i[nDOF_test_element],
@@ -2270,14 +2270,14 @@ namespace proteus
             double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
 	    for (int j=0;j<nDOF_mesh_trial_element;j++)
 	      {
-		register int eN_j = eN*nDOF_mesh_trial_element+j;
+		int eN_j = eN*nDOF_mesh_trial_element+j;
 		element_phi[j] = phi_dof[p_l2g[eN_j]];
 		element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
 	      }
             double element_nodes[nDOF_mesh_trial_element*3];
 	    for (int i=0;i<nDOF_mesh_trial_element;i++)
 	      {
-		register int eN_i=eN*nDOF_mesh_trial_element+i;
+		int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
@@ -2291,11 +2291,11 @@ namespace proteus
                 gf.set_quad(k);
                 gf_s.set_quad(k);
                 //compute indices and declare local storage
-                register int eN_k = eN*nQuadraturePoints_element+k,
+                int eN_k = eN*nQuadraturePoints_element+k,
                   eN_k_nSpace = eN_k*nSpace,
                   eN_k_3d     = eN_k*3,
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
-                register double p=0.0,u=0.0,v=0.0,w=0.0,un=0.0,vn=0.0,wn=0.0,
+                double p=0.0,u=0.0,v=0.0,w=0.0,un=0.0,vn=0.0,wn=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
                   mom_u_acc=0.0,
@@ -2944,7 +2944,7 @@ namespace proteus
        		// adjoint times the test functions
        		for (int i=0;i<nDOF_test_element;i++)
        		  {
-       		    register int i_nSpace = i*nSpace;
+       		    int i_nSpace = i*nSpace;
 		    /* Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]); */
 		    /* Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]); */
 		    /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
@@ -3053,7 +3053,7 @@ namespace proteus
                 v2[0]=-unit_normal[0]*unit_normal[1];
                 v2[1]=1.-unit_normal[1]*unit_normal[1];
                 double delta = gf.D(eps_mu,phi[eN_k]); //use eps_rho instead?
-                register double vel_tgrad_test_i[nSpace], tgrad_u[nSpace], tgrad_v[nSpace];
+                double vel_tgrad_test_i[nSpace], tgrad_u[nSpace], tgrad_v[nSpace];
                 calculateTangentialGradient(unit_normal,
                                             grad_u,
                                             tgrad_u);
@@ -3070,7 +3070,7 @@ namespace proteus
 		  }
                 for(int i=0;i<nDOF_test_element;i++)
                   {
-                    register int i_nSpace=i*nSpace;
+                    int i_nSpace=i*nSpace;
                     calculateTangentialGradient(unit_normal,
                                                 &vel_grad_trial[i_nSpace],
                                                 vel_tgrad_test_i);
@@ -3209,7 +3209,7 @@ namespace proteus
 				      cE*hK*hK*nlinVisc_eN_num/(nlinVisc_eN_den+1E-10));
 		for(int k=0;k<nQuadraturePoints_element;k++)
 		  {
-		    register int eN_k = eN*nQuadraturePoints_element+k;
+		    int eN_k = eN*nQuadraturePoints_element+k;
 		    q_numDiff_u[eN_k] = artVisc;
 		    q_numDiff_v[eN_k] = artVisc;
 		    q_numDiff_w[eN_k] = artVisc;
@@ -3220,7 +3220,7 @@ namespace proteus
             //
             for(int i=0;i<nDOF_test_element;i++)
 	      {
-                register int eN_i=eN*nDOF_test_element+i;
+                int eN_i=eN*nDOF_test_element+i;
                 phisErrorNodal[vel_l2g[eN_i]]+= element_active*phisErrorElement[i];
                 /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
                 /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
@@ -3342,8 +3342,8 @@ namespace proteus
 		    double vStar_He = element_vStar_He[eN];
 		    for(int i=0;i<nDOF_test_element;i++)
 		      {
-			register int eN_i=eN*nDOF_test_element+i;
-			register int gi = vel_l2g[eN_i]; // offset=0, stride=1
+			int eN_i=eN*nDOF_test_element+i;
+			int gi = vel_l2g[eN_i]; // offset=0, stride=1
 			uStar_min_hiHe[gi] = fmin(uStar_min_hiHe[gi], uStar_hi[gi]*uStar_He);
 			vStar_min_hiHe[gi] = fmin(vStar_min_hiHe[gi], vStar_hi[gi]*vStar_He);
 		      }
@@ -3456,12 +3456,12 @@ namespace proteus
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
                 // Initialization of the force to 0
-                register double Fx = 0.0, Fy = 0.0, Fxp = 0.0, Fyp = 0.0, surfaceArea=0.0, Mz = 0.0;
-                register int ebN = surrogate_boundaries[ebN_s],
+                double Fx = 0.0, Fy = 0.0, Fxp = 0.0, Fyp = 0.0, surfaceArea=0.0, Mz = 0.0;
+                int ebN = surrogate_boundaries[ebN_s],
                   eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
-                register double elementResidual_mesh[nDOF_test_element],
+                double elementResidual_mesh[nDOF_test_element],
                   elementResidual_p[nDOF_test_element],
                   elementResidual_u[nDOF_test_element],
                   elementResidual_v[nDOF_test_element],
@@ -3481,11 +3481,11 @@ namespace proteus
                   }
                 for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
-                    register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                    int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
                       /* ebNE_kb_nSpace = ebNE_kb*nSpace, */
                       ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                       ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-                    register double
+                    double
                       u_ext=0.0,
                       v_ext=0.0,
                       bc_u_ext=0.0,
@@ -3735,11 +3735,11 @@ namespace proteus
         gf_s.useExact=false;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray[ebNE],
+            int ebN = exteriorElementBoundariesArray[ebNE],
               eN  = elementBoundaryElementsArray[ebN*2+0],
               ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
-            register double elementResidual_mesh[nDOF_test_element],
+            double elementResidual_mesh[nDOF_test_element],
               elementResidual_p[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementResidual_v[nDOF_test_element],
@@ -3756,11 +3756,11 @@ namespace proteus
               }
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
-                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
                   ebNE_kb_nSpace = ebNE_kb*nSpace,
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-                register double p_ext=0.0,
+                double p_ext=0.0,
                   u_ext=0.0,
                   v_ext=0.0,
                   w_ext=0.0,
@@ -4917,10 +4917,10 @@ namespace proteus
         const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double eps_rho,eps_mu;
+            double eps_rho,eps_mu;
             double element_active=1.0;//value 1 is because it is ibm by default
 
-            register double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
+            double  elementJacobian_p_p[nDOF_test_element][nDOF_trial_element],
               elementJacobian_p_u[nDOF_test_element][nDOF_trial_element],
               elementJacobian_p_v[nDOF_test_element][nDOF_trial_element],
               elementJacobian_p_w[nDOF_test_element][nDOF_trial_element],
@@ -5018,14 +5018,14 @@ namespace proteus
             double element_phi[nDOF_mesh_trial_element], element_phi_s[nDOF_mesh_trial_element];
 	    for (int j=0;j<nDOF_mesh_trial_element;j++)
 	      {
-		register int eN_j = eN*nDOF_mesh_trial_element+j;
+		int eN_j = eN*nDOF_mesh_trial_element+j;
 		element_phi[j] = phi_dof[p_l2g[eN_j]];
 		element_phi_s[j] = phi_solid_nodes[p_l2g[eN_j]];
 	      }
             double element_nodes[nDOF_mesh_trial_element*3];
 	    for (int i=0;i<nDOF_mesh_trial_element;i++)
 	      {
-		register int eN_i=eN*nDOF_mesh_trial_element+i;
+		int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof[mesh_l2g[eN_i]*3 + I];
 	      }//i
@@ -5041,7 +5041,7 @@ namespace proteus
                   eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
                 //declare local storage
-                register double p=0.0,u=0.0,v=0.0,w=0.0,
+                double p=0.0,u=0.0,v=0.0,w=0.0,
                   grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
                   hess_u[nSpace2],hess_v[nSpace2],
                   mom_u_acc=0.0,
@@ -5559,7 +5559,7 @@ namespace proteus
                 //calculate the Jacobian of strong residual
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    register int j_nSpace = j*nSpace;
+                    int j_nSpace = j*nSpace;
                     dpdeResidual_p_u[j]=ck.AdvectionJacobian_strong(dmass_adv_u,&vel_grad_trial[j_nSpace]);
                     dpdeResidual_p_v[j]=ck.AdvectionJacobian_strong(dmass_adv_v,&vel_grad_trial[j_nSpace]);
                     /* dpdeResidual_p_w[j]=ck.AdvectionJacobian_strong(dmass_adv_w,&vel_grad_trial[j_nSpace]); */
@@ -5651,7 +5651,7 @@ namespace proteus
                 //calculate the adjoint times the test functions
                 for (int i=0;i<nDOF_test_element;i++)
                   {
-                    register int i_nSpace = i*nSpace;
+                    int i_nSpace = i*nSpace;
                     Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]);
                     Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
                     /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
@@ -5689,19 +5689,19 @@ namespace proteus
                 for (int I=0;I<nSpace;I++)
                   unit_normal[I] = normal_phi[eN_k_nSpace+I]/norm_grad_phi;
                 double delta = gf.D(eps_mu,phi[eN_k]); //use eps_rho instead?
-                register double vel_tgrad_test_i[nSpace], vel_tgrad_test_j[nSpace];
+                double vel_tgrad_test_i[nSpace], vel_tgrad_test_j[nSpace];
                 // END OF SURFACE TENSION //
 
                 //cek todo add RBLES terms consistent to residual modifications or ignore the partials w.r.t the additional RBLES terms
                 for(int i=0;i<nDOF_test_element;i++)
                   {
-                    register int i_nSpace = i*nSpace;
+                    int i_nSpace = i*nSpace;
                     calculateTangentialGradient(unit_normal,
                                                 &vel_grad_trial[i_nSpace],
                                                 vel_tgrad_test_i);
                     for(int j=0;j<nDOF_trial_element;j++)
                       {
-                        register int j_nSpace = j*nSpace;
+                        int j_nSpace = j*nSpace;
                         calculateTangentialGradient(unit_normal,
                                                     &vel_grad_trial[j_nSpace],
                                                     vel_tgrad_test_j);
@@ -5813,10 +5813,10 @@ namespace proteus
             //
             for (int i=0;i<nDOF_test_element;i++)
               {
-                register int eN_i = eN*nDOF_test_element+i;
+                int eN_i = eN*nDOF_test_element+i;
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    register int eN_i_j = eN_i*nDOF_trial_element+j;
+                    int eN_i_j = eN_i*nDOF_trial_element+j;
                     /* globalJacobian[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_j]] += elementJacobian_p_p[i][j]; */
                     /* globalJacobian[csrRowIndeces_p_u[eN_i] + csrColumnOffsets_p_u[eN_i_j]] += elementJacobian_p_u[i][j]; */
                     /* globalJacobian[csrRowIndeces_p_v[eN_i] + csrColumnOffsets_p_v[eN_i_j]] += elementJacobian_p_v[i][j]; */
@@ -5882,22 +5882,22 @@ namespace proteus
             //
             for (int ebN_s=0;ebN_s < surrogate_boundaries.size();ebN_s++)
               {
-                register int ebN = surrogate_boundaries[ebN_s],
+                int ebN = surrogate_boundaries[ebN_s],
                   eN = elementBoundaryElementsArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+surrogate_boundary_elements[ebN_s]],
                   eN_nDOF_trial_element = eN*nDOF_trial_element;
-                register double eps_rho,eps_mu;
+                double eps_rho,eps_mu;
                 //This assumption is wrong for parallel: If one of nodes of this edge is owned by this processor,
                 //then the integral over this edge has contribution to the residual and Jacobian.
                 //if (ebN >= nElementBoundaries_owned) continue;
                 for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
                   {
-                    register int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
+                    int ebN_kb = ebN*nQuadraturePoints_elementBoundary+kb,
                       ebN_kb_nSpace = ebN_kb*nSpace,
                       ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                       ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 
-                    register double u_ext=0.0,
+                    double u_ext=0.0,
                       v_ext=0.0,
                       bc_u_ext=0.0,
                       bc_v_ext=0.0,
@@ -6016,7 +6016,7 @@ namespace proteus
 
                     for (int i=0;i<nDOF_test_element;i++)
                       {
-                        register int eN_i = eN*nDOF_test_element+i;
+                        int eN_i = eN*nDOF_test_element+i;
                         double phi_i = vel_test_dS[i];
                         double* grad_phi_i = &vel_grad_test_dS[i*nSpace+0];
                         const double grad_phi_i_dot_d = get_dot_product(grad_phi_i,distance);
@@ -6026,7 +6026,7 @@ namespace proteus
                         const double zero_vec[2]={0.,0.};
                         for (int j=0;j<nDOF_trial_element;j++)
                           {
-                            register int ebN_i_j = ebN*4*nDOF_test_X_trial_element
+                            int ebN_i_j = ebN*4*nDOF_test_X_trial_element
                                                    + surrogate_boundary_elements[ebN_s]*2*nDOF_test_X_trial_element
                                                    + surrogate_boundary_elements[ebN_s]*nDOF_test_X_trial_element
                                                    + i*nDOF_trial_element
@@ -6122,19 +6122,19 @@ namespace proteus
         gf_s.useExact=false;
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray[ebNE],
+            int ebN = exteriorElementBoundariesArray[ebNE],
               eN  = elementBoundaryElementsArray[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element,
               ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
-            register double eps_rho,eps_mu;
+            double eps_rho,eps_mu;
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
-                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
                   ebNE_kb_nSpace = ebNE_kb*nSpace,
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 
-                register double p_ext=0.0,
+                double p_ext=0.0,
                   u_ext=0.0,
                   v_ext=0.0,
                   w_ext=0.0,
@@ -6730,7 +6730,7 @@ namespace proteus
                 penalty = useMetrics*C_b/h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
                 for (int j=0;j<nDOF_trial_element;j++)
                   {
-                    register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+                    int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
                     /* fluxJacobian_p_p[j]=0.0; */
                     /* fluxJacobian_p_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_u_ext,vel_trial_trace_ref[ebN_local_kb_j]); */
                     /* fluxJacobian_p_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_v_ext,vel_trial_trace_ref[ebN_local_kb_j]); */
@@ -6861,10 +6861,10 @@ namespace proteus
                 //
                 for (int i=0;i<nDOF_test_element;i++)
                   {
-                    register int eN_i = eN*nDOF_test_element+i;
+                    int eN_i = eN*nDOF_test_element+i;
                     for (int j=0;j<nDOF_trial_element;j++)
                       {
-                        register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+                        int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 
                         /* globalJacobian[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_eb_p_p[ebN_i_j]] += fluxJacobian_p_p[j]*p_test_dS[i]; */
                         /* globalJacobian[csrRowIndeces_p_u[eN_i] + csrColumnOffsets_eb_p_u[ebN_i_j]] += fluxJacobian_p_u[j]*p_test_dS[i]; */
@@ -7005,10 +7005,10 @@ namespace proteus
           permutations[i]=i;//just to initialize
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray[ebNE];
+            int ebN = exteriorElementBoundariesArray[ebNE];
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
-                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace,
+                int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace,
                   ebNE_kb_nSpace = ebNE*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
                 velocityAverage[ebN_kb_nSpace+0]=ebqe_velocity[ebNE_kb_nSpace+0];
                 velocityAverage[ebN_kb_nSpace+1]=ebqe_velocity[ebNE_kb_nSpace+1];
@@ -7016,7 +7016,7 @@ namespace proteus
           }
         for (int ebNI = 0; ebNI < nInteriorElementBoundaries_global; ebNI++)
           {
-            register int ebN = interiorElementBoundariesArray[ebNI],
+            int ebN = interiorElementBoundariesArray[ebNI],
               left_eN_global   = elementBoundaryElementsArray[ebN*2+0],
               left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
               right_eN_global  = elementBoundaryElementsArray[ebN*2+1],
@@ -7111,8 +7111,8 @@ namespace proteus
               }
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
-                register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
-                register double u_left=0.0,
+                int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace;
+                double u_left=0.0,
                   v_left=0.0,
                   w_left=0.0,
                   u_right=0.0,
@@ -7122,7 +7122,7 @@ namespace proteus
                   vos_right=0.0,
                   porosity_left=0.0,
                   porosity_right=0.0;
-                register int left_kb = kb,
+                int left_kb = kb,
                   right_kb = permutations[kb],
                   left_ebN_element_kb_nDOF_test_element=(left_ebN_element*nQuadraturePoints_elementBoundary+left_kb)*nDOF_test_element,
                   right_ebN_element_kb_nDOF_test_element=(right_ebN_element*nQuadraturePoints_elementBoundary+right_kb)*nDOF_test_element;
@@ -7173,22 +7173,22 @@ namespace proteus
         //eN is the element index
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray[ebNE],
+            int ebN = exteriorElementBoundariesArray[ebNE],
               eN  = elementBoundaryElementsArray[ebN*2+0],
               ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
               eN_nDOF_trial_element = eN*nDOF_trial_element;
-            register double
+            double
 	      elementIsBoundary[nDOF_test_element];
             const double* elementResidual_w(NULL);
             for (int i=0;i<nDOF_test_element;i++)
 	      elementIsBoundary[i]=0.0;
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
-                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
                   ebNE_kb_nSpace = ebNE_kb*nSpace,
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-                register double
+                double
                   jac_ext[nSpace*nSpace],
                   jacDet_ext,
                   jacInv_ext[nSpace*nSpace],

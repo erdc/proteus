@@ -999,7 +999,7 @@ public:
     //      * Velocity and soln at quad points (for other models)
     for (int eN = 0; eN < nElements_global; eN++) {
       // declare local storage for element residual and initialize
-      register double elementResidual_h[nDOF_test_element],
+      double elementResidual_h[nDOF_test_element],
           elementResidual_hu[nDOF_test_element],
           elementResidual_hv[nDOF_test_element];
 
@@ -1013,10 +1013,10 @@ public:
       //
       for (int k = 0; k < nQuadraturePoints_element; k++) {
         // compute indices and declare local storage
-        register int eN_k = eN * nQuadraturePoints_element + k,
+        int eN_k = eN * nQuadraturePoints_element + k,
                      eN_k_nSpace = eN_k * nSpace,
                      eN_nDOF_trial_element = eN * nDOF_trial_element;
-        register double h = 0.0, hu = 0.0,
+        double h = 0.0, hu = 0.0,
                         hv = 0.0,                    // solution at current time
             h_old = 0.0, hu_old = 0.0, hv_old = 0.0, // solution at lstage
             jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
@@ -1066,7 +1066,7 @@ public:
       }
       // distribute
       for (int i = 0; i < nDOF_test_element; i++) {
-        register int eN_i = eN * nDOF_test_element + i;
+        int eN_i = eN * nDOF_test_element + i;
 
         // global i-th index for h (this is same for vel_l2g)
         int h_gi = h_l2g[eN_i];
@@ -1634,18 +1634,18 @@ public:
       // This is to identify the normals and create a vector of normal
       // components
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) {
-        register int
+        int
             ebN = exteriorElementBoundariesArray[ebNE],
             eN = elementBoundaryElementsArray[ebN * 2 + 0],
             ebN_local = elementBoundaryLocalElementBoundariesArray[ebN * 2 + 0];
-        register double normal[3];
+        double normal[3];
         {             // "Loop" in quad points
           int kb = 0; // NOTE: I need to consider just one quad point since
                       // the element is not curved so the normal is constant
                       // per element
-          register int ebN_local_kb =
+          int ebN_local_kb =
               ebN_local * nQuadraturePoints_elementBoundary + kb;
-          register double jac_ext[nSpace * nSpace], jacDet_ext,
+          double jac_ext[nSpace * nSpace], jacDet_ext,
               jacInv_ext[nSpace * nSpace], boundaryJac[nSpace * (nSpace - 1)],
               metricTensor[(nSpace - 1) * (nSpace - 1)], metricTensorDetSqrt,
               x_ext, y_ext;
@@ -1848,7 +1848,7 @@ public:
     // element Jacobians and global Jacobian
     //
     for (int eN = 0; eN < nElements_global; eN++) {
-      register double elementJacobian_h_h[nDOF_test_element]
+      double elementJacobian_h_h[nDOF_test_element]
                                          [nDOF_trial_element],
           elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
           elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element];
@@ -1867,7 +1867,7 @@ public:
                 nDOF_trial_element; // index to a vector at a quadrature point
 
         // declare local storage
-        register double jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
+        double jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
             dV, h_test_dV[nDOF_test_element], vel_test_dV[nDOF_test_element], x,
             y, xt, yt;
         // get jacobian, etc for mapping reference element
@@ -1882,9 +1882,9 @@ public:
           vel_test_dV[j] = vel_test_ref[k * nDOF_trial_element + j] * dV;
         }
         for (int i = 0; i < nDOF_test_element; i++) {
-          register int i_nSpace = i * nSpace;
+          int i_nSpace = i * nSpace;
           for (int j = 0; j < nDOF_trial_element; j++) {
-            register int j_nSpace = j * nSpace;
+            int j_nSpace = j * nSpace;
             elementJacobian_h_h[i][j] +=
                 h_trial_ref[k * nDOF_trial_element + j] * h_test_dV[i];
             elementJacobian_hu_hu[i][j] +=
@@ -1898,9 +1898,9 @@ public:
       // load into element Jacobian into global Jacobian
       //
       for (int i = 0; i < nDOF_test_element; i++) {
-        register int eN_i = eN * nDOF_test_element + i;
+        int eN_i = eN * nDOF_test_element + i;
         for (int j = 0; j < nDOF_trial_element; j++) {
-          register int eN_i_j = eN_i * nDOF_trial_element + j;
+          int eN_i_j = eN_i * nDOF_trial_element + j;
           globalJacobian[csrRowIndeces_h_h[eN_i] +
                          csrColumnOffsets_h_h[eN_i_j]] +=
               elementJacobian_h_h[i][j];
@@ -2084,7 +2084,7 @@ public:
     // element Jacobians and global Jacobian
     //
     for (int eN = 0; eN < nElements_global; eN++) {
-      register double elementJacobian_h_h[nDOF_test_element]
+      double elementJacobian_h_h[nDOF_test_element]
                                          [nDOF_trial_element],
           elementJacobian_hu_hu[nDOF_test_element][nDOF_trial_element],
           elementJacobian_hv_hv[nDOF_test_element][nDOF_trial_element];
@@ -2103,7 +2103,7 @@ public:
                 nDOF_trial_element; // index to a vector at a quadrature point
 
         // declare local storage
-        register double jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
+        double jac[nSpace * nSpace], jacDet, jacInv[nSpace * nSpace],
             dV, h_test_dV[nDOF_test_element], vel_test_dV[nDOF_test_element], x,
             y, xt, yt;
         // get jacobian, etc for mapping reference element
@@ -2119,9 +2119,9 @@ public:
         }
 
         for (int i = 0; i < nDOF_test_element; i++) {
-          register int i_nSpace = i * nSpace;
+          int i_nSpace = i * nSpace;
           for (int j = 0; j < nDOF_trial_element; j++) {
-            register int j_nSpace = j * nSpace;
+            int j_nSpace = j * nSpace;
             elementJacobian_h_h[i][j] += (i == j ? 1.0 : 0.0) * h_test_dV[i];
             elementJacobian_hu_hu[i][j] +=
                 (i == j ? 1.0 : 0.0) * vel_test_dV[i];
@@ -2134,9 +2134,9 @@ public:
       // load into element Jacobian into global Jacobian
       //
       for (int i = 0; i < nDOF_test_element; i++) {
-        register int eN_i = eN * nDOF_test_element + i;
+        int eN_i = eN * nDOF_test_element + i;
         for (int j = 0; j < nDOF_trial_element; j++) {
-          register int eN_i_j = eN_i * nDOF_trial_element + j;
+          int eN_i_j = eN_i * nDOF_trial_element + j;
           globalJacobian[csrRowIndeces_h_h[eN_i] +
                          csrColumnOffsets_h_h[eN_i_j]] +=
               elementJacobian_h_h[i][j];
