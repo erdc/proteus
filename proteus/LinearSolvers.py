@@ -480,9 +480,9 @@ class KSP_petsc4py(LinearSolver):
         #    print "Matrix is symmetric"
         # else:
         #    print "MATRIX IS NONSYMMETRIC"
-        logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
+        logEvent("before ksp.rtol= %s ksp.atol= %s ksp.is_converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
                                                                                                    self.ksp.atol,
-                                                                                                   self.ksp.converged,
+                                                                                                   self.ksp.is_converged,
                                                                                                    self.ksp.its,
                                                                                                    self.ksp.norm))
         if self.pccontext is not None:
@@ -495,9 +495,9 @@ class KSP_petsc4py(LinearSolver):
 
         self.ksp.solve(par_b,par_u)
 
-        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.is_converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
-                                                                                                             self.ksp.converged,
+                                                                                                             self.ksp.is_converged,
                                                                                                              self.ksp.its,
                                                                                                              self.ksp.norm,
                                                                                                              self.ksp.reason))
@@ -513,12 +513,12 @@ class KSP_petsc4py(LinearSolver):
         """
         decide on convention to match norms, convergence criteria
         """
-        return self.ksp.converged
+        return self.ksp.is_converged
     def failed(self):
         failedFlag = LinearSolver.failed(self)
         logEvent("KSPpetsc4py return flag {0}".format(failedFlag))
-        logEvent("KSP converged flag {0}".format(self.ksp.converged))
-        failedFlag = failedFlag or (not self.ksp.converged)
+        logEvent("KSP converged flag {0}".format(self.ksp.is_converged))
+        failedFlag = failedFlag or (not self.ksp.is_converged)
         return failedFlag
 
     def info(self):
