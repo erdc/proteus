@@ -11,7 +11,7 @@ dependencies:
   - daetk =1.0.1
   - hdf5 =1.14.3=*mpich*
   - h5py =3.10.0=*mpich*
-  - metis =5.1.1
+  - metis =5.1.0
   - mpich =4.2.0
   - mpich-mpicc =4.2.0
   - mpich-mpicxx =4.2.0
