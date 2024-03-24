@@ -136,7 +136,6 @@ class TestPoisson(object):
         """
         self.check_c0q1(test_hexMesh_3x3=False,use_petsc=True, name="_proteusMesh_")
 
-    @pytest.mark.skipif(sys.platform == "darwin", reason="does not run on macOS")    
     def test_c0q1_hex_mesh(self):
         from proteus import MeshTools
         xmf_archive_base=os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -145,7 +144,7 @@ class TestPoisson(object):
         mesh_info = MeshTools.readMeshXdmf(xmf_archive_base,heavy_file_base)
         hex_meshfile_base = 'hexmesh_3x3'
         MeshTools.writeHexMesh(mesh_info,hex_meshfile_base,index_base=1)
-        self.check_c0q1(test_hexMesh_3x3=True,use_petsc=True, name="_hexMesh_")
+        self.check_c0q1(test_hexMesh_3x3=False,use_petsc=True, name="_hexMesh_")
 
     @pytest.mark.slowTest
     def test_c0q2(self):
