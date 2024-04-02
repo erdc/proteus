@@ -141,10 +141,10 @@ namespace proteus
         for  (int k=0;k<nQuadraturePoints_element;k++)
           {
             //compute indeces and declare local storage
-            register int eN_k = eN*nQuadraturePoints_element+k,
+            int eN_k = eN*nQuadraturePoints_element+k,
               eN_k_nSpace = eN_k*nSpace;
             //eN_nDOF_trial_element = eN*nDOF_trial_element;
-            register double u=0.0,grad_u[nSpace],
+            double u=0.0,grad_u[nSpace],
               r=0.0,dr=0.0,
               jac[nSpace*nSpace],
               jacDet,
@@ -227,10 +227,10 @@ namespace proteus
             //
             for(int i=0;i<nDOF_test_element;i++)
               {
-		register int eN_i = eN*nDOF_test_element+i;
-                //register int eN_k_i=eN_k*nDOF_test_element+i;
-                //register int eN_k_i_nSpace = eN_k_i*nSpace;
-                register int  i_nSpace=i*nSpace;
+		int eN_i = eN*nDOF_test_element+i;
+                //int eN_k_i=eN_k*nDOF_test_element+i;
+                //int eN_k_i_nSpace = eN_k_i*nSpace;
+                int  i_nSpace=i*nSpace;
 
                 elementResidual_u[i] += H_s*(ck.Reaction_weak(r,u_test_dV[i]) +
 					     ck.NumericalDiffusion(epsDiffusion,grad_u,&u_grad_test_dV[i_nSpace]));
@@ -335,12 +335,12 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double elementResidual_u[nDOF_test_element], element_u[nDOF_trial_element], element_phi[nDOF_trial_element], element_phi_s[nDOF_mesh_trial_element];
+            double elementResidual_u[nDOF_test_element], element_u[nDOF_trial_element], element_phi[nDOF_trial_element], element_phi_s[nDOF_mesh_trial_element];
 	    bool element_active=false;
 	    isActiveElement[eN]=0;
             for (int i=0;i<nDOF_test_element;i++)
               {
-                register int eN_i=eN*nDOF_test_element+i;
+                int eN_i=eN*nDOF_test_element+i;
                 element_u[i] = u_dof.data()[u_l2g.data()[eN_i]];
                 element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]] + element_u[i];
 		element_phi_s[i] = phi_solid_nodes.data()[u_l2g.data()[eN_i]];
@@ -348,7 +348,7 @@ namespace proteus
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
               {
-                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
@@ -433,7 +433,7 @@ namespace proteus
 	    //
 	    for(int i=0;i<nDOF_test_element;i++)
 	      {
-		register int eN_i=eN*nDOF_test_element+i;
+		int eN_i=eN*nDOF_test_element+i;
 
                 globalResidual.data()[offset_u+stride_u*r_l2g.data()[eN_i]]+=elementResidual_u[i];
               }//i
@@ -444,7 +444,7 @@ namespace proteus
 	    if(isActiveElement[elementBoundaryElementsArray[(*it)*2+0]] && isActiveElement[elementBoundaryElementsArray[(*it)*2+1]])
 	      {
 		std::map<int,double> DW_Dn_jump;
-		register double gamma_cutfem=ghost_penalty_constant,
+		double gamma_cutfem=ghost_penalty_constant,
 		  h_cutfem=elementBoundaryDiameter.data()[*it];
 		int eN_nDOF_trial_element  = elementBoundaryElementsArray.data()[(*it)*2+0]*nDOF_trial_element;
 		//See Massing Schott Wall 2018
@@ -465,10 +465,10 @@ namespace proteus
 		//  gamma_cutfem*=(gamma_v_dim/rho_0);
 		for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
 		  {
-		    register double Du_Dn_jump=0.0, dS;
+		    double Du_Dn_jump=0.0, dS;
 		    for (int eN_side=0;eN_side < 2; eN_side++)
 		      {
-			register int ebN = *it,
+			int ebN = *it,
 			  eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
 			for (int i=0;i<nDOF_test_element;i++)
 			  {
@@ -477,13 +477,13 @@ namespace proteus
 		      }
 		    for (int eN_side=0;eN_side < 2; eN_side++)
 		      {
-			register int ebN = *it,
+			int ebN = *it,
 			  eN  = elementBoundaryElementsArray[ebN*2+eN_side],
 			  ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+eN_side],
 			  eN_nDOF_trial_element = eN*nDOF_trial_element,
 			  ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
 			  ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-			register double u_int=0.0,
+			double u_int=0.0,
 			  grad_u_int[nSpace],
 			  jac_int[nSpace*nSpace],
 			  jacDet_int,
@@ -557,24 +557,24 @@ namespace proteus
         //eN is the element index
         for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
           {
-            register int ebN = exteriorElementBoundariesArray.data()[ebNE],
+            int ebN = exteriorElementBoundariesArray.data()[ebNE],
               eN  = elementBoundaryElementsArray.data()[ebN*2+0],
               ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0];
             //eN_nDOF_trial_element = eN*nDOF_trial_element;
-            //register double elementResidual_u[nDOF_test_element];
+            //double elementResidual_u[nDOF_test_element];
             double element_u[nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
-                register int eN_i=eN*nDOF_test_element+i;
+                int eN_i=eN*nDOF_test_element+i;
                 element_u[i] = u_dof.data()[u_l2g.data()[eN_i]];
               }//i
             for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
               {
-                register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+                int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
                   ebNE_kb_nSpace = ebNE_kb*nSpace,
                   ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
                   ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-                register double u_ext=0.0,
+                double u_ext=0.0,
                   grad_u_ext[nSpace],
                   //m_ext=0.0,
                   //dm_ext=0.0,
@@ -698,7 +698,7 @@ namespace proteus
             gf.set_quad(k);
 	    gf_s.set_quad(k);
             //declare local storage
-            register double u=0.0,
+            double u=0.0,
               grad_u[nSpace],
               r=0.0,dr=0.0,
               jac[nSpace*nSpace],
@@ -852,10 +852,10 @@ namespace proteus
         gf_s.useExact = useExact_s;
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element],element_phi_s[nDOF_mesh_trial_element];
+            double  elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element],element_phi[nDOF_trial_element],element_phi_s[nDOF_mesh_trial_element];
             for (int j=0;j<nDOF_trial_element;j++)
               {
-                register int eN_j = eN*nDOF_trial_element+j;
+                int eN_j = eN*nDOF_trial_element+j;
                 element_u[j] = u_dof.data()[u_l2g.data()[eN_j]];
                 element_phi[j] = phi_dof.data()[u_l2g.data()[eN_j]] + element_u[j];
 		element_phi_s[j] = phi_solid_nodes.data()[u_l2g.data()[eN_j]];
@@ -863,7 +863,7 @@ namespace proteus
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
               {
-                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
@@ -923,7 +923,7 @@ namespace proteus
 	  {
 	    std::map<int,double> DW_Dn_jump;
 	    std::map<std::pair<int, int>, int> u_u_nz;
-	    register double gamma_cutfem=ghost_penalty_constant,
+	    double gamma_cutfem=ghost_penalty_constant,
 	      h_cutfem=elementBoundaryDiameter.data()[*it];
 	    int eN_nDOF_trial_element  = elementBoundaryElementsArray.data()[(*it)*2+0]*nDOF_trial_element;
 	    //See Massing Schott Wall 2018
@@ -944,10 +944,10 @@ namespace proteus
 	    //  gamma_cutfem*=(gamma_v_dim/rho_0);
 	    for (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
 	      {
-		register double Du_Dn_jump=0.0, dS;
+		double Du_Dn_jump=0.0, dS;
 		for (int eN_side=0;eN_side < 2; eN_side++)
 		  {
-		    register int ebN = *it,
+		    int ebN = *it,
 		      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
 		    for (int i=0;i<nDOF_test_element;i++)
 		      {
@@ -956,13 +956,13 @@ namespace proteus
 		  }
 		for (int eN_side=0;eN_side < 2; eN_side++)
 		  {
-		    register int ebN = *it,
+		    int ebN = *it,
 		      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side],
 		      ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+eN_side],
 		      eN_nDOF_trial_element = eN*nDOF_trial_element,
 		      ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
 		      ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-		    register double u_int=0.0,
+		    double u_int=0.0,
 		      grad_u_int[nSpace],
 		      jac_int[nSpace*nSpace],
 		      jacDet_int,
@@ -1010,19 +1010,19 @@ namespace proteus
 		  }//eN_side
 		for (int eN_side=0;eN_side < 2; eN_side++)
 		  {
-		    register int ebN = *it,
+		    int ebN = *it,
 		      eN  = elementBoundaryElementsArray.data()[ebN*2+eN_side];
 		    for (int i=0;i<nDOF_test_element;i++)
 		      {
-			register int eN_i = eN*nDOF_test_element+i;
+			int eN_i = eN*nDOF_test_element+i;
 			for (int eN_side2=0;eN_side2 < 2; eN_side2++)
 			  {
-			    register int eN2  = elementBoundaryElementsArray.data()[ebN*2+eN_side2];
+			    int eN2  = elementBoundaryElementsArray.data()[ebN*2+eN_side2];
 			    for (int j=0;j<nDOF_test_element;j++)
 			      {
 				int eN_i_j = eN_i*nDOF_test_element + j;
 				int eN2_j = eN2*nDOF_test_element + j;
-				register int ebN_i_j = ebN*4*nDOF_test_X_trial_element +
+				int ebN_i_j = ebN*4*nDOF_test_X_trial_element +
 				  eN_side*2*nDOF_test_X_trial_element +
 				  eN_side2*nDOF_test_X_trial_element +
 				  i*nDOF_trial_element +
@@ -1123,11 +1123,11 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double element_u[nDOF_test_element],
+            double element_u[nDOF_test_element],
               element_du[nDOF_test_element],
               elementResidual_u[nDOF_test_element],
               elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],scale=1.0;
-            register PROTEUS_LAPACK_INTEGER elementPivots[nDOF_test_element],
+            PROTEUS_LAPACK_INTEGER elementPivots[nDOF_test_element],
               elementColPivots[nDOF_test_element];
             //double epsHeaviside,epsDirac,epsDiffusion;
 	    bool element_active=true;
@@ -1401,7 +1401,7 @@ namespace proteus
         for(int eN=0;eN<nElements_global;eN++)
           {
             //declare local storage for element residual and initialize
-            register double element_u[nDOF_test_element],elementConstant_u,
+            double element_u[nDOF_test_element],elementConstant_u,
               elementResidual_u[nDOF_test_element],elementConstantResidual,
               elementJacobian_u_u[nDOF_test_element*nDOF_trial_element],elementConstantJacobian,resNorm;
             elementConstant_u=0.0;
@@ -1646,7 +1646,7 @@ namespace proteus
         int maxIts = args.scalar<int>("maxIts");
         double atol = args.scalar<double>("atol");
         double constant_u = args.scalar<double>("constant_u");
-        register double element_u[nDOF_test_element],
+        double element_u[nDOF_test_element],
           elementResidual_u[nDOF_test_element],
           elementJacobian_u_u[nDOF_test_element*nDOF_trial_element];
         double constantResidual = 0.0;
@@ -1823,17 +1823,17 @@ namespace proteus
             double epsHeaviside;
             //loop over quadrature points and compute integrands
             //declare local storage for element residual and initialize
-            register double element_phi[nDOF_trial_element],element_phi_s[nDOF_trial_element];
+            double element_phi[nDOF_trial_element],element_phi_s[nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
-                register int eN_i=eN*nDOF_test_element+i;
+                int eN_i=eN*nDOF_test_element+i;
                 element_phi[i] = phi_dof.data()[u_l2g.data()[eN_i]];
                 element_phi_s[i] = phi_solid_nodes.data()[u_l2g.data()[eN_i]];
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
               {
-                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
@@ -1842,7 +1842,7 @@ namespace proteus
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
-		register int eN_k = eN*nQuadraturePoints_element+k,
+		int eN_k = eN*nQuadraturePoints_element+k,
 		  eN_k_nSpace = eN_k*nSpace;
 		//eN_nDOF_trial_element = eN*nDOF_trial_element;
 		//double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
@@ -1950,16 +1950,16 @@ namespace proteus
             double epsHeaviside;
             //loop over quadrature points and compute integrands
             //declare local storage for element residual and initialize
-            register double element_phi[nDOF_trial_element];
+            double element_phi[nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
-                register int eN_i=eN*nDOF_test_element+i;
+                int eN_i=eN*nDOF_test_element+i;
                 element_phi[i] = phi_dof.data()[phi_l2g.data()[eN_i]];
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
               {
-                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
@@ -1968,11 +1968,11 @@ namespace proteus
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
-		register int eN_k = eN*nQuadraturePoints_element+k,
+		int eN_k = eN*nQuadraturePoints_element+k,
 		  eN_k_nSpace = eN_k*nSpace;
 		//eN_nDOF_trial_element = eN*nDOF_trial_element;
-		//register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-		register double jac[nSpace*nSpace],
+		//double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		double jac[nSpace*nSpace],
 		  jacDet,
 		  jacInv[nSpace*nSpace],
 		  //u_grad_trial[nDOF_trial_element*nSpace],
@@ -2166,7 +2166,7 @@ namespace proteus
             //eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
             //declare local storage
-            register double u=0.0,
+            double u=0.0,
               grad_u[nSpace],
               r=0.0,dr=0.0,
               jac[nSpace*nSpace],
@@ -2296,10 +2296,10 @@ namespace proteus
         //
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double  elementMassMatrix[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element], elementLumpedMassMatrix[nDOF_trial_element];
+            double  elementMassMatrix[nDOF_test_element*nDOF_trial_element],element_u[nDOF_trial_element], elementLumpedMassMatrix[nDOF_trial_element];
             for (int j=0;j<nDOF_trial_element;j++)
               {
-                register int eN_j = eN*nDOF_trial_element+j;
+                int eN_j = eN*nDOF_trial_element+j;
                 element_u[j] = u_dof.data()[u_l2g.data()[eN_j]];
               }
             calculateElementMassMatrix(mesh_trial_ref.data(),
@@ -2411,7 +2411,7 @@ namespace proteus
         gf.useExact=useExact;
         for(int eN=0;eN<nElements_global;eN++)
           {
-            register double element_rhs_mass_correction[nDOF_test_element];
+            double element_rhs_mass_correction[nDOF_test_element];
             for (int i=0;i<nDOF_test_element;i++)
               element_rhs_mass_correction[i] = 0.;
             double epsHeaviside;
@@ -2419,13 +2419,13 @@ namespace proteus
             double element_phi[nDOF_trial_element];
             for (int i=0;i<nDOF_test_element;i++)
               {
-                register int eN_i=eN*nDOF_test_element+i;
+                int eN_i=eN*nDOF_test_element+i;
                 element_phi[i] = phi_dof.data()[phi_l2g.data()[eN_i]];
               }//i
             double element_nodes[nDOF_mesh_trial_element*3];
             for (int i=0;i<nDOF_mesh_trial_element;i++)
               {
-                register int eN_i=eN*nDOF_mesh_trial_element+i;
+                int eN_i=eN*nDOF_mesh_trial_element+i;
                 for(int I=0;I<3;I++)
                   element_nodes[i*3 + I] = mesh_dof.data()[mesh_l2g.data()[eN_i]*3 + I];
 	      }//i
@@ -2433,11 +2433,11 @@ namespace proteus
 	    for  (int k=0;k<nQuadraturePoints_element;k++)
 	      {
 		//compute indeces and declare local storage
-		register int eN_k = eN*nQuadraturePoints_element+k,
+		int eN_k = eN*nQuadraturePoints_element+k,
 		  eN_k_nSpace = eN_k*nSpace;
 		//eN_nDOF_trial_element = eN*nDOF_trial_element;
-		//register double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
-		register double jac[nSpace*nSpace],
+		//double u=0.0,grad_u[nSpace],r=0.0,dr=0.0;
+		double jac[nSpace*nSpace],
 		  jacDet,
 		  jacInv[nSpace*nSpace],
 		  //u_grad_trial[nDOF_trial_element*nSpace],

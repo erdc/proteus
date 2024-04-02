@@ -837,7 +837,7 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
         {
           //declare local storage for element residual and initialize
-          register double elementResidual_h[nDOF_test_element],
+          double elementResidual_h[nDOF_test_element],
             elementResidual_u[nDOF_test_element],
             elementResidual_v[nDOF_test_element];
           for (int i=0;i<nDOF_test_element;i++)
@@ -854,10 +854,10 @@ namespace proteus
           for(int k=0;k<nQuadraturePoints_element;k++)
             {
               //compute indices and declare local storage
-              register int eN_k = eN*nQuadraturePoints_element+k,
+              int eN_k = eN*nQuadraturePoints_element+k,
                 eN_k_nSpace = eN_k*nSpace,
                 eN_nDOF_trial_element = eN*nDOF_trial_element;
-              register double b=0.0,h=0.0,u=0.0,v=0.0,h_sge=0.0,u_sge=0.0,v_sge=0.0,
+              double b=0.0,h=0.0,u=0.0,v=0.0,h_sge=0.0,u_sge=0.0,v_sge=0.0,
                 grad_b[nSpace],grad_h[nSpace],grad_u[nSpace],grad_v[nSpace],
                 mass_acc=0.0,
                 dmass_acc_h=0.0,
@@ -1190,7 +1190,7 @@ namespace proteus
               //adjoint times the test functions
               for (int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace = i*nSpace;
+                  int i_nSpace = i*nSpace;
                   Lstar_h_h[i]=ck.Advection_adjoint(dmass_adv_h_sge,&h_grad_test_dV[i_nSpace]);
                   Lstar_u_h[i]=ck.Advection_adjoint(dmass_adv_u_sge,&h_grad_test_dV[i_nSpace]);
                   Lstar_v_h[i]=ck.Advection_adjoint(dmass_adv_v_sge,&h_grad_test_dV[i_nSpace]);
@@ -1223,7 +1223,7 @@ namespace proteus
 
               for(int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace=i*nSpace;
+                  int i_nSpace=i*nSpace;
 
                   elementResidual_h[i] += ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
                     ck.Advection_weak(mass_adv,&h_grad_test_dV[i_nSpace]) +
@@ -1258,7 +1258,7 @@ namespace proteus
 
           for(int i=0;i<nDOF_test_element;i++)
             {
-              register int eN_i=eN*nDOF_test_element+i;
+              int eN_i=eN*nDOF_test_element+i;
 
               elementResidual_h_save.data()[eN_i] +=  elementResidual_h[i];
 
@@ -1276,11 +1276,11 @@ namespace proteus
       /* eN is the element index */
       /* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)  */
       /*        {  */
-      /*          register int ebN = exteriorElementBoundariesArray.data()[ebNE],  */
+      /*          int ebN = exteriorElementBoundariesArray.data()[ebNE],  */
       /*            eN  = elementBoundaryElementsArray.data()[ebN*2+0], */
       /*            ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0], */
       /*            eN_nDOF_trial_element = eN*nDOF_trial_element; */
-      /*          register double elementResidual_h[nDOF_test_element], */
+      /*          double elementResidual_h[nDOF_test_element], */
       /*            elementResidual_u[nDOF_test_element], */
       /*            elementResidual_v[nDOF_test_element], */
       /*            eps_rho,eps_mu; */
@@ -1292,11 +1292,11 @@ namespace proteus
       /*            } */
       /*          for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)  */
       /*            {  */
-      /*              register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
+      /*              int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
       /*                ebNE_kb_nSpace = ebNE_kb*nSpace, */
       /*                ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, */
       /*                ebN_local_kb_nSpace = ebN_local_kb*nSpace; */
-      /*              register double h_ext=0.0, */
+      /*              double h_ext=0.0, */
       /*                u_ext=0.0, */
       /*                v_ext=0.0, */
       /*                grad_h_ext[nSpace], */
@@ -1774,7 +1774,7 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
         {
           //declare local storage for element residual and initialize
-          register double elementResidual_h[nDOF_test_element],
+          double elementResidual_h[nDOF_test_element],
             elementResidual_u[nDOF_test_element],
             elementResidual_v[nDOF_test_element];
           for (int i=0;i<nDOF_test_element;i++)
@@ -1791,10 +1791,10 @@ namespace proteus
           for(int k=0;k<nQuadraturePoints_element;k++)
             {
               //compute indices and declare local storage
-              register int eN_k = eN*nQuadraturePoints_element+k,
+              int eN_k = eN*nQuadraturePoints_element+k,
                 eN_k_nSpace = eN_k*nSpace,
                 eN_nDOF_trial_element = eN*nDOF_trial_element;
-              register double b=0.0,h=0.0,u=0.0,v=0.0,h_sge=0.0,u_sge=0.0,v_sge=0.0,
+              double b=0.0,h=0.0,u=0.0,v=0.0,h_sge=0.0,u_sge=0.0,v_sge=0.0,
                 grad_b[nSpace],grad_h[nSpace],grad_u[nSpace],grad_v[nSpace],
                 mass_acc=0.0,
                 dmass_acc_h=0.0,
@@ -2085,7 +2085,7 @@ namespace proteus
               //Not really SUPG, but is test function contribution
               for (int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace = i*nSpace;
+                  int i_nSpace = i*nSpace;
                   Lhat_x[i]= -h_grad_test_dV[i_nSpace];
                   Lhat_y[i]= -h_grad_test_dV[i_nSpace+1];
                 }
@@ -2112,7 +2112,7 @@ namespace proteus
 
               for(int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace=i*nSpace;
+                  int i_nSpace=i*nSpace;
 
                   elementResidual_h[i] += ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
                     ck.Advection_weak(mass_adv,&h_grad_test_dV[i_nSpace]) +
@@ -2147,7 +2147,7 @@ namespace proteus
 
           for(int i=0;i<nDOF_test_element;i++)
             {
-              register int eN_i=eN*nDOF_test_element+i;
+              int eN_i=eN*nDOF_test_element+i;
 
               elementResidual_h_save.data()[eN_i] +=  elementResidual_h[i];
 
@@ -2274,7 +2274,7 @@ namespace proteus
       //
       for(int eN=0;eN<nElements_global;eN++)
         {
-          register double  elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
+          double  elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
             elementJacobian_h_u[nDOF_test_element][nDOF_trial_element],
             elementJacobian_h_v[nDOF_test_element][nDOF_trial_element],
             elementJacobian_u_h[nDOF_test_element][nDOF_trial_element],
@@ -2303,7 +2303,7 @@ namespace proteus
                 eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
               //declare local storage
-              register double b=0.0,
+              double b=0.0,
                 h=0.0,
                 u=0.0,
                 v=0.0,
@@ -2629,7 +2629,7 @@ namespace proteus
               //calculate the Jacobian of strong residual
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  register int j_nSpace = j*nSpace;
+                  int j_nSpace = j*nSpace;
 
                   dpdeResidual_h_h[j]= ck.MassJacobian_strong(dmass_acc_h_t,h_trial_ref.data()[k*nDOF_trial_element+j])+
                     ck.AdvectionJacobian_strong(dmass_adv_h_sge,&h_grad_trial[j_nSpace]);
@@ -2687,7 +2687,7 @@ namespace proteus
               //adjoint times the test functions
               for (int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace = i*nSpace;
+                  int i_nSpace = i*nSpace;
                   Lstar_h_h[i]=ck.Advection_adjoint(dmass_adv_h_sge,&h_grad_test_dV[i_nSpace]);
                   Lstar_u_h[i]=ck.Advection_adjoint(dmass_adv_u_sge,&h_grad_test_dV[i_nSpace]);
                   Lstar_v_h[i]=ck.Advection_adjoint(dmass_adv_v_sge,&h_grad_test_dV[i_nSpace]);
@@ -2705,10 +2705,10 @@ namespace proteus
 
               for(int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace = i*nSpace;
+                  int i_nSpace = i*nSpace;
                   for(int j=0;j<nDOF_trial_element;j++)
                     {
-                      register int j_nSpace = j*nSpace;
+                      int j_nSpace = j*nSpace;
                       //h
                       elementJacobian_h_h[i][j] += ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref.data()[k*nDOF_trial_element+j],h_test_dV[i]) +
                         ck.AdvectionJacobian_weak(dmass_adv_h,h_trial_ref.data()[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]) +
@@ -2778,10 +2778,10 @@ namespace proteus
           //
           for (int i=0;i<nDOF_test_element;i++)
             {
-              register int eN_i = eN*nDOF_test_element+i;
+              int eN_i = eN*nDOF_test_element+i;
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  register int eN_i_j = eN_i*nDOF_trial_element+j;
+                  int eN_i_j = eN_i*nDOF_trial_element+j;
                   globalJacobian.data()[csrRowIndeces_h_h.data()[eN_i] + csrColumnOffsets_h_h.data()[eN_i_j]] += elementJacobian_h_h[i][j];
                   globalJacobian.data()[csrRowIndeces_h_u.data()[eN_i] + csrColumnOffsets_h_u.data()[eN_i_j]] += elementJacobian_h_u[i][j];
                   globalJacobian.data()[csrRowIndeces_h_v.data()[eN_i] + csrColumnOffsets_h_v.data()[eN_i_j]] += elementJacobian_h_v[i][j];
@@ -2802,19 +2802,19 @@ namespace proteus
       //
       /* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)  */
       /*        {  */
-      /*          register int ebN = exteriorElementBoundariesArray.data()[ebNE], */
+      /*          int ebN = exteriorElementBoundariesArray.data()[ebNE], */
       /*            eN  = elementBoundaryElementsArray.data()[ebN*2+0], */
       /*            eN_nDOF_trial_element = eN*nDOF_trial_element, */
       /*            ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0]; */
-      /*          register double eps_rho,eps_mu; */
+      /*          double eps_rho,eps_mu; */
       /*          for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)  */
       /*            {  */
-      /*              register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
+      /*              int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
       /*                ebNE_kb_nSpace = ebNE_kb*nSpace, */
       /*                ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, */
       /*                ebN_local_kb_nSpace = ebN_local_kb*nSpace; */
 
-      /*              register double h_ext=0.0, */
+      /*              double h_ext=0.0, */
       /*                u_ext=0.0, */
       /*                v_ext=0.0, */
       /*                grad_h_ext[nSpace], */
@@ -3141,7 +3141,7 @@ namespace proteus
       /*              h_henalty = 100.0/elementDiameter.data()[eN]; */
       /*              for (int j=0;j<nDOF_trial_element;j++) */
       /*                { */
-      /*                  register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j; */
+      /*                  int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j; */
       /*                  //cek debug */
       /*                  //ebqe_henalty_ext[ebNE_kb] = 10.0; */
       /*                  // */
@@ -3230,10 +3230,10 @@ namespace proteus
       /*              // */
       /*              for (int i=0;i<nDOF_test_element;i++) */
       /*                { */
-      /*                  register int eN_i = eN*nDOF_test_element+i; */
+      /*                  int eN_i = eN*nDOF_test_element+i; */
       /*                  for (int j=0;j<nDOF_trial_element;j++) */
       /*                    { */
-      /*                      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j; */
+      /*                      int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j; */
 
       /*                      globalJacobian.data()[csrRowIndeces_h_h.data()[eN_i] + csrColumnOffsets_eb_h_h.data()[ebN_i_j]] += fluxJacobian_h_h[j]*h_test_dS[i]; */
       /*                      globalJacobian.data()[csrRowIndeces_h_u.data()[eN_i] + csrColumnOffsets_eb_h_u.data()[ebN_i_j]] += fluxJacobian_h_u[j]*h_test_dS[i]; */
@@ -3387,7 +3387,7 @@ namespace proteus
       //
       for(int eN=0;eN<nElements_global;eN++)
         {
-          register double  elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
+          double  elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
             elementJacobian_h_u[nDOF_test_element][nDOF_trial_element],
             elementJacobian_h_v[nDOF_test_element][nDOF_trial_element],
             elementJacobian_u_h[nDOF_test_element][nDOF_trial_element],
@@ -3416,7 +3416,7 @@ namespace proteus
                 eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
               //declare local storage
-              register double b=0.0,
+              double b=0.0,
                 h=0.0,
                 u=0.0,
                 v=0.0,
@@ -3695,7 +3695,7 @@ namespace proteus
               //calculate the Jacobian of strong residual
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  register int j_nSpace = j*nSpace;
+                  int j_nSpace = j*nSpace;
 
                   dpdeResidual_h_h[j]= ck.MassJacobian_strong(dmass_acc_h_t,h_trial_ref.data()[k*nDOF_trial_element+j])+
                     ck.AdvectionJacobian_strong(dmass_adv_h_sge,&h_grad_trial[j_nSpace]);
@@ -3766,17 +3766,17 @@ namespace proteus
               //Not really SUPG, but is test function contribution
               for (int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace = i*nSpace;
+                  int i_nSpace = i*nSpace;
                   Lhat_x[i]= -h_grad_test_dV[i_nSpace];
                   Lhat_y[i]= -h_grad_test_dV[i_nSpace+1];
                 }
 
               for(int i=0;i<nDOF_test_element;i++)
                 {
-                  register int i_nSpace = i*nSpace;
+                  int i_nSpace = i*nSpace;
                   for(int j=0;j<nDOF_trial_element;j++)
                     {
-                      register int j_nSpace = j*nSpace;
+                      int j_nSpace = j*nSpace;
                       //h
                       elementJacobian_h_h[i][j] += ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref.data()[k*nDOF_trial_element+j],h_test_dV[i]) +
                         ck.AdvectionJacobian_weak(dmass_adv_h,h_trial_ref.data()[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]) +
@@ -3844,10 +3844,10 @@ namespace proteus
           //
           for (int i=0;i<nDOF_test_element;i++)
             {
-              register int eN_i = eN*nDOF_test_element+i;
+              int eN_i = eN*nDOF_test_element+i;
               for (int j=0;j<nDOF_trial_element;j++)
                 {
-                  register int eN_i_j = eN_i*nDOF_trial_element+j;
+                  int eN_i_j = eN_i*nDOF_trial_element+j;
                   globalJacobian.data()[csrRowIndeces_h_h.data()[eN_i] + csrColumnOffsets_h_h.data()[eN_i_j]] += elementJacobian_h_h[i][j];
                   globalJacobian.data()[csrRowIndeces_h_u.data()[eN_i] + csrColumnOffsets_h_u.data()[eN_i_j]] += elementJacobian_h_u[i][j];
                   globalJacobian.data()[csrRowIndeces_h_v.data()[eN_i] + csrColumnOffsets_h_v.data()[eN_i_j]] += elementJacobian_h_v[i][j];
@@ -3891,10 +3891,10 @@ namespace proteus
     /*  xArray_right[nQuadraturePoints_elementBoundary*3]; */
     /*   for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) */
     /*  { */
-    /*    register int ebN = exteriorElementBoundariesArray[ebNE]; */
+    /*    int ebN = exteriorElementBoundariesArray[ebNE]; */
     /*    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
     /*      { */
-    /*        register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace, */
+    /*        int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace, */
     /*          ebNE_kb_nSpace = ebNE*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace; */
     /*        velocityAverage[ebN_kb_nSpace+0]=ebqe_velocity.data()[ebNE_kb_nSpace+0]; */
     /*        velocityAverage[ebN_kb_nSpace+1]=ebqe_velocity.data()[ebNE_kb_nSpace+1]; */
@@ -3903,7 +3903,7 @@ namespace proteus
     /*  } */
     /*   for (int ebNI = 0; ebNI < nInteriorElementBoundaries_global; ebNI++) */
     /*  { */
-    /*    register int ebN = interiorElementBoundariesArray[ebNI], */
+    /*    int ebN = interiorElementBoundariesArray[ebNI], */
     /*      left_eN_global   = elementBoundaryElementsArray[ebN*2+0], */
     /*      left_ebN_element  = elementBoundaryLocalElementBoundariesArray[ebN*2+0], */
     /*      right_eN_global  = elementBoundaryElementsArray[ebN*2+1], */
@@ -3984,12 +3984,12 @@ namespace proteus
     /*      } */
     /*    for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
     /*      { */
-    /*        register int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace; */
-    /*        register double u_left=0.0, */
+    /*        int ebN_kb_nSpace = ebN*nQuadraturePoints_elementBoundary*nSpace+kb*nSpace; */
+    /*        double u_left=0.0, */
     /*          v_left=0.0, */
     /*          u_right=0.0, */
     /*          v_right=0.0; */
-    /*        register int left_kb = kb, */
+    /*        int left_kb = kb, */
     /*          right_kb = permutations[kb], */
     /*          left_ebN_element_kb_nDOF_test_element=left_ebN_element*left_kb*nDOF_test_element, */
     /*          right_ebN_element_kb_nDOF_test_element=right_ebN_element*right_kb*nDOF_test_element; */

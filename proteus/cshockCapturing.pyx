@@ -2,7 +2,7 @@
 # cython: language_level=3
 import numpy as np
 cimport numpy as np
-cdef extern from "subgridError.h":
+cdef extern from "shockCapturing.h":
     void ccalculateNumericalDiffusionResGrad "calculateNumericalDiffusionResGrad"(int nElements_global,
                                                 int nQuadraturePoints_element,
                                                 int nSpace,

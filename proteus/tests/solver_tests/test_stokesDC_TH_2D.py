@@ -219,7 +219,7 @@ def test_Schur_Sp_solve_global_null_space(load_nse_cavity_matrix,
     ksp_obj = initialize_schur_ksp_obj(mat_A,schur_approx)
     ksp_obj.solve(b,x)
 
-    assert ksp_obj.converged == True
+    assert ksp_obj.is_converged == True
     assert ksp_obj.its == 89
     assert ksp_obj.norm < np.linalg.norm(b)*1.0e-9 + 1.0e-16
     assert ksp_obj.reason == 2

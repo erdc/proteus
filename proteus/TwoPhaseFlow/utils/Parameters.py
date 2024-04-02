@@ -1396,7 +1396,7 @@ class ParametersModelNCLS(ParametersModelBase):
 
         # BOUNDARY CONDITIONS
         BC = self._Problem.SystemPhysics.boundaryConditions
-        if self.p.dirichletConditions is None or len(self.p.dirichletConditions) is 0:
+        if self.p.dirichletConditions is None or len(self.p.dirichletConditions) == 0:
             if domain.useSpatialTools is False or self._Problem.SystemPhysics.useBoundaryConditionsModule is False:
                 if 'ncls_DBC' in BC:
                     self.p.dirichletConditions = {0: BC['ncls_DBC']}

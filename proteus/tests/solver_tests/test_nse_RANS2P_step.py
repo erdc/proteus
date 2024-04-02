@@ -210,7 +210,7 @@ def test_Schur_Sp_solve():
     ksp_obj = initialize_schur_ksp_obj(mat_A, schur_approx)
     ksp_obj.solve(b,x)
 
-    assert ksp_obj.converged == True
+    assert ksp_obj.is_converged == True
     assert ksp_obj.reason == 2
     assert float(ksp_obj.norm) < 1.0e-5
     assert ksp_obj.its == 63
