@@ -45,6 +45,12 @@ cdef class  SolitaryWave:
         double mwl,c
     cdef np.ndarray g,waveDir,vDir,trans
     cdef bool fast
+cdef class  SolitaryWaveFenton:
+    cdef double afa,H,gAbs,K,depth,d2,d3
+    cdef public:
+        double mwl,c
+    cdef np.ndarray g,waveDir,vDir,trans
+    cdef bool fast
 
 cdef class  MonochromaticWaves:
     cdef bool fast
