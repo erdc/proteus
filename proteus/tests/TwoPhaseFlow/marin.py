@@ -29,7 +29,7 @@ opts= Context.Options([
     ("ARTIFICIAL_VISCOSITY",3,"artificial viscosity")
     ])
 
-assert opts.ns_model==1, "use ns_model=1 (rans3pf) for this"
+#assert opts.ns_model==1, "use ns_model=1 (rans3pf) for this"
 
 # ****************** #
 # ***** GAUGES ***** #

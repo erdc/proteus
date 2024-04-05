@@ -950,13 +950,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #          repr(self.netForces_v[:,:]))
             self.timeHistory.write("%21.16e\n" % (t,))
             self.timeHistory.flush()
-            self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            for bN in range(self.wettedAreas.shape[0]):
+                self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[bN],))
+                self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[bN, :]))
+                self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[bN, :]))
+                self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[bN, :]))
             self.wettedAreaHistory.flush()
-            self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
-            self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[-1, :]))
             self.forceHistory_v.flush()
-            self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1, :]))
             self.momentHistory.flush()
             if self.nParticles > 0:
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
