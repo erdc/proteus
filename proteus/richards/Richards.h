@@ -32,12 +32,15 @@ namespace proteus
 }
 
 namespace proteus
+
 {
   class Richards_base
   {
     //The base class defining the interface
   public:
-    virtual ~Richards_base(){}
+    virtual ~Richards_base(){
+		double anb_seepage_flux =1e-16;
+	}
     virtual void calculateResidual(arguments_dict& args)=0;
     virtual void calculateJacobian(arguments_dict& args)=0;
     virtual void invert(arguments_dict& args)=0;
@@ -113,6 +116,7 @@ namespace proteus
       psiC = -u;
       m_vg = 1.0 - 1.0 / n_vg;
       thetaS = thetaR + thetaSR;
+	  //std::cout<< "Thetas"<<thetaS<<std::endl;//arnob trying to debug
       if (psiC > 0.0)
 	{
 	  pcBar = alpha * psiC;
@@ -172,7 +176,7 @@ namespace proteus
 	    }
 	}
     }
-
+    
     inline
     void evaluateInverseCoefficients(const int rowptr[nSpace],
 				     const int colind[nnz],
@@ -183,7 +187,7 @@ namespace proteus
 				     const double n_vg,
 				     const double thetaR,
 				     const double thetaSR,
-				     const double KWs[nnz],
+				     const double KWs[nnz],			      
 				     double& u,
 				     const double& m,
 				     const double& dm,
@@ -192,7 +196,7 @@ namespace proteus
 				     const double a[nnz],
 				     const double da[nnz])
     {
-      double psiC,
+      register double psiC,
 	pcBar,pcBar_n,
 	sBar,
 	thetaW,
@@ -222,7 +226,6 @@ namespace proteus
 		   <<"psiC "<<psiC<<std::endl;
 	}
     }
-
     inline
     void calculateCFL(const double& elementDiameter,
 		      const double df[nSpace],
@@ -236,7 +239,7 @@ namespace proteus
       nrm_v = sqrt(nrm_v);
       cfl = nrm_v/h;
     }
-
+      
     inline
     void calculateSubgridError_tau(const double& elementDiameter,
 				   const double& dmt,
@@ -270,7 +273,7 @@ namespace proteus
 
       tau_v = 1.0/sqrt(Ct_sge*A0*A0 + v_d_Gv);
     }
-
+    
     inline
     void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
 				     const double& elementDiameter,
@@ -392,6 +395,23 @@ namespace proteus
 	fluxJacobian = 0.0;
     }
 
+	double seepagefluxcalculator(double anb_seepage_flux,
+							  	int isSeepageFace,
+							  	double dS,
+							  	double flux_ext)
+	{
+		//std::cout<<"ds "<<dS<<"flux" <<flux_ext <<std::endl;
+		if (isSeepageFace)
+		{
+			anb_seepage_flux += flux_ext * dS;
+			//std::cout<<"Seepage Flux by Arnob Barua is "<<anb_seepage_flux<<std::endl;		
+		}
+		//else{
+			//std::cout<<"No Seepage boundary "<<std::endl;
+		//	}
+		return anb_seepage_flux;
+	}
+
     void calculateResidual(arguments_dict& args)
     {
       xt::pyarray<double>& mesh_trial_ref = args.array<double>("mesh_trial_ref");
@@ -501,11 +521,26 @@ namespace proteus
       xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
       xt::pyarray<double>& sLow = args.array<double>("sLow");
       xt::pyarray<double>& sn = args.array<double>("sn");
-
+	  
       assert(a_rowptr.data()[nSpace] == nnz);
       assert(a_rowptr.data()[nSpace] == nSpace);
       //cek should this be read in?
       double Ct_sge = 4.0;
+	  //For flux Calculation
+	  //double anb_seepage_flux=0.0; 
+	  //anb_seepage_flux = args["anb_seepage_flux"];
+	  //double anb_seepage_flux = args.scalar<double>("anb_seepage_flux");
+	  //anb_seepage_flux=0.0;
+	  
+	  xt::pyarray<double>& anb_seepage_flux_n = args.array<double>("anb_seepage_flux_n");
+
+
+	  //double anb_seepage_flux=0.0;
+	  double & anb_seepage_flux (args.scalar<double>("anb_seepage_flux")) ;
+	  //double anb_seepage_flux = args.scalar<double>("anb_seepage_flux_n");
+	  
+	  //double anb_seepage_flux=0.0;
+	  anb_seepage_flux=0.0;
 
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -519,7 +554,7 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for element residual and initialize
-	  double elementResidual_u[nDOF_test_element];
+	  register double elementResidual_u[nDOF_test_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      elementResidual_u[i]=0.0;
@@ -528,10 +563,10 @@ namespace proteus
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
 	      //compute indeces and declare local storage
-	      int eN_k = eN*nQuadraturePoints_element+k,
+	      register int eN_k = eN*nQuadraturePoints_element+k,
 		eN_k_nSpace = eN_k*nSpace,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
-	      double u=0.0,grad_u[nSpace],grad_u_old[nSpace],
+	      register double u=0.0,grad_u[nSpace],grad_u_old[nSpace],
 		m=0.0,dm=0.0,
 		f[nSpace],df[nSpace],
 		a[nnz],da[nnz],as[nnz],
@@ -628,9 +663,9 @@ namespace proteus
 	      /* //calculate adjoint */
 	      /* for (int i=0;i<nDOF_test_element;i++) */
 	      /*     { */
-	      /*       // int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace; */
+	      /*       // register int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace; */
 	      /*       // Lstar_u[i]  = ck.Advection_adjoint(df,&u_grad_test_dV[eN_k_i_nSpace]); */
-	      /*       int i_nSpace = i*nSpace; */
+	      /*       register int i_nSpace = i*nSpace; */
 	      /*       Lstar_u[i]  = ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]); */
 	      /*     } */
 	      /* //calculate tau and tau*Res */
@@ -660,7 +695,7 @@ namespace proteus
 	      //
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
-		  int eN_k_i=eN_k*nDOF_test_element+i,
+		  register int eN_k_i=eN_k*nDOF_test_element+i,
 		    eN_k_i_nSpace = eN_k_i*nSpace,
 		    i_nSpace=i*nSpace;
 
@@ -680,7 +715,7 @@ namespace proteus
 	  //
 	  for(int i=0;i<nDOF_test_element;i++)
 	    {
-	      int eN_i=eN*nDOF_test_element+i;
+	      register int eN_i=eN*nDOF_test_element+i;
 
 	      globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]] += elementResidual_u[i];
 	    }//i
@@ -693,22 +728,22 @@ namespace proteus
       //eN is the element index
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	{
-	  int ebN = exteriorElementBoundariesArray.data()[ebNE],
+	  register int ebN = exteriorElementBoundariesArray.data()[ebNE],
 	    eN  = elementBoundaryElementsArray.data()[ebN*2+0],
 	    ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
 	    eN_nDOF_trial_element = eN*nDOF_trial_element;
-	  double elementResidual_u[nDOF_test_element];
+	  register double elementResidual_u[nDOF_test_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      elementResidual_u[i]=0.0;
 	    }
 	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
 	    {
-	      int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+	      register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
 		ebNE_kb_nSpace = ebNE_kb*nSpace,
 		ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
 		ebN_local_kb_nSpace = ebN_local_kb*nSpace;
-	      double u_ext=0.0,
+	      register double u_ext=0.0,
 		grad_u_ext[nSpace],
 		m_ext=0.0,
 		dm_ext=0.0,
@@ -718,6 +753,7 @@ namespace proteus
 		da_ext[nnz],
 		as_ext[nnz],
 		flux_ext=0.0,
+		//anb_seepage_flux=0.0, // for flux calculation
 		bc_u_ext=0.0,
 		bc_grad_u_ext[nSpace],
 		bc_m_ext=0.0,
@@ -852,17 +888,43 @@ namespace proteus
 				    ebqe_penalty_ext.data()[ebNE_kb],// penalty,
 				    flux_ext);
 	      ebqe_flux.data()[ebNE_kb] = flux_ext;
-	      ebqe_u.data()[ebNE_kb] = u_ext;
+
+		  //anb_seepage_flux +=flux_ext*dS;
+		  //std::cout<<"Seepage Flux" <<anb_seepage_flux<<std::endl;
+		  
+		  //if (isSeepageFace)
+		  //{
+		  //  anb_seepage_flux +=flux_ext*dS;
+		//	std::cout<<"Seepage face at last!"<<std::endl;
+		  //}
+		 // else {
+		//	std::cout<<"Flux ext" <<flux_ext<<"Weightage" <<dS <<std::endl;
+		 // }
+		 anb_seepage_flux= seepagefluxcalculator(anb_seepage_flux,
+							  						  isSeepageFace.data()[ebNE],
+							  						  dS,
+							  						  flux_ext);
+				//std::cout<<"The seepage flux is "<<anb_seepage_flux<<std::endl;
+		 	anb_seepage_flux_n.data()[0]= anb_seepage_flux;
+				
+				//anb_seepage_flux= anb_seepage_flux;
+			if (anb_seepage_flux>0)
+				{
+					std::cout<<"The seepage flux is "<<anb_seepage_flux<<std::endl;
+				}
+				
+	      ebqe_u.data()[ebNE_kb] = u_ext;  
 	      //
 	      //update residuals
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-
+		  
 		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
 		}//i
-	    }//kb
+		}//kb
+		
 	  //
 	  //update the element and global residual storage
 	  //
@@ -871,6 +933,8 @@ namespace proteus
 	      int eN_i = eN*nDOF_test_element+i;
 
 	      globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]] += elementResidual_u[i];
+		  //arnob
+		  //std::cout<<"Element_REsidual"<<elementResidual_u[i]<<std::endl;
 	    }//i
 	}//ebNE
     }
@@ -939,13 +1003,14 @@ namespace proteus
       assert(a_rowptr.data()[nSpace] == nnz);
       assert(a_rowptr.data()[nSpace] == nSpace);
       double Ct_sge = 4.0;
+	  
 
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
       for(int eN=0;eN<nElements_global;eN++)
 	{
-	  double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	  register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      for (int j=0;j<nDOF_trial_element;j++)
@@ -953,6 +1018,7 @@ namespace proteus
 		  elementJacobian_u_u[i][j]=0.0;
 		}
 	    }
+	  //std::cout<<"Element_REsidual 22"<<std::endl;
 	  for (int k=0;k<nQuadraturePoints_element;k++)
 	    {
 	      int eN_k = eN*nQuadraturePoints_element+k, //index to a scalar at a quadrature point
@@ -960,7 +1026,7 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
 	      //declare local storage
-	      double u=0.0,
+	      register double u=0.0,
 		grad_u[nSpace],
 		m=0.0,dm=0.0,
 		f[nSpace],df[nSpace],
@@ -1058,7 +1124,7 @@ namespace proteus
 	      //     {
 	      //       // int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
 	      //       // Lstar_u[i]=ck.Advection_adjoint(df,&u_grad_test_dV[eN_k_i_nSpace]);
-	      //       int i_nSpace = i*nSpace;
+	      //       register int i_nSpace = i*nSpace;
 	      //       Lstar_u[i]=ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);
 	      //     }
 	      // //calculate the Jacobian of strong residual
@@ -1124,18 +1190,18 @@ namespace proteus
       //
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
 	{
-	  int ebN = exteriorElementBoundariesArray.data()[ebNE];
-	  int eN  = elementBoundaryElementsArray.data()[ebN*2+0],
+	  register int ebN = exteriorElementBoundariesArray.data()[ebNE];
+	  register int eN  = elementBoundaryElementsArray.data()[ebN*2+0],
 	    ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0],
 	    eN_nDOF_trial_element = eN*nDOF_trial_element;
 	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
 	    {
-	      int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+	      register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
 		ebNE_kb_nSpace = ebNE_kb*nSpace,
 		ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
 		ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 
-	      double u_ext=0.0,
+	      register double u_ext=0.0,
 		grad_u_ext[nSpace],
 		m_ext=0.0,
 		dm_ext=0.0,
@@ -1266,8 +1332,8 @@ namespace proteus
 	      //
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
-		  //int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
-		  int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+		  //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
+		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 		  exteriorNumericalFluxJacobian(a_rowptr.data(),
 						a_colind.data(),
 						isDOFBoundary_u.data()[ebNE_kb],
@@ -1286,11 +1352,11 @@ namespace proteus
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
-		  int eN_i = eN*nDOF_test_element+i;
-		  //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
+		  register int eN_i = eN*nDOF_test_element+i;
+		  //register int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {
-		      int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
+		      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
 		      globalJacobian.data()[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
 		    }//j
 		}//i
@@ -1319,10 +1385,10 @@ namespace proteus
       xt::pyarray<double>& max_s_bc = args.array<double>("max_s_bc");
       int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
       int MONOLITHIC = args.scalar<int>("MONOLITHIC");
-      double Rpos[numDOFs], Rneg[numDOFs];
-      double FluxCorrectionMatrix[NNZ];
-      double solL[numDOFs];
-      double sdot[numDOFs];
+      register double Rpos[numDOFs], Rneg[numDOFs];
+      register double FluxCorrectionMatrix[NNZ];
+      register double solL[numDOFs];
+      register double sdot[numDOFs];
       //////////////////
       // LOOP in DOFs //
       //////////////////
@@ -1476,7 +1542,7 @@ namespace proteus
       xt::pyarray<double>& max_s_bc = args.array<double>("max_s_bc");
       int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
       int MONOLITHIC = args.scalar<int>("MONOLITHIC");
-      double Rpos[numDOFs], Rneg[numDOFs];
+      register double Rpos[numDOFs], Rneg[numDOFs];
       int ij=0;
 
       //////////////////////////////////////////////////////
@@ -1527,16 +1593,16 @@ namespace proteus
 		      double Fluxij = FluxMatrix.data()[ij] - limitedFlux.data()[ij];
 		      // compute limiter
 		      double Lij = 1.0;
-		      Lij = (Fluxij>0 ? Rposi : Rpos[j]);
+		      Lij = (Fluxij>0 ? Rposi : Rpos[j]);		    
 		      // compute limited flux 
 		      ith_Limiter_times_FluxCorrectionMatrix += Lij*Fluxij;		    
-
+			
 		      // update limited flux
 		      limitedFlux.data()[ij] = Lij*Fluxij;
-
+			
 		      //update FluxMatrix
-		      FluxMatrix.data()[ij] = Fluxij;
-
+		      FluxMatrix.data()[ij] = Fluxij;		   
+			
 		      //update ij
 		      ij+=1;
 		    }
@@ -1575,7 +1641,7 @@ namespace proteus
 	  double Qnegi = mi*(mini-solLim.data()[i]);
 	  // compute R vectors //
 	  Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
-	  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));
+	  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));	    	
 	}
 
       // COMPUTE LIMITERS //
@@ -1623,6 +1689,7 @@ namespace proteus
       xt::pyarray<double>& mesh_grad_trial_trace_ref = args.array<double>("mesh_grad_trial_trace_ref");
       xt::pyarray<double>& dS_ref = args.array<double>("dS_ref");
       xt::pyarray<double>& u_trial_trace_ref = args.array<double>("u_trial_trace_ref");
+
       xt::pyarray<double>& u_grad_trial_trace_ref = args.array<double>("u_grad_trial_trace_ref");
       xt::pyarray<double>& u_test_trace_ref = args.array<double>("u_test_trace_ref");
       xt::pyarray<double>& u_grad_test_trace_ref = args.array<double>("u_grad_test_trace_ref");
@@ -1717,20 +1784,34 @@ namespace proteus
       xt::pyarray<double>& quantDOFs = args.array<double>("quantDOFs");
       xt::pyarray<double>& sLow = args.array<double>("sLow");
       xt::pyarray<double>& sn = args.array<double>("sn");
-      double Rpos[numDOFs], Rneg[numDOFs];
-      //double FluxCorrectionMatrix[NNZ];
+
+	  xt::pyarray<double>& anb_seepage_flux_n = args.array<double>("anb_seepage_flux_n");
+
+
+	  //double anb_seepage_flux=0.0;
+	  double & anb_seepage_flux (args.scalar<double>("anb_seepage_flux")) ;
+	  //double anb_seepage_flux = args.scalar<double>("anb_seepage_flux_n");
+	  
+	  //double anb_seepage_flux=0.0;
+	  anb_seepage_flux=0.0;
+
+
+      register double Rpos[numDOFs], Rneg[numDOFs];
+      //register double FluxCorrectionMatrix[NNZ];
       // NOTE: This function follows a different (but equivalent) implementation of the smoothness based indicator than NCLS.h
       // Allocate space for the transport matrices
       // This is used for first order KUZMIN'S METHOD
-      double TransportMatrix[NNZ],TransportMatrixConsistent[NNZ];
-      double TransportMatrixn[NNZ],TransportMatrixConsistentn[NNZ];
+      register double TransportMatrix[NNZ],TransportMatrixConsistent[NNZ];
+      register double TransportMatrixn[NNZ],TransportMatrixConsistentn[NNZ];
       std::valarray<double> u_free_dof(numDOFs);
       std::valarray<double> u_free_dof_old(numDOFs);
       std::valarray<double> ML2(numDOFs);
+
+
       for(int eN=0;eN<nElements_global;eN++)
 	for (int j=0;j<nDOF_trial_element;j++)
 	  {
-	    int eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    register int eN_nDOF_trial_element = eN*nDOF_trial_element;
 	    u_free_dof[r_l2g.data()[eN_nDOF_trial_element+j]] = u_dof.data()[u_l2g.data()[eN_nDOF_trial_element+j]];
 	    u_free_dof_old[r_l2g.data()[eN_nDOF_trial_element+j]] = u_dof_old.data()[u_l2g.data()[eN_nDOF_trial_element+j]];
 	  }
@@ -1743,7 +1824,7 @@ namespace proteus
 	}
 
       // compute entropy and init global_entropy_residual and boundary_integral
-      double psi[numDOFs], eta[numDOFs], global_entropy_residual[numDOFs], boundary_integral[numDOFs];
+      register double psi[numDOFs], eta[numDOFs], global_entropy_residual[numDOFs], boundary_integral[numDOFs];
       for (int i=0; i<numDOFs; i++)
 	{
 	  // NODAL ENTROPY //
@@ -1768,12 +1849,12 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for local contributions and initialize
-	  double
+	  register double
 	    elementResidual_u[nDOF_test_element],
 	    element_entropy_residual[nDOF_test_element],Phi[nDOF_trial_element],Phi_n[nDOF_trial_element];
-	  double  elementTransport[nDOF_test_element][nDOF_trial_element],
+	  register double  elementTransport[nDOF_test_element][nDOF_trial_element],
 	    elementTransportConsistent[nDOF_test_element][nDOF_trial_element];
-	  double  elementTransportn[nDOF_test_element][nDOF_trial_element],
+	  register double  elementTransportn[nDOF_test_element][nDOF_trial_element],
 	    elementTransportConsistentn[nDOF_test_element][nDOF_trial_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
@@ -1798,10 +1879,10 @@ namespace proteus
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
 	      //compute indeces and declare local storage
-	      int eN_k = eN*nQuadraturePoints_element+k,
+	      register int eN_k = eN*nQuadraturePoints_element+k,
 		eN_k_nSpace = eN_k*nSpace,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
-	      double
+	      register double
 		// for entropy residual
 		aux_entropy_residual=0., DENTROPY_un, DENTROPY_uni,
 		//for mass matrix contributions
@@ -1854,7 +1935,7 @@ namespace proteus
 		      u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
 		    }
 		}
-
+                
 	      //
 	      //calculate pde coefficients at quadrature points
 	      //
@@ -1899,6 +1980,8 @@ namespace proteus
 				   as,
 				   Kr,
 				   dKr);
+		
+
 	      //
 	      //moving mesh
 	      //
@@ -2007,134 +2090,288 @@ namespace proteus
       /* // ADD OUTFLOW BOUNDARY TERM TO TRANSPORT MATRICES AND COMPUTE INFLOW BOUNDARY INTEGRAL // */
       /* ////////////////////////////////////////////////////////////////////////////////////////// */
       /* //   * Compute outflow boundary integral as a matrix; i.e., int_B[ (vel.normal)*wi*wj*dx] */
-      /* for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) */
-      /*   { */
-      /*     double min_u_bc_local = 1E10, max_u_bc_local = -1E10; */
-      /*     int ebN = exteriorElementBoundariesArray[ebNE]; */
-      /*     int eN  = elementBoundaryElementsArray[ebN*2+0], */
-      /*       ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0], */
-      /*       eN_nDOF_trial_element = eN*nDOF_trial_element; */
-      /*     double elementResidual_u[nDOF_test_element]; */
-      /*     for (int i=0;i<nDOF_test_element;i++) */
-      /*       elementResidual_u[i]=0.0; */
-      /*     // loop on quad points */
-      /*     for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) */
-      /*       { */
-      /*         int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, */
-      /*           ebNE_kb_nSpace = ebNE_kb*nSpace, */
-      /*           ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, */
-      /*           ebN_local_kb_nSpace = ebN_local_kb*nSpace; */
-      /*         double */
-      /*           u_ext=0.0, bc_u_ext=0.0, */
-      /*           porosity_times_velocity[nSpace], */
-      /*           flux_ext=0.0, dflux_ext=0.0, */
-      /*           fluxTransport[nDOF_trial_element], */
-      /*           jac_ext[nSpace*nSpace], */
-      /*           jacDet_ext, */
-      /*           jacInv_ext[nSpace*nSpace], */
-      /*           boundaryJac[nSpace*(nSpace-1)], */
-      /*           metricTensor[(nSpace-1)*(nSpace-1)], */
-      /*           metricTensorDetSqrt, */
-      /*           dS, */
-      /*           u_test_dS[nDOF_test_element], */
-      /*           normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,porosity_ext; */
-      /*         // calculate mappings */
-      /*         ck.calculateMapping_elementBoundary(eN, */
-      /*                                             ebN_local, */
-      /*                                             kb, */
-      /*                                             ebN_local_kb, */
-      /*                                             mesh_dof, */
-      /*                                             mesh_l2g, */
-      /*                                             mesh_trial_trace_ref, */
-      /*                                             mesh_grad_trial_trace_ref, */
-      /*                                             boundaryJac_ref, */
-      /*                                             jac_ext, */
-      /*                                             jacDet_ext, */
-      /*                                             jacInv_ext, */
-      /*                                             boundaryJac, */
-      /*                                             metricTensor, */
-      /*                                             metricTensorDetSqrt, */
-      /*                                             normal_ref, */
-      /*                                             normal, */
-      /*                                             x_ext,y_ext,z_ext); */
-      /*         ck.calculateMappingVelocity_elementBoundary(eN, */
-      /*                                                     ebN_local, */
-      /*                                                     kb, */
-      /*                                                     ebN_local_kb, */
-      /*                                                     mesh_velocity_dof, */
-      /*                                                     mesh_l2g, */
-      /*                                                     mesh_trial_trace_ref, */
-      /*                                                     xt_ext,yt_ext,zt_ext, */
-      /*                                                     normal, */
-      /*                                                     boundaryJac, */
-      /*                                                     metricTensor, */
-      /*                                                     integralScaling); */
-      /*         dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb]; */
-      /*         //compute shape and solution information */
-      /*         ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext); */
-      /*         //precalculate test function products with integration weights */
-      /*         for (int j=0;j<nDOF_trial_element;j++) */
-      /*           u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS; */
+      //This is comment undone to calculate flux under Stabilization_type=2
+	   for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
+         { 
+           double min_u_bc_local = 1E10, max_u_bc_local = -1E10; 
+           register int ebN = exteriorElementBoundariesArray[ebNE]; 
+           register int eN  = elementBoundaryElementsArray[ebN*2+0], 
+             ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0], 
+             eN_nDOF_trial_element = eN*nDOF_trial_element; 
+           register double elementResidual_u[nDOF_test_element]; 
+           for (int i=0;i<nDOF_test_element;i++) 
+             elementResidual_u[i]=0.0; 
+           // loop on quad points 
+           for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
+             { 
+               register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb, 
+                 ebNE_kb_nSpace = ebNE_kb*nSpace, 
+                 ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb, 
+                 ebN_local_kb_nSpace = ebN_local_kb*nSpace; 
+               register double u=0.0,
+                 u_ext=0.0, bc_u_ext=0.0, 
+				 grad_u_ext[nSpace],
+                 porosity_times_velocity[nSpace], 
+                 flux_ext=0.0, dflux_ext=0.0, 
+                 fluxTransport[nDOF_trial_element], 
+                 jac_ext[nSpace*nSpace], 
+                 jacDet_ext, 
+                 jacInv_ext[nSpace*nSpace], 
+                 boundaryJac[nSpace*(nSpace-1)], 
+                 metricTensor[(nSpace-1)*(nSpace-1)], 
+                 metricTensorDetSqrt, 
+				 //arnob adding the variable
+				 //u_grad_trial_trace[nDOF_trial_element*nSpace],
+				 a_ext[nnz],
+				 da_ext[nnz],
+				 as_ext[nnz],
 
-      /*         //VRANS */
-      /*         porosity_ext = 1.0; */
-      /*         // */
-      /*         //moving mesh */
-      /*         // */
-      /*         double mesh_velocity[3]; */
-      /*         mesh_velocity[0] = xt_ext; */
-      /*         mesh_velocity[1] = yt_ext; */
-      /*         mesh_velocity[2] = zt_ext; */
-      /*         //std::cout<<"mesh_velocity ext"<<std::endl; */
-      /*         for (int I=0;I<nSpace;I++) */
-      /*           porosity_times_velocity[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]); */
-      /*         // */
-      /*         //calculate the fluxes */
-      /*         // */
-      /*         double flow = 0.; */
-      /*         for (int I=0; I < nSpace; I++) */
-      /*           flow += normal[I]*porosity_times_velocity[I]; */
-      /*         //cek todo, fix boundary conditions */
-      /*         if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0 */
-      /*           { */
-      /*             dflux_ext = flow; */
-      /*             flux_ext = 0; */
-      /*             // save external u */
-      /*             ebqe_u[ebNE_kb] = u_ext; */
-      /*           } */
-      /*         else // inflow. This is handled via the boundary integral. Then flux_ext!=0 and dflux_ext=0 */
-      /*           { */
-      /*             dflux_ext = 0; */
-      /*             // save external u */
-      /*             ebqe_u[ebNE_kb] = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext; */
-      /*             if (isDOFBoundary_u[ebNE_kb] == 1) */
-      /*               flux_ext = ebqe_bc_u_ext[ebNE_kb]*flow; */
-      /*             else if (isFluxBoundary_u[ebNE_kb] == 1) */
-      /*               flux_ext = ebqe_bc_flux_u_ext[ebNE_kb]; */
-      /*             else */
-      /*               { */
-      /*                 std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl; */
-      /*                 flux_ext = 0.0; */
-      /*               } */
-      /*           } */
+				 m_ext=0.0,
+				 dm_ext=0.0,
 
+				 f_ext[nSpace],df_ext[nSpace],
+				 bc_m_ext=0.0,bc_dm_ext=0.0,
+
+				 //bc_u_ext=0.0,
+				 bc_f_ext[nSpace],bc_df_ext[nSpace],bc_a_ext[nnz],bc_da_ext[nnz],bc_as_ext[nnz],
+
+                 dS, 
+                 u_test_dS[nDOF_test_element], u_grad_trial_trace[nDOF_trial_element*nSpace],
+                 normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,porosity_ext, 
+				 G[nSpace*nSpace],G_dd_G,tr_G;
+               // calculate mappings 
+               ck.calculateMapping_elementBoundary(eN, 
+                                                   ebN_local, 
+                                                   kb, 
+                                                   ebN_local_kb, 
+                                                   mesh_dof.data(), 
+                                                   mesh_l2g.data(), 
+                                                   mesh_trial_trace_ref.data(), 
+                                                   mesh_grad_trial_trace_ref.data(), 
+                                                   boundaryJac_ref.data(), 
+                                                   jac_ext, 
+                                                   jacDet_ext, 
+                                                   jacInv_ext, 
+                                                   boundaryJac, 
+                                                   metricTensor, 
+                                                   metricTensorDetSqrt, 
+                                                   normal_ref.data(), 
+                                                   normal, 
+                                                   x_ext,y_ext,z_ext); 
+               ck.calculateMappingVelocity_elementBoundary(eN, 
+                                                           ebN_local, 
+                                                           kb, 
+                                                           ebN_local_kb, 
+                                                           mesh_velocity_dof.data(), 
+                                                           mesh_l2g.data(), 
+                                                           mesh_trial_trace_ref.data(), 
+                                                           xt_ext,yt_ext,zt_ext, 
+                                                           normal, 
+                                                           boundaryJac, 
+                                                           metricTensor, 
+                                                           integralScaling); 
+               dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb]; 
+
+			   //calculate the numerical fluxes
+	      	   //get the metric tensor
+	      //cek todo use symmetry
+	      		ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+	      //compute shape and solution information
+	      //shape
+	      		ck.gradTrialFromRef(&u_grad_trial_trace_ref.data()[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
+
+
+               //compute shape and solution information 
+
+
+               ck.valFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],&u_trial_trace_ref.data()[ebN_local_kb*nDOF_test_element],u_ext); 
+			   ck.gradFromDOF(u_dof.data(),&u_l2g.data()[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
+			   
+
+
+               //precalculate test function products with integration weights 
+               for (int j=0;j<nDOF_trial_element;j++) 
+                 u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS; 
+
+			   bc_u_ext = isDOFBoundary_u.data()[ebNE_kb]*ebqe_bc_u_ext.data()[ebNE_kb]+(1-isDOFBoundary_u.data()[ebNE_kb])*u_ext;
+
+			   //arnob addition
+			   double Kr, dKr;
+	      	   evaluateCoefficients(a_rowptr.data(),
+				   a_colind.data(),
+				   rho,
+				   beta,
+				   gravity.data(),
+				   alpha.data()[elementMaterialTypes.data()[eN]],
+				   n.data()[elementMaterialTypes.data()[eN]],
+				   thetaR.data()[elementMaterialTypes.data()[eN]],
+				   thetaSR.data()[elementMaterialTypes.data()[eN]],
+				   &KWs.data()[elementMaterialTypes.data()[eN]*nnz],
+				   u_ext,
+				   m_ext,
+				   dm_ext,
+				   f_ext,
+				   df_ext,
+				   a_ext,
+				   da_ext,
+				   as_ext,
+				   Kr,
+				   dKr);
+	      	   evaluateCoefficients(a_rowptr.data(),
+				   a_colind.data(),
+				   rho,
+				   beta,
+				   gravity.data(),
+				   alpha.data()[elementMaterialTypes.data()[eN]],
+				   n.data()[elementMaterialTypes.data()[eN]],
+				   thetaR.data()[elementMaterialTypes.data()[eN]],
+				   thetaSR.data()[elementMaterialTypes.data()[eN]],
+				   &KWs.data()[elementMaterialTypes.data()[eN]*nnz],
+				   bc_u_ext,
+				   bc_m_ext,
+				   bc_dm_ext,
+				   bc_f_ext,
+				   bc_df_ext,
+				   bc_a_ext,
+				   bc_da_ext,
+				   bc_as_ext,
+				   Kr,
+				   dKr);
+
+
+			   exteriorNumericalFlux(ebqe_bc_flux_ext[ebNE_kb],
+				    a_rowptr.data(),
+				    a_colind.data(),
+				    isSeepageFace.data()[ebNE],//tricky, this is a face flag not face quad
+				    isDOFBoundary_u.data()[ebNE_kb],
+				    normal,
+				    bc_u_ext,
+				    a_ext,
+				    grad_u_ext,
+				    u_ext,
+				    f_ext,
+				    ebqe_penalty_ext.data()[ebNE_kb],// penalty,
+				    flux_ext);
+	      		ebqe_flux.data()[ebNE_kb] = flux_ext;
+	      		ebqe_u.data()[ebNE_kb] = u_ext;
+
+				//std::cout<<"flux_ext "<<flux_ext<<std::endl;
+				//std::cout<<"dS "<< dS <<std::endl;		
+
+			   anb_seepage_flux= seepagefluxcalculator(anb_seepage_flux,
+							  						  isSeepageFace.data()[ebNE],
+							  						  dS,
+							  						  flux_ext);
+				//std::cout<<"The seepage flux is "<<anb_seepage_flux<<std::endl;
+				anb_seepage_flux_n.data()[0]= anb_seepage_flux;
+				
+				//anb_seepage_flux= anb_seepage_flux;
+				if (anb_seepage_flux>0)
+				{
+					std::cout<<"The seepage flux is "<<anb_seepage_flux<<std::endl;
+				}
+				
+				
+				//}	
+				  
+				//else{
+					
+				//}  
+
+				//anb_seepage_flux += dS* flux_ext;
+				//double anb_seepage_flux_n = args.scalar<double>("anb_seepage_flux_n");
+				//anb_seepage_flux_n=0.0;
+
+				//anb_seepage_flux_n= anb_seepage_flux;
+				
+
+
+				//if (isSeepageFace)
+				//{
+				//	anb_seepage_flux+= dS* flux_ext;
+				//	std::cout<<"The seepage flux is "<<anb_seepage_flux<<std::endl;
+
+					
+
+				
+
+				//anb_seepage_flux+= dS* flux_ext;
+				//if (anb_seepage_flux >0){
+				//	std::cout<<"The seepage flux is "<<anb_seepage_flux<<std::endl;
+				//}
+				
+	      
+
+			   
+               //VRANS 
+               porosity_ext = 1.0; 
+               // 
+               //moving mesh 
+               // 
+               double mesh_velocity[3]; 
+               mesh_velocity[0] = xt_ext; 
+               mesh_velocity[1] = yt_ext; 
+               mesh_velocity[2] = zt_ext; 
+               //std::cout<<"mesh_velocity ext"<<std::endl; 
+               for (int I=0;I<nSpace;I++) 
+                 porosity_times_velocity[I] = porosity_ext*(ebqe_velocity_ext[ebNE_kb_nSpace+I] - MOVING_DOMAIN*mesh_velocity[I]); 
+               // 
+               //calculate the fluxes 
+               // 
+              // double flow = 0.; 
+              // for (int I=0; I < nSpace; I++) 
+              //   flow += normal[I]*porosity_times_velocity[I];
+				 //std::cout<<"normal "<< flow <<std::endl; 
+				 //std::cout<<"porosity_times_velocity[I] "<< porosity_times_velocity <<std::endl; 
+			//std::cout<<"flux ext is "<< flow <<std::endl; 
+						   
+
+               //cek todo, fix boundary conditions 
+              // if (flow >= 0 && isFluxBoundary_u[ebNE_kb] != 1 )  //outflow. This is handled via the transport matrices. Then flux_ext=0 and dflux_ext!=0 
+              //   { 
+              //     dflux_ext = flow; 
+              //     flux_ext = 0; 
+               //    // save external u 
+               //    ebqe_u[ebNE_kb] = u_ext; 
+               //  } 
+               //else // inflow. This is handled via the boundary integral. Then flux_ext!=0 and dflux_ext=0 
+                 //{ 
+                   //dflux_ext = 0; 
+                   // save external u 
+                   //ebqe_u[ebNE_kb] = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext; 
+                   //if (isDOFBoundary_u[ebNE_kb] == 1) 
+                    // flux_ext = ebqe_bc_u_ext[ebNE_kb]*flow; 
+                   //else if (isFluxBoundary_u[ebNE_kb] == 1) 
+                     //flux_ext = ebqe_bc_flux_u_ext[ebNE_kb];
+					// flux_ext = ebqe_bc_u_ext[ebNE_kb]; 
+                   //else 
+                   //  { 
+                   //    std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl; 
+                   //    flux_ext = 0.0; 
+                   //  } 
+
+                 //} 
+
+				 //anb_seepage_flux+= dS*flow;
+				 //std::cout<<"Seepage Flux is "<<anb_seepage_flux<<std::endl;
+				
       /*         for (int j=0;j<nDOF_trial_element;j++) */
       /*           { */
       /*             // elementResidual. This is to include the inflow boundary integral. */
       /*             // NOTE: here I assume that we use a Galerkin approach st nDOF_test_element = nDOF_trial_element */
       /*             elementResidual_u[j] += flux_ext*u_test_dS[j]; */
-      /*             int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j; */
+      /*             register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j; */
       /*             fluxTransport[j] = dflux_ext*u_trial_trace_ref[ebN_local_kb_j]; */
       /*           }//j */
       /*         /////////////////////////////////////////////////////// */
-      /*         // DISTRIBUTE OUTFLOW BOUNDARY TO TRANSPORT MATRICES // */
+      /*         // DISglobalresidualTRIBUTE OUTFLOW BOUNDARY TO TRANSPORT MATRICES // */
       /*         /////////////////////////////////////////////////////// */
       /*         for (int i=0;i<nDOF_test_element;i++) */
       /*           { */
-      /*             int eN_i = eN*nDOF_test_element+i; */
+      /*             register int eN_i = eN*nDOF_test_element+i; */
       /*             for (int j=0;j<nDOF_trial_element;j++) */
       /*               { */
-      /*                 int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j; */
+      /*                 register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j; */
       /*                 TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] */
       /*                   += fluxTransport[j]*u_test_dS[i]; */
       /*                 TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] */
@@ -2144,7 +2381,7 @@ namespace proteus
       /*         // local min/max at boundary */
       /*         min_u_bc_local = fmin(ebqe_u[ebNE_kb], min_u_bc_local); */
       /*         max_u_bc_local = fmax(ebqe_u[ebNE_kb], max_u_bc_local); */
-      /*       }//kb */
+             }//kb 
       /*     // global min/max at boundary */
       /*     for (int i=0;i<nDOF_test_element;i++) */
       /*       { */
@@ -2155,7 +2392,7 @@ namespace proteus
       /*         min_u_bc[gi] = fmin(min_u_bc_local,min_u_bc[gi]); */
       /*         max_u_bc[gi] = fmax(max_u_bc_local,max_u_bc[gi]); */
       /*       } */
-      /*   }//ebNE */
+         }//ebNE */
       // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES and COMPUTING BOUNDARY INTEGRAL //
 
       /////////////////////////////////////////////////////////////////
@@ -2484,41 +2721,141 @@ namespace proteus
 			       dKrn);
 	  sn.data()[i] = mn;
 	  sLow.data()[i] = m;
+
+	  //////////////////////////////////////////////////////////////////////
+	  ////////ADDING ANTIDIFFUSIVE TERM IN STABILIZATION TYPE 2/////////////
+	  ///////////////////////////////////////////////////////////////////////
+
+	  // first step is computing limiters 
+
+
+	  //////////////////////////Copied from FCTStep 
+
+	  //xt::pyarray<double>& bc_mask = args.array<double>("bc_mask");
+      //int NNZ = args.scalar<int>("NNZ"); //number on non-zero entries on sparsity pattern
+      //int numDOFs = args.scalar<int>("numDOFs"); //number of DOFs
+      //double dt = args.scalar<double>("dt");
+      //xt::pyarray<double>& lumped_mass_matrix = args.array<double>("lumped_mass_matrix"); //lumped mass matrix (as vector)
+      
+	  xt::pyarray<double>& soln = args.array<double>("soln"); //DOFs of solution at time tn
+      //xt::pyarray<double>& pn = args.array<double>("pn"); //DOFs of solution at time tn
+      //xt::pyarray<double>& solH = args.array<double>("solH"); //DOFs of high order solution at tnp1
+      //xt::pyarray<double>& uLow = args.array<double>("uLow");
+      //xt::pyarray<double>& uDotLow = args.array<double>("uDotLow");
+      //xt::pyarray<double>& limited_solution = args.array<double>("limited_solution");
+      xt::pyarray<int>& csrRowIndeces_DofLoops = args.array<int>("csrRowIndeces_DofLoops"); //csr row indeces
+      xt::pyarray<int>& csrColumnOffsets_DofLoops = args.array<int>("csrColumnOffsets_DofLoops"); //csr column offsets
+      //xt::pyarray<double>& MassMatrix = args.array<double>("MassMatrix"); //mass matrix
+      //xt::pyarray<double>& dt_times_fH_minus_fL = args.array<double>("dt_times_fH_minus_fL"); //low minus high order dissipative matrices
+      //xt::pyarray<double>& min_s_bc = args.array<double>("min_s_bc"); //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+      //xt::pyarray<double>& max_s_bc = args.array<double>("max_s_bc");
+      //int LUMPED_MASS_MATRIX = args.scalar<int>("LUMPED_MASS_MATRIX");
+      //int MONOLITHIC = args.scalar<int>("MONOLITHIC");
+      register double Rpos[numDOFs], Rneg[numDOFs];
+      register double FluxCorrectionMatrix[NNZ];
+	  xt::pyarray<double>& solLim = args.array<double>("limited_solution");
+      //register double solL[numDOFs];
+      //register double sdot[numDOFs];
+
+	  ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  //double mini=soln.data()[i], maxi=soln.data()[i];
+	  //arnob_edit
+	  double mini=soln.data()[i], maxi=soln.data()[i];
+	  double Pposi = 0, Pnegi = 0.;
+	  for (int offset=csrRowIndeces_DofLoops.data()[i];
+	       offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops.data()[offset];
+	      // compute local bounds //
+	      
+		  mini = fmin(mini,sn.data()[j]);
+	      maxi = fmax(maxi,sn.data()[j]);
+	      
+
+
+		  //mini = fmin(mini,soln.data()[j]);
+	      //maxi = fmax(maxi,soln.data()[j]);
+	      // compute P vectors //
+	      double fij = dt*(ML.data()[ij]*(uDotLow.data()[i]-uDotLow.data()[j]) + dLow.data()[ij]*(uLow.data()[i]-uLow.data()[j]));
+	      Pposi += fij * (fij > 0 ? 1. : 0.);
+	      Pnegi += fij * (fij < 0 ? 1. : 0.);
+	      //update ij
+	      ij+=1;
+	    }
+
+	// compute Q vectors //
+	  double mi = ML.data()[i];
+	  double Qposi = mi*(maxi-solLim.data()[i]);
+	  double Qnegi = mi*(mini-solLim.data()[i]);
+	  // compute R vectors //
+	  Rpos[i] = ((Pposi==0) ? 1. : fmin(1.0,Qposi/Pposi));
+	  Rneg[i] = ((Pnegi==0) ? 1. : fmin(1.0,Qnegi/Pnegi));	    	
+	}
+
+	 ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double ith_limited_flux_correction = 0;
+	  double Rposi = Rpos[i];
+	  double Rnegi = Rneg[i];
+	  for (int offset=csrRowIndeces_DofLoops.data()[i]; offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops.data()[offset];
+	      // compute flux correction
+	      //double fij = dt*(MC.data()[ij]*(uDotLow.data()[i]-uDotLow.data()[j]) + dLow.data()[ij]*(uLow.data()[i]-uLow.data()[j]));
+		  //arnob_edit
+		  double fij = dt*(ML.data()[ij]*(uDotLow.data()[i]-uDotLow.data()[j]) + dLow.data()[ij]*(uLow.data()[i]-uLow.data()[j]));
+	      // compute limiters
+	      double Lij = 1.0;
+	      Lij = fij > 0 ? fmin(Rposi,Rneg[j]) : fmin(Rnegi,Rpos[j]);
+	      // compute ith_limited_flux_correction
+	      ith_limited_flux_correction += Lij*fij;
+	      ij+=1;
+	    }
+	  double mi = ML.data()[i];
+	  solLim[i] += 1./mi*ith_limited_flux_correction;
+	}
+
+  //std::cout<<"Limiter "<< ith_Limiter_times_FluxCorrectionMatrix  <<std::endl;
+
 	  //sLow.data()[i] = mn + dt*uDotLow.data()[i]*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
-	  globalResidual.data()[i] = (mi*(m - mn)/dt - ith_flux_term)*bc_mask.data()[i];//cek should introduce mn,mnp1 or somethign clearer
+	  globalResidual.data()[i] = (mi*(m - mn)/dt - ith_flux_term)*bc_mask.data()[i] + ith_limited_flux_correction ;//cek should introduce mn,mnp1 or somethign clearer
 	  globalJacobian.data()[ii] += bc_mask.data()[i]*(mi*dm/dt + J_ii) + (1.0-bc_mask.data()[i]);
 	  //globalJacobian[ii] = bc_mask.data()[i]*mi*dm/dt + (1.0-bc_mask.data()[i]);
+	}
 
 	  if (false)
 	    {
-	      //cek debug
-	      //std::cout<<"dt*divergence "<<dt*uDotLow.data()[i]<<std::endl;
-	      //std::cout<<"mass density old "<<m<<std::endl;
-	      m = sLow.data()[i];
-	      //std::cout<<"mass density "<<m<<std::endl;
-	      double mMin = rho*thetaR.data()[elementMaterialTypes.data()[0]];
-	      double mMax = rho*(thetaR.data()[elementMaterialTypes.data()[0]] + thetaSR.data()[elementMaterialTypes.data()[0]]);
-	      if (m < mMin || m  > mMax)
-		{
-		  std::cout<<"mass out of bounds "<<mMin<<'\t'<<m<<'\t'<<mMax<<std::endl;
-		}
-	      evaluateInverseCoefficients(a_rowptr.data(),
-					  a_colind.data(),
-					  rho,
-					  beta,
-					  gravity.data(),
-					  alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
-					  n.data()[elementMaterialTypes.data()[0]],
-					  thetaR.data()[elementMaterialTypes.data()[0]],
-					  thetaSR.data()[elementMaterialTypes.data()[0]],
-					  &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
-					  uLow.data()[i],
-					  m,
-					  dm,
-					  f,
-					  df,
-					  a,
-					  da);
+	  //cek debug
+	  //std::cout<<"dt*divergence "<<dt*uDotLow.data()[i]<<std::endl;
+	  //std::cout<<"mass density old "<<m<<std::endl;
+	  m = sLow.data()[i];
+	  //std::cout<<"mass density "<<m<<std::endl;
+	  double mMin = rho*thetaR.data()[elementMaterialTypes.data()[0]];
+	  double mMax = rho*(thetaR.data()[elementMaterialTypes.data()[0]] + thetaSR.data()[elementMaterialTypes.data()[0]]);
+	  if (m < mMin || m  > mMax)
+	    {
+	      std::cout<<"mass out of bounds "<<mMin<<'\t'<<m<<'\t'<<mMax<<std::endl;
+	    }
+	  evaluateInverseCoefficients(a_rowptr.data(),
+				      a_colind.data(),
+				      rho,
+				      beta,
+				      gravity.data(),
+				      alpha.data()[elementMaterialTypes.data()[0]],//cek hack, only for 1 material
+				      n.data()[elementMaterialTypes.data()[0]],
+				      thetaR.data()[elementMaterialTypes.data()[0]],
+				      thetaSR.data()[elementMaterialTypes.data()[0]],
+				      &KWs.data()[elementMaterialTypes.data()[0]*nnz],			      
+				      uLow.data()[i],
+				      m,
+				      dm,
+				      f,
+				      df,
+				      a,
+				      da);
 	    }
 	  //uLow.data()[i] = u_dof_old.data()[i] - dt/mi*(ith_flux_term
 	  //						  + boundary_integral[i]
@@ -2530,8 +2867,8 @@ namespace proteus
 	  //					      - ith_dissipative_term);
 	  //else
 	  //globalResidual.data()[i] += dt*(ith_flux_term - ith_dissipative_term);
-	}
-
+	//}
+	
       //ij=0;
       //for (int i=0; i<numDOFs; i++)
       //{
@@ -2564,7 +2901,7 @@ namespace proteus
       //abort();
       //}
       //}
-
+	
       //ij=0;
       //for (int i=0; i<numDOFs; i++)
       //{
@@ -2572,11 +2909,11 @@ namespace proteus
       //  double Rposi = Rpos[i];
       //  double Rnegi = Rneg[i];
 
-      //if (Rposi > 1.0 || Rposi < 0.0)
+      //if (Rposi > 1.0 || Rposi < 0.0)	      
       //std::cout << "Rposi: " << Rposi << std::endl;
-      //if (Rnegi > 1.0 || Rnegi < 0.0)
-      //std::cout << "Rnegi: " << Rnegi << std::endl;
-
+      //if (Rnegi > 1.0 || Rnegi < 0.0)	      
+      //std::cout << "Rnegi: " << Rnegi << std::endl;	    
+	    
       // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
       //  for (int offset=csrRowIndeces_DofLoops.data()[i];
       //	 offset<csrRowIndeces_DofLoops.data()[i+1]; offset++)
@@ -2590,12 +2927,12 @@ namespace proteus
       //	ij+=1;
       //    }
       //  double mi = ML[i];
-      //  double solni = u_dof_old[i];
+      //  double solni = u_dof_old[i];    
       //  globalResidual[i] = solni + 1.0/mi*ith_Limiter_times_FluxCorrectionMatrix;
       //}
-
     }
 
+    
     void invert(arguments_dict& args)
     {
       xt::pyarray<int>& a_rowptr = args.array<int>("a_rowptr");
@@ -2719,7 +3056,7 @@ namespace proteus
       //
       for(int eN=0;eN<nElements_global;eN++)
 	{
-	  double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
+	  register double  elementJacobian_u_u[nDOF_test_element][nDOF_trial_element];
 	  for (int i=0;i<nDOF_test_element;i++)
 	    for (int j=0;j<nDOF_trial_element;j++)
 	      {
@@ -2732,7 +3069,7 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
 	      //declare local storage
-	      double u=0.0,
+	      register double u=0.0,
 		grad_u[nSpace],
 		m=0.0,dm=0.0,
 		f[nSpace],df[nSpace],
@@ -2850,7 +3187,7 @@ namespace proteus
 		{
 		  // int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
 		  // Lstar_u[i]=ck.Advection_adjoint(df,&u_grad_test_dV[eN_k_i_nSpace]);
-		  int i_nSpace = i*nSpace;
+		  register int i_nSpace = i*nSpace;
 		  Lstar_u[i]=ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);
 		}
 	      //calculate the Jacobian of strong residual
@@ -2926,6 +3263,8 @@ namespace proteus
     }//computeMassMatrix
   };//Richards
 
+
+
   inline Richards_base* newRichards(int nSpaceIn,
 				    int nQuadraturePoints_elementIn,
 				    int nDOF_mesh_trial_elementIn,
@@ -2936,11 +3275,11 @@ namespace proteus
   {
     if (nSpaceIn == 1)
       return proteus::chooseAndAllocateDiscretization1D<Richards_base,Richards,CompKernel>(nSpaceIn,
-											   nQuadraturePoints_elementIn,
-											   nDOF_mesh_trial_elementIn,
-											   nDOF_trial_elementIn,
-											   nDOF_test_elementIn,
-											   nQuadraturePoints_elementBoundaryIn,
+											 nQuadraturePoints_elementIn,
+											 nDOF_mesh_trial_elementIn,
+											 nDOF_trial_elementIn,
+											 nDOF_test_elementIn,
+											 nQuadraturePoints_elementBoundaryIn,
 											   CompKernelFlag);
     else if (nSpaceIn == 2)
       return proteus::chooseAndAllocateDiscretization2D<Richards_base,Richards,CompKernel>(nSpaceIn,
@@ -2962,5 +3301,5 @@ namespace proteus
 											   CompKernelFlag);
       }
   }
-}//proteus
+};//proteus
 #endif
