@@ -67,7 +67,7 @@ class RKEV(TimeIntegration.SSP):
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)]  # Manuel is ignoring different time step levels for now
-        #print("Hi, This is Arnob")
+        
         
 
     def initialize_dt(self, t0, tOut, q):
@@ -140,7 +140,7 @@ class RKEV(TimeIntegration.SSP):
             for ci in range(self.nc):
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                 self.transport.u_dof_old[:] = self.transport.u[ci].dof
-                #self.print("Hi, Arnob")
+                
 
     def initializeTimeHistory(self, resetFromDOF=True):
         """
@@ -330,7 +330,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 #mwf missing ebNE-->ebN?
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
                 #print "eb flag",mesh.elementBoundaryMaterialTypes[ebN]
-                #print("Hi, Arnob")
+            
                 #print self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
                 self.isSeepageFace[ebNE] = self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
         #print (self.isSeepageFace)
@@ -575,50 +575,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if elemQuadIsDict:
                     if ('numDiff',ci,ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature[('numDiff',ci,ci)]
-                        #print("Hi, Arnob1")
-                        #print(anb_seepage_flux)
+
                     else:
                         elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature['default']
-                        #print("Hi, Arnob2")
-                        #print(anb_seepage_flux)
                 else:
                     elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature
-                    print("Hi, Arnob3")
-                    #print(anb_seepage_flux)
         if massLumping:
             for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('m',ci)] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global,1)
-                print("Hi, Arnob4")
-                #print(anb_seepage_flux)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',)+I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global,1)
-                print("Hi, Arnob5")
-                #print(anb_seepage_flux)
         if reactionLumping:
             for ci in list(self.coefficients.mass.keys()):
                 elementQuadratureDict[('r',ci)] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global,1)
-                print("Hi, Arnob6")
-                #print(anb_seepage_flux)
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[('stab',)+I[1:]] = Quadrature.SimplexLobattoQuadrature(self.nSpace_global,1)
-                print("Hi, Arnob7")
-                #print(anb_seepage_flux)
         elementBoundaryQuadratureDict={}
         if isinstance(elementBoundaryQuadrature,dict): #set terms manually
             for I in self.coefficients.elementBoundaryIntegralKeys:
                 if I in elementBoundaryQuadrature:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature[I]
-                    print("Hi, Arnob8")
-                    #print(anb_seepage_flux)
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
-                    #print("Hi, Arnob9")
-                    #print(anb_seepage_flux)
         else:
             for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
-                print("Hi, Arnob10")
-                #print(anb_seepage_flux)
         #
         # find the union of all element quadrature points and
         # build a quadrature rule for each integral that has a
@@ -1377,6 +1358,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.calculateResidual = self.richards.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.richards.calculateMassMatrix
+        
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
         self.calculateResidual(argsDict)
@@ -1394,11 +1376,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = np.zeros(r.shape,'d')
-
-        #print("Hello from the python file", self.coefficients.anb_seepage_flux)
-        #logEvent("Hello from the python file", self.coefficients.anb_seepage_flux")
-        
-    
 
 
 
@@ -1556,8 +1533,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["sn"] = self.sn
         #Arnob trying to print flux
         argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
-        #print("Hi",anb_seepage_flux)
-        #print("Hi Seepage Flux", self.coefficients.anb_seepage_flux)
+ 
 
         self.richards.invert(argsDict)
             # self.timeIntegration.dt,
@@ -1762,19 +1738,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0,0)]
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
         argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
-        
-        #arnob trying to calculate flux
-        #argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
-        #Arnob trying to print flux
-        #argsDict["anb_seepage_flux"] = self.calculateResidual.anb_seepage_flux
-
-        #argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
-        #print("Hi Seepage Flux", self.coefficients.anb_seepage_flux)
-        #print("Hi Seepage Flux",anb_seepage_flux)
-        #print("The seepage is ", anb_seepage_flux)
-
-        
-        
 
         self.calculateJacobian(argsDict)
         if self.forceStrongConditions:
