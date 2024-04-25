@@ -739,12 +739,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #################################################################
         ####################ARNOB_FCT_EDIT###############################
         #################################################################
-
-        if self.coefficients.LUMPED_MASS_MATRIX == False:
-            cond = self.coefficients.STABILIZATION_TYPE == 2
-            assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
+        if not self.coefficients.LUMPED_MASS_MATRIX and self.coefficients.STABILIZATION_TYPE == 2:
             cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == Newton
-            #assert cond, "Use levelNonlinearSolver=ExplicitLumpedMassMatrixForRichards when the mass matrix is lumped"
         
 
 
