@@ -1341,7 +1341,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #if np.sum(anb_seepage_flux_n)>0:
 
         #logEvent("Hi, this is Arnob", self.anb_seepage_flux_n[0])
-        print("Seepage Flux from Python file",  np.sum(self.anb_seepage_flux_n))
+        #print("Seepage Flux from Python file",  np.sum(self.anb_seepage_flux_n))
         seepage_text_variable= np.sum(self.anb_seepage_flux_n)
         
         with open('seepage_stab_0',"a" ) as f:
