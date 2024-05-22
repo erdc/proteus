@@ -12,6 +12,8 @@ from proteus.mprans import cArgumentsDict
 from proteus.LinearAlgebraTools import SparseMat
 from proteus import TimeIntegration
 from proteus.NonlinearSolvers import ExplicitLumpedMassMatrixForRichards
+from proteus.NonlinearSolvers import Newton
+
 
 class ThetaScheme(TimeIntegration.BackwardEuler):
     def __init__(self,transport,integrateInterpolationPoints=False):
@@ -51,6 +53,8 @@ class RKEV(TimeIntegration.SSP):
                 self.u_dof_stage[ci] = []
                 for k in range(self.nStages + 1):
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+                    #print()
+        
 
     # def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
@@ -63,6 +67,8 @@ class RKEV(TimeIntegration.SSP):
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
         self.substeps = [self.t for i in range(self.nStages)]  # Manuel is ignoring different time step levels for now
+        
+        
 
     def initialize_dt(self, t0, tOut, q):
         """
@@ -134,6 +140,7 @@ class RKEV(TimeIntegration.SSP):
             for ci in range(self.nc):
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                 self.transport.u_dof_old[:] = self.transport.u[ci].dof
+                
 
     def initializeTimeHistory(self, resetFromDOF=True):
         """
@@ -199,6 +206,8 @@ class RKEV(TimeIntegration.SSP):
                 setattr(self, flag, val)
                 if flag == 'timeOrder':
                     self.resetOrder(self.timeOrder)
+    
+
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
@@ -223,8 +232,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  ENTROPY_TYPE=2,  # logarithmic
                  LUMPED_MASS_MATRIX=False,
                  MONOLITHIC=True,
-                 FCT=False,
-                 forceStrongBoundaryConditions=False,
+                 FCT=True,
                  num_fct_iter=1,
                  # FOR ENTROPY VISCOSITY
                  cE=1.0,
@@ -233,7 +241,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # FOR ARTIFICIAL COMPRESSION
                  cK=1.0,
                  # OUTPUT quantDOFs
-                 outputQuantDOFs=False):
+                 outputQuantDOFs=False, ):
+        self.anb_seepage_flux= 0.00
+        #self.anb_seepage_flux_n =0.0
         variableNames=['pressure_head']
         nc=1
         mass={0:{0:'nonlinear'}}
@@ -294,7 +304,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.uL = uL
         self.uR = uR
         self.cK = cK
-        self.forceStrongConditions = forceStrongBoundaryConditions
+        self.forceStrongConditions = True
         self.cE = cE
         self.outputQuantDOFs = outputQuantDOFs
         TC_base.__init__(self,
@@ -320,12 +330,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 #mwf missing ebNE-->ebN?
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
                 #print "eb flag",mesh.elementBoundaryMaterialTypes[ebN]
+            
                 #print self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
                 self.isSeepageFace[ebNE] = self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
-        #print self.isSeepageFace
+        #print (self.isSeepageFace)
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
+        #self.anb_seepage_flux= anb_seepage_flux
+        #print("The seepage is ", anb_seepage_flux)
 #        cq['Ks'] = np.zeros(self.q_shape,'d')
 #        for k in range(self.q_shape[1]):
 #            cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
@@ -342,6 +355,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_shape = cebqe[('u',0)].shape
         self.ebqe[('vol_frac',0)] = np.zeros(self.ebqe_shape,'d')
         #
+    
+
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
@@ -402,11 +417,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             np.isnan(c[('dm',0,0)]).any()):
             import pdb
             pdb.set_trace()
-
-#         #mwf debug
-#         if c[('u',0)].shape == self.q_shape:
-#             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
-
+   
+    def postStep(self, t, firstStep=False):
+    #    #anb_seepage_flux_n[:]= self.anb_seepage_flux
+        with open('seepage_stab_0', "a") as f:
+    #        f.write("\n Time"+ ",\t" +"Seepage\n")
+            f.write(repr(t)+ ",\t")# +repr(np.sum(self.LevelModel.anb_seepage_flux_n)))
+        
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
     def __init__(self,
@@ -538,6 +555,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for I in self.coefficients.elementIntegralKeys:
                 if I in elementQuadrature:
                     elementQuadratureDict[I] = elementQuadrature[I]
+                    
                 else:
                     elementQuadratureDict[I] = elementQuadrature['default']
         else:
@@ -557,6 +575,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 if elemQuadIsDict:
                     if ('numDiff',ci,ci) in elementQuadrature:
                         elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature[('numDiff',ci,ci)]
+
                     else:
                         elementQuadratureDict[('numDiff',ci,ci)] = elementQuadrature['default']
                 else:
@@ -716,6 +735,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             assert cond, "Use lumped mass matrix just with: STABILIZATION_TYPE=2 (smoothness based stab.)"
             cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == ExplicitLumpedMassMatrixForRichards
             assert cond, "Use levelNonlinearSolver=ExplicitLumpedMassMatrixForRichards when the mass matrix is lumped"
+        
+        #################################################################
+        ####################ARNOB_FCT_EDIT###############################
+        #################################################################
+        if not self.coefficients.LUMPED_MASS_MATRIX and self.coefficients.STABILIZATION_TYPE == 2:
+            cond = 'levelNonlinearSolver' in dir(options) and options.levelNonlinearSolver == Newton
+        
+
+
+
+        
         if self.coefficients.FCT == True:
             cond = self.coefficients.STABILIZATION_TYPE > 0, "Use FCT just with STABILIZATION_TYPE>0; i.e., edge based stabilization"
         # END OF ASSERTS
@@ -739,6 +769,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.sLow = np.zeros(self.u[0].dof.shape, 'd')
         self.sHigh = np.zeros(self.u[0].dof.shape, 'd')
         self.sn = np.zeros(self.u[0].dof.shape, 'd')
+        self.anb_seepage_flux_n = np.zeros(self.u[0].dof.shape, 'd')
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -749,6 +780,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stride = [self.nc for ci in range(self.nc)]
         #
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
+        
+        
         if numericalFluxType != None:
             if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
@@ -821,7 +854,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')        
-        self.forceStrongConditions=self.coefficients.forceStrongConditions
+        self.forceStrongConditions=True
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -860,6 +893,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["max_s_bc"] = np.ones_like(self.min_s_bc)*self.coefficients.rho*(self.coefficients.thetaR_types[0] + self.coefficients.thetaSR_types[0]) #cek hack
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
         argsDict["MONOLITHIC"] =0#cek hack self.coefficients.MONOLITHIC
+        argsDict["anb_seepage_flux_n"]= self.anb_seepage_flux_n
         #pdb.set_trace()
         self.richards.FCTStep(argsDict)
         
@@ -1177,8 +1211,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
 
         argsDict = cArgumentsDict.ArgumentsDict()
-        if self.forceStrongConditions:
-            argsDict["bc_mask"] = self.bc_mask
+        argsDict["bc_mask"] = self.bc_mask
         argsDict["dt"] = self.timeIntegration.dt
         argsDict["Theta"] = 1.0
         argsDict["mesh_trial_ref"] = self.u[0].femSpace.elementMaps.psi
@@ -1292,12 +1325,36 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["quantDOFs"] = self.quantDOFs
         argsDict["sLow"] = self.sLow
         argsDict["sn"] = self.sn
+        argsDict["anb_seepage_flux_n"]= self.anb_seepage_flux_n
+######################################################################################
+        argsDict["pn"] = self.u[0].dof
+        argsDict["solH"] = self.sHigh
+
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        argsDict["MassMatrix"] = MassMatrix
+        argsDict["solH"] = self.sHigh
+        
+######################################################################################        
+        argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
+        #print(anb_seepage_flux)
+        #argsDict["anb_seepage_flux_n"] = self.coefficients.anb_seepage_flux_n
+        #if np.sum(anb_seepage_flux_n)>0:
+
+        #logEvent("Hi, this is Arnob", self.anb_seepage_flux_n[0])
+        #print("Seepage Flux from Python file",  np.sum(self.anb_seepage_flux_n))
+        seepage_text_variable= np.sum(self.anb_seepage_flux_n)
+        
+        with open('seepage_stab_0',"a" ) as f:
+            #f.write("\n Time"+ ",\t" +"Seepage\n")
+            #f.write(repr(self.coefficients.t)+ ",\t" +repr(seepage_text_variable), "\n")
+            f.write(repr(seepage_text_variable)+ "\n")
         if (self.coefficients.STABILIZATION_TYPE == 0):  # SUPG
             self.calculateResidual = self.richards.calculateResidual
             self.calculateJacobian = self.richards.calculateJacobian
         else:
             self.calculateResidual = self.richards.calculateResidual_entropy_viscosity
             self.calculateJacobian = self.richards.calculateMassMatrix
+        
         if self.delta_x_ij is None:
             self.delta_x_ij = -np.ones((self.nNonzerosInJacobian*3,),'d')
         self.calculateResidual(argsDict)
@@ -1315,6 +1372,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy is None:
             self.globalResidualDummy = np.zeros(r.shape,'d')
+
+
 
     def invert(self,u,r):
         #u=s
@@ -1468,6 +1527,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["quantDOFs"] = self.quantDOFs
         argsDict["sLow"] = self.sLow
         argsDict["sn"] = self.sn
+        #Arnob trying to print flux
+        argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
+ 
+
         self.richards.invert(argsDict)
             # self.timeIntegration.dt,
             # self.u[0].femSpace.elementMaps.psi,
@@ -1591,6 +1654,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.nonlinear_function_evaluations += 1
         #if self.globalResidualDummy is None:
         #    self.globalResidualDummy = numpy.zeros(r.shape,'d')
+    def postStep(self, t, firstStep=False):
+        with open('seepage_flux_nnnn', "a") as f:
+            f.write("\n Time"+ ",\t" +"Seepage\n")
+            f.write(repr(t)+ ",\t" +repr(self.coefficients.anb_seepage_flux))
     def getJacobian(self,jacobian):
         if (self.coefficients.STABILIZATION_TYPE == 0):  # SUPG
             cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
@@ -1666,6 +1733,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ebqe_bc_flux_ext"] = self.ebqe[('advectiveFlux_bc',0)]
         argsDict["csrColumnOffsets_eb_u_u"] = self.csrColumnOffsets_eb[(0,0)]
         argsDict["LUMPED_MASS_MATRIX"] = self.coefficients.LUMPED_MASS_MATRIX
+        argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
+
         self.calculateJacobian(argsDict)
         if self.forceStrongConditions:
             for dofN in list(self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys()):
@@ -1737,9 +1806,27 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                                   getDiffusiveFluxBoundaryConditions=self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
                                                        for cj in list(self.advectiveFluxBoundaryConditionsSetterDict.keys())])
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
+        #argsDict = cArgumentsDict.ArgumentsDict()
+        #argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux
+        #print("Hi", self.coefficients.anb_seepage_flux)
+
+        #print("The seepage is ", anb_seepage_flux)
     def estimate_mt(self):
         pass
     def calculateSolutionAtQuadrature(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
         pass
+    def postStep(self, t, firstStep=False):
+        with open('seepage_flux_nnnnk', "a") as f:
+            f.write("\n Time"+ ",\t" +"Seepage\n")
+            f.write(repr(t)+ ",\t" +repr(self.coefficients.anb_seepage_flux))
+
+    
+
+#argsDict["anb_seepage_flux"] = self.coefficients.anb_seepage_flux        
+#anb_seepage_flux= self.coefficients.anb_seepage_flux
+#print("Hi",anb_seepage_flux)
+
+
+#print("Hello from the python file", self.coefficients.anb_seepage_flux)
