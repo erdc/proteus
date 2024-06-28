@@ -151,6 +151,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml $(shell find stack -type f) 
 	@echo "************************"
 	@echo "Dependency build complete"
 	@echo "************************"
+	${PROTEUS_PREFIX}/bin/python -m ensurepip
 
 ${PROTEUS_PREFIX}/bin/proteus_env.sh: ${PROTEUS_PREFIX}/artifact.json
 	@echo "************************"
