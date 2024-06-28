@@ -28,6 +28,9 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = centennial* ]] && echo "centennial" ||
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = thunder* ]] && echo "thunder" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = gordon* ]] && echo "gordon" || python3 -c "import sys; print(sys.platform)")
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = conrad* ]] && echo "conrad" || python3 -c "import sys; print(sys.platform)")
+ifdef PROTEUS_PREFIX
+CONDA_PREFIX=''
+endif
 ifdef CONDA_PREFIX
 PROTEUS_ARCH ?= linux
 PROTEUS_PREFIX ?= ${CONDA_PREFIX}
@@ -37,6 +40,7 @@ PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python3
 PROTEUS_VERSION := $(shell ${VER_CMD})
 endif
+
 TEST_MARKER="' '"
 
 define show_info
