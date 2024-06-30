@@ -4,7 +4,6 @@ import sys
 import platform
 import site
 PROTEUS_PRELOAD_LIBS=[]
-
 prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
     prefix = sys.exec_prefix
@@ -60,6 +59,7 @@ def get_flags(package):
     return include_dir, lib_dir
 
 PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
+PROTEUS_EXTRA_LINK_ARGS=[]
 
 if sys.platform == 'darwin':
     PROTEUS_BLAS_LIB ='m'
@@ -70,7 +70,6 @@ elif sys.platform.startswith('linux'):
     PROTEUS_BLAS_LIB   ='openblas'
     PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
 
-PROTEUS_EXTRA_LINK_ARGS=[]
 
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
 
@@ -78,6 +77,8 @@ PROTEUS_CHRONO_CXX_FLAGS = []
 chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','Chrono','ChronoConfig.cmake')
 if not os.path.isfile(chrono_cmake_file_path):
     chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake')
+    if not os.path.isfile(chrono_cmake_file_path):
+        chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','Chrono','chrono-config.cmake') 
 with open(chrono_cmake_file_path,'r') as f:
     for l in f:
         if 'set(CHRONO_CXX_FLAGS' in l:
