@@ -226,7 +226,7 @@ else:
         domain.writePoly(polyfile)
     else:
         domain.polyfile=polyfile
-
+    comm.barrier()
 domain.MeshOptions.genMesh=genMesh
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.node
