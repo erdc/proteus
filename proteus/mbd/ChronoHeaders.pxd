@@ -14,14 +14,28 @@ cdef extern from "ProtChMoorings.h":
 
     # ------- CORE ------- #
 
-    cdef cppclass ChVector[double]:
+    cdef cppclass ChVector3d:
         double x()
         double y()
         double z()
-        ChVector(double x,
+        ChVector3d(double x,
                  double y,
                  double z)
-        ChVector()
+        ChVector3d()
+
+    cdef cppclass ChVector3i:
+        int x()
+        int y()
+        int z()
+        ChVector3d(int x,
+                 int y,
+                 int z)
+        ChVector3i()
+
+    cdef cppclass ChWrenchd:
+      ChVector3d force
+      ChVector3d torque
+      ChWrenchd()
 
     cdef cppclass ChQuaternion[double]:
         double e0()
@@ -35,19 +49,19 @@ cdef extern from "ProtChMoorings.h":
         ChQuaternion()
 
     cdef cppclass ChCoordsys[double]:
-        ChVector pos
+        ChVector3d pos
         ChQuaternion rot
         ChCoordsys()
-        ChCoordsys(ChVector &mv,
+        ChCoordsys(ChVector3d &mv,
                    ChQuaternion &mq)
-        ChCoordsys(ChVector &mv,
+        ChCoordsys(ChVector3d &mv,
                    double Alpha,
-                   ChVector &mu)
+                   ChVector3d &mu)
 
     cdef cppclass ChMatrix33[double]:
-        ChVector Get_A_Xaxis()
-        ChVector Get_A_Yaxis()
-        ChVector Get_A_Zaxis()
+        ChVector3d GetAxisX()
+        ChVector3d GetAxisY()
+        ChVector3d GetAxisZ()
         # void CopyFromMatrixT(ChMatrix matra)
         # ChMatrix33()
         # ChMatrix33(ChQuaternion quat)
@@ -58,26 +72,26 @@ cdef extern from "ProtChMoorings.h":
                         const int col)
         # ChMatrixDynamic operator=(const ChMatrix& matbis)
         # ChMatrixDynamic operator+(const ChMatrix& matbis)
-        ChVector Get_A_Xaxis()
-        ChVector Get_A_Yaxis()
-        ChVector Get_A_Zaxis()
+        ChVector3d GetAxisX()
+        ChVector3d GetAxisY()
+        ChVector3d GetAxisZ()
 
     cdef cppclass ChTriangle:
-        ChTriangle(const ChVector &mp1,
-                   const ChVector &mp2,
-                   const ChVector &mp3)
+        ChTriangle(const ChVector3d &mp1,
+                   const ChVector3d &mp2,
+                   const ChVector3d &mp3)
 
     cdef cppclass ChTriangleMesh:
-        void addTriangle(const ChVector &vertex0,
-                         const ChVector &vertex1,
-                         const ChVector &vertex2)
+        void addTriangle(const ChVector3d &vertex0,
+                         const ChVector3d &vertex1,
+                         const ChVector3d &vertex2)
         void addTriangle(const ChTriangle &atriangle)
 
     cdef cppclass ChTriangleMeshConnected(ChTriangleMesh):
         ChTriangleMeshConnected()
-        vector[ChVector[double]]& getCoordsVertices()
-        vector[ChVector[double]]& getCoordsNormals()
-        vector[ChVector[int]]& getIndicesVertexes()
+        vector[ChVector3d]& GetCoordsVertices()
+        vector[ChVector3d]& GetCoordsNormals()
+        vector[ChVector3i]& GetIndicesVertexes()
         void LoadWavefrontMesh(string filename,
                                bool load_normals=True,
                                bool load_uv=False)
@@ -86,7 +100,7 @@ cdef extern from "ProtChMoorings.h":
         bool AddTriangleMesh(shared_ptr[ChTriangleMesh] trimesh,
                              bool is_static,
                              bool is_convex,
-                             const ChVector &pos,
+                             const ChVector3d &pos,
                              const ChMatrix33 &rot,
                              double sphereswept_thickness)
         void SetEnvelope(double amargin)
@@ -95,7 +109,7 @@ cdef extern from "ProtChMoorings.h":
         void BuildModel()
 
     ChQuaternion Q_from_AngAxis(double angle,
-                                const ChVector &axis)
+                                const ChVector3d &axis)
 
     # ------- PHYSICS ------- #
 
@@ -114,28 +128,28 @@ cdef extern from "ProtChMoorings.h":
         ChPhysicsItem()
 
     cdef cppclass ChFrame[double]:
-        void SetPos(const ChVector[double]& mpos) except +
-        ChVector& GetPos()
+        void SetPos(const ChVector3d& mpos) except +
+        ChVector3d& GetPos()
         ChQuaternion& GetRot()
         void SetRot(ChQuaternion &rot) except +
-        void SetPos(ChVector &pos) except +
-        ChMatrix33& GetA()
-        ChVector GetRotAxis()
+        void SetPos(ChVector3d &pos) except +
+        ChMatrix33& GetRotMat()
+        ChVector3d GetRotAxis()
         double GetRotAngle()
 
     cdef cppclass ChFrameMoving[double](ChFrame):
-        ChVector& GetPos_dt()
-        void SetPos_dt(ChVector &pos_dt)
-        ChQuaternion& GetRot_dt()
-        void SetRot_dt(ChQuaternion &mrot_dt)
-        ChVector& GetPos_dtdt()
-        void SetPos_dtdt(ChVector &mpos_dtdt)
-        ChQuaternion& GetRot_dtdt()
-        void SetRot_dtdt(ChQuaternion &mrot_dtdt)
-        ChMatrix33 GetA_dt()
-        ChMatrix33 GetA_dtdt()
-        ChVector GetWvel_loc()
-        ChVector GetWacc_loc()
+        ChVector3d& GetPosDt()
+        void SetPosDt(ChVector3d &pos_dt)
+        ChQuaternion& GetRotDt()
+        void SetRotDt(ChQuaternion &mrot_dt)
+        ChVector3d& GetPosDt2()
+        void SetPosDt2(ChVector3d &mpos_dtdt)
+        ChQuaternion& GetRotDt2()
+        void SetRotDt2(ChQuaternion &mrot_dtdt)
+        ChMatrix33 GetRotMatDt()
+        ChMatrix33 GetRotMatDt2()
+        ChVector3d GetAngVelLocal()
+        ChVector3d GetAngAccLocal()
 
     cdef cppclass ChBodyFrame(ChFrameMoving):
         ChBodyFrame()
@@ -143,14 +157,14 @@ cdef extern from "ProtChMoorings.h":
     cdef cppclass ChBody(ChPhysicsItem, ChBodyFrame):
         ChBody() except +
         # void SetRot(ChQuaternion &rot) except +
-        # void SetInertiaXX(ChVector &iner)
-        # void SetInertiaXY(ChVector &iner)
+        # void SetInertiaXX(ChVector3d &iner)
+        # void SetInertiaXY(ChVector3d &iner)
         # const ChMatrix33& GetInertia()
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurface] &mnewsurf) except +
         shared_ptr[ChCollisionModel] GetCollisionModel()
-        void SetCollide(bool state)
-        bool GetCollide()
+        void EnableCollision(bool state)
+        bool IsCollisionEnabled()
         # void SetMass(double newmass)
         # double GetMass()
 
@@ -169,12 +183,12 @@ cdef extern from "ProtChMoorings.h":
         ChNodeBase()
 
     cdef cppclass ChNodeXYZ(ChNodeBase):
-        void SetPos (const ChVector &mpos)
-        const ChVector& GetPos()
-        void SetPos_dt (const ChVector &mposdt)
-        const ChVector& GetPos_dt()
-        void SetPos_dtdt (const ChVector &mposdtdt)
-        const ChVector& GetPos_dtdt()
+        void SetPos (const ChVector3d &mpos)
+        const ChVector3d& GetPos()
+        void SetPosDt (const ChVector3d &mposdt)
+        const ChVector3d& GetPosDt()
+        void SetPosDt2 (const ChVector3d &mposdtdt)
+        const ChVector3d& GetPosDt2()
 
     cdef cppclass ChNodeFEAbase(ChNodeBase):
         ChNodeFEAbase()
@@ -189,20 +203,20 @@ cdef extern from "ProtChMoorings.h":
         ChNodeFEAxyz()
         double GetMass()
         void SetMass(double mm)
-        void SetForce(ChVector mf)
-        ChVector& GetForce()
+        void SetForce(ChVector3d mf)
+        ChVector3d& GetForce()
 
     cdef cppclass ChNodeFEAxyzD(ChNodeFEAxyz):
-        const ChVector& GetD()
+        const ChVector3d& GetSlope1()
 
     cdef cppclass ChNodeFEAxyzDD(ChNodeFEAxyzD):
-        const ChVector& GetDD()
+        const ChVector3d& GetSlope2()
 
     cdef cppclass ChNodeFEAxyzrot(ChNodeFEAbase, ChBodyFrame):
-        void SetForce(ChVector mf)
-        ChVector& GetForce()
-        void SetTorque(ChVector mf)
-        ChVector& GetTorque()
+        void SetForce(ChVector3d mf)
+        ChVector3d& GetForce()
+        void SetTorque(ChVector3d mf)
+        ChVector3d& GetTorque()
 
     cdef cppclass ChNodeFEAxyzP(ChNodeFEAbase)
 
@@ -219,19 +233,19 @@ cdef extern from "ProtChMoorings.h":
     cdef cppclass ChElementBeam(ChElementGeneric):
         # void EvaluateSectionDisplacement(const double eta,
         #                                  const ChMatrix &displ,
-        #                                  ChVector &u_displ,
-        #                                  ChVector &u_rotaz)
+        #                                  ChVector3d &u_displ,
+        #                                  ChVector3d &u_rotaz)
         # void EvaluateSectionFrame(const double eta,
         #                           const ChMatrix &displ,
-        #                           ChVector &u_displ,
+        #                           ChVector3d &u_displ,
         #                           ChQuaternion &rot)
         # void EvaluateSectionForceTorque(const double eta,
         #                                 const ChMatrix &displ,
-        #                                 ChVector &Fforce,
-        #                                 ChVector &Mtorque)
+        #                                 ChVector3d &Fforce,
+        #                                 ChVector3d &Mtorque)
         # void EvaluateSectionStrain(const double eta,
         #                            const ChMatrix &displ,
-        #                            ChVector &StrainV)
+        #                            ChVector3d &StrainV)
         double GetMass()
         double GetRestLength()
         void SetRestLength(double ml)
@@ -285,7 +299,10 @@ cdef extern from "ProtChMoorings.h":
     cdef cppclass ChMaterialSurface:
         ChMaterialSurface() except +
 
-    cdef cppclass ChMaterialSurfaceSMC(ChMaterialSurface):
+    cdef cppclass ChContactMaterial:
+        ChContactMaterial() except +
+
+    cdef cppclass ChContactMaterialSMC(ChContactMaterial):
         void SetYoungModulus(float val)
         void SetPoissonRatio(float val)
         void SetSfriction(float val)
@@ -322,7 +339,8 @@ cdef extern from "ProtChMoorings.h":
         void AddAllNodes(const double point_radius)
 
     cdef cppclass ChLinkBase:
-        ChVector Get_react_force()
+        ChWrenchd GetReaction1()
+        ChWrenchd GetReaction2()
 
     cdef cppclass ChLink(ChLinkBase)
 
@@ -331,11 +349,11 @@ cdef extern from "ProtChMoorings.h":
     cdef cppclass ChLinkMateGeneric(ChLinkMate)
 
     cdef cppclass ChLinkPointFrame(ChLinkBase):
-        int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector* pos)
-        ChVector GetReactionOnNode()
-        ChVector GetReactionOnBody()
+        int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector3d* pos)
+        ChVector3d GetReactionOnNode()
+        ChVector3d GetReactionOnBody()
         #virtual
-        #int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector[double] *pos=0)
+        #int Initialize(shared_ptr[ChNodeFEAxyz] node, shared_ptr[ChBodyFrame] body, ChVector3d *pos=0)
 
     cdef cppclass ChLinkPointPoint(ChLinkBase):
         #virtual
@@ -348,12 +366,12 @@ cdef extern from "ChBodyAddedMass.h":
         ChBodyAddedMass() except +
         void SetMass(double newmass)
         void SetInertia(ChMatrix33& newXInertia)
-        void SetInertiaXX(ChVector& newXInertia)
-        void SetInertiaXY(ChVector& newXInertia)
+        void SetInertiaXX(ChVector3d& newXInertia)
+        void SetInertiaXY(ChVector3d& newXInertia)
         double GetMass()
         const ChMatrix33& GetInertia()
-        ChVector GetInertiaXX()
-        ChVector GetInertiaXY()
+        ChVector3d GetInertiaXX()
+        ChVector3d GetInertiaXY()
         void SetMfullmass(ChMatrixDynamic Mfullmass_in)
         void SetInvMfullmass(ChMatrixDynamic inv_Mfullmass_in)
     ChBodyAddedMass * newChBodyAddedMass()

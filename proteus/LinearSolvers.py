@@ -442,8 +442,8 @@ class KSP_petsc4py(LinearSolver):
     def prepare(self,
                 b=None,
                 newton_its=None):
-        pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
-        pc_setup_stage.push()
+        #pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
+        #pc_setup_stage.push()
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.petsc_L.proteus_jacobian is not None:
@@ -467,11 +467,11 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner.setUp(self.ksp,newton_its)
         self.ksp.setUp()
         self.ksp.pc.setUp()
-        pc_setup_stage.pop()
+        #pc_setup_stage.pop()
 
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
-        solve_stage = p4pyPETSc.Log.Stage('lin_solve')
-        solve_stage.push()
+        #solve_stage = p4pyPETSc.Log.Stage('lin_solve')
+        #solve_stage.push()
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
@@ -491,7 +491,7 @@ class KSP_petsc4py(LinearSolver):
         if self.matcontext is not None:
             self.matcontext.par_b = par_b
 
-        self.null_space.apply_ns(par_b)
+        #self.null_space.apply_ns(par_b)
 
         self.ksp.solve(par_b,par_u)
 
@@ -502,12 +502,12 @@ class KSP_petsc4py(LinearSolver):
                                                                                                              self.ksp.norm,
                                                                                                              self.ksp.reason))
         self.its = self.ksp.its
-        if self.printInfo:
-            self.info()
+        #if self.printInfo:
+        #    self.info()
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
-        solve_stage.pop()
+        #solve_stage.pop()
 
     def converged(self,r):
         """

@@ -21,16 +21,16 @@ cdef extern from "ProtChMoorings.h":
         ch.ChMesh& mesh
         vector[shared_ptr[ch.ChNodeFEAxyzD]] nodes
         vector[shared_ptr[ch.ChNodeFEAxyzrot]] nodesRot
-        vector[shared_ptr[ch.ChVector]] forces_drag
-        vector[shared_ptr[ch.ChVector]] forces_addedmass
+        vector[shared_ptr[ch.ChVector3d]] forces_drag
+        vector[shared_ptr[ch.ChVector3d]] forces_addedmass
         double L0
         double length
         int nb_elems
         bool applyDrag
         bool applyAddedMass
         bool applyBuoyancy
-        vector[ch.ChVector] mvecs
-        vector[ch.ChVector] mvecs_tangents
+        vector[ch.ChVector3d] mvecs
+        vector[ch.ChVector3d] mvecs_tangents
         void buildNodes()
         void buildMaterials()
         void buildElements()
@@ -53,9 +53,9 @@ cdef extern from "ProtChMoorings.h":
         vector[shared_ptr[ch.ChElementBeamEuler]] elemsBeamEuler
         shared_ptr[ch.ChLinkPointFrame] constraint_back
         shared_ptr[ch.ChLinkPointFrame] constraint_front
-        vector[shared_ptr[ch.ChVector]] forces_drag
-        vector[shared_ptr[ch.ChVector]] forces_addedmass
-        shared_ptr[ch.ChMaterialSurfaceSMC] contact_material
+        vector[shared_ptr[ch.ChVector3d]] forces_drag
+        vector[shared_ptr[ch.ChVector3d]] forces_addedmass
+        shared_ptr[ch.ChContactMaterialSMC] contact_material
         void buildNodes()
         void buildElements()
         void buildCable()
@@ -66,11 +66,11 @@ cdef extern from "ProtChMoorings.h":
         void updateAddedMassForces()
         void applyForces()
         void updateBuoyancyForces()
-        void setFluidVelocityAtNodes(vector[ch.ChVector] fluid_velocity)
-        void setFluidAccelerationAtNodes(vector[ch.ChVector] fluid_acceleration)
+        void setFluidVelocityAtNodes(vector[ch.ChVector3d] fluid_velocity)
+        void setFluidAccelerationAtNodes(vector[ch.ChVector3d] fluid_acceleration)
         void setFluidDensityAtNodes(vector[double] dens)
-        void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceSMC] material)
-        ch.ChVector getTensionElement(int i, double eta)
+        void setContactMaterial(shared_ptr[ch.ChContactMaterialSMC] material)
+        ch.ChVector3d getTensionElement(int i, double eta)
     cppMultiSegmentedCable * newMoorings(shared_ptr[ch.ChSystem] system,
                                          shared_ptr[ch.ChMesh] mesh,
                                          vector[double] length,
@@ -105,38 +105,38 @@ cdef extern from "ProtChBody.h":
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
         double mass
-        ch.ChVector pos
-        ch.ChVector pos_last
-        ch.ChVector vel
-        ch.ChVector vel_last
-        ch.ChVector acc
-        ch.ChVector acc_last
-        ch.ChVector angvel
-        ch.ChVector angvel_last
-        ch.ChVector angacc
-        ch.ChVector angacc_last
-        # ChVector inertia
+        ch.ChVector3d pos
+        ch.ChVector3d pos_last
+        ch.ChVector3d vel
+        ch.ChVector3d vel_last
+        ch.ChVector3d acc
+        ch.ChVector3d acc_last
+        ch.ChVector3d angvel
+        ch.ChVector3d angvel_last
+        ch.ChVector3d angacc
+        ch.ChVector3d angacc_last
+        # ChVector3d inertia
         ch.ChMatrix33 rotm
         ch.ChMatrix33 rotm_last
         ch.ChQuaternion rotq
         ch.ChQuaternion rotq_last
-        ch.ChVector free_x
-        ch.ChVector free_r
-        ch.ChVector F
-        ch.ChVector F_last
-        ch.ChVector M
-        ch.ChVector M_last
+        ch.ChVector3d free_x
+        ch.ChVector3d free_r
+        ch.ChVector3d F
+        ch.ChVector3d F_last
+        ch.ChVector3d M
+        ch.ChVector3d M_last
         shared_ptr[ch.ChTriangleMeshConnected] trimesh
         bool has_trimesh
-        vector[ch.ChVector] trimesh_pos
-        vector[ch.ChVector] trimesh_pos0
-        ch.ChVector pos0_trimesh
+        vector[ch.ChVector3d] trimesh_pos
+        vector[ch.ChVector3d] trimesh_pos0
+        ch.ChVector3d pos0_trimesh
         ch.ChQuaternion rotq0_trimesh
         cppRigidBody(cppSystem* system)
         void calculate_init()
         void prestep(double* force, double* torque)
         void poststep()
-        ch.ChVector hxyz(double* x, double dt)
+        ch.ChVector3d hxyz(double* x, double dt)
         double hx(double* x, double dt)
         double hy(double* x, double dt)
         double hz(double* x, double dt)
@@ -181,7 +181,7 @@ cdef class ProtChBody:
     cdef cppRigidBody * thisptr
     cdef ch.ChQuaternion rotation
     cdef ch.ChQuaternion rotation_last
-    cdef vector[ch.ChVector] trimesh_nodes
+    cdef vector[ch.ChVector3d] trimesh_nodes
     cdef vector[ch.ChTriangle] trimesh_triangles
     cdef public:
       str record_file

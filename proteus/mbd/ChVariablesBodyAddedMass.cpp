@@ -9,7 +9,7 @@
 // http://projectchrono.org/license-chrono.txt.
 //
 // =============================================================================
-// Authors: Tristan de Lataillade
+// Authors: Tristan de Lataillade, Chris Kees
 // =============================================================================
 
 #include "ChVariablesBodyAddedMass.h"
@@ -46,8 +46,8 @@ ChVariablesBodyAddedMass& ChVariablesBodyAddedMass::operator=(const ChVariablesB
 }
 
 void ChVariablesBodyAddedMass::SetMfullmass(ChMatrixDynamic<>& Mfullmass_in) {
-    assert(Mfullmass_in.rows() == Get_ndof());
-    assert(Mfullmass_in.cols() == Get_ndof());
+    assert(Mfullmass_in.rows() == GetDOF());
+    assert(Mfullmass_in.cols() == GetDOF());
     GetMfullmass() = Mfullmass_in;
     GetInvMfullmass() = Mfullmass_in.inverse();
 }
@@ -91,8 +91,8 @@ void ChVariablesBodyAddedMass::SetMfullmass(ChMatrixDynamic<>& Mfullmass_in) {
 
 // /// Set the added mass matrix of the body (6x6)
 // void ChVariablesBodyAddedMass::SetBodyAddedMass(ChMatrixDynamic<>& Maddedmass_in) {
-//     assert(Maddedmass_in.GetRows() == Get_ndof());
-//     assert(Maddedmass_in.GetColums() == Get_ndof());
+//     assert(Maddedmass_in.GetRows() == GetDOF());
+//     assert(Maddedmass_in.GetColums() == GetDOF());
 //     Maddedmass.CopyFromMatrix(Maddedmass_in);
 //     /// rebuild full mass matrix
 //     Mfullmass = Mmass + Maddedmass;
@@ -100,25 +100,25 @@ void ChVariablesBodyAddedMass::SetMfullmass(ChMatrixDynamic<>& Mfullmass_in) {
 
 // Computes the product of the inverse mass matrix by a
 // vector, and set in result: result = [invMb]*vect
-void ChVariablesBodyAddedMass::Compute_invMb_v(ChVectorRef result, const ChVectorConstRef vect) const {
-    assert(vect.size() == Get_ndof());
-    assert(result.size() == Get_ndof());
+void ChVariablesBodyAddedMass::ComputeMassInverseTimesVector(ChVectorRef result, ChVectorConstRef vect) const {
+    assert(vect.size() == GetDOF());
+    assert(result.size() == GetDOF());
     result = inv_Mfullmass * vect;
 }
 
 // Computes the product of the inverse mass matrix by a
 // vector, and increment result: result += [invMb]*vect
-void ChVariablesBodyAddedMass::Compute_inc_invMb_v(ChVectorRef result, const ChVectorConstRef vect) const {
-    assert(vect.size() == Get_ndof());
-    assert(result.size() == Get_ndof());
+void ChVariablesBodyAddedMass::Compute_inc_invMb_v(ChVectorRef result, ChVectorConstRef vect) const {
+    assert(vect.size() == GetDOF());
+    assert(result.size() == GetDOF());
     result += inv_Mfullmass * vect;
 }
 
 // Computes the product of the mass matrix by a
 // vector, and set in result: result = [Mb]*vect
-void ChVariablesBodyAddedMass::Compute_inc_Mb_v(ChVectorRef result, const ChVectorConstRef vect) const {
-    assert(vect.size() == Get_ndof());
-    assert(result.size() == Get_ndof());
+void ChVariablesBodyAddedMass::AddMassTimesVector(ChVectorRef result, const ChVectorConstRef vect) const {
+    assert(vect.size() == GetDOF());
+    assert(result.size() == GetDOF());
     result += Mfullmass * vect;
 }
 
@@ -128,8 +128,8 @@ void ChVariablesBodyAddedMass::Compute_inc_Mb_v(ChVectorRef result, const ChVect
 // the size of the total variables&constraints in the system; the procedure
 // will use the ChVariable offsets (that must be already updated) to know the
 // indexes in result and vect.
-void ChVariablesBodyAddedMass::MultiplyAndAdd(ChVectorRef result,
-    const ChVectorConstRef vect,
+void ChVariablesBodyAddedMass::AddMassTimesVectorInto(ChVectorRef result,
+    ChVectorConstRef vect,
     const double c_a) const {
     int off = this->offset;
     result.segment(off, 6) += Mfullmass*vect.segment(off, 6)*c_a;
@@ -139,9 +139,9 @@ void ChVariablesBodyAddedMass::MultiplyAndAdd(ChVectorRef result,
 // NOTE: the 'result' vector must already have the size of system unknowns, ie
 // the size of the total variables&constraints in the system; the procedure
 // will use the ChVariable offset (that must be already updated) as index.
-void ChVariablesBodyAddedMass::DiagonalAdd(ChVectorRef result, const double c_a) const {
-    assert(result.size() >= this->offset + Get_ndof());
-    for (int i = 0; i < Get_ndof(); i++) {
+  void ChVariablesBodyAddedMass::AddMassDiagonalInto(ChVectorRef result, const double c_a) const {
+    assert(result.size() >= this->offset + GetDOF());
+    for (int i = 0; i < GetDOF(); i++) {
         result(this->offset + i) += c_a * Mfullmass(i, i);
     }
 }
@@ -150,9 +150,9 @@ void ChVariablesBodyAddedMass::DiagonalAdd(ChVectorRef result, const double c_a)
 // it in 'storage' sparse matrix, at given column/row offset.
 // Note, most iterative solvers don't need to know mass matrix explicitly.
 // Optimized: doesn't fill unneeded elements except mass and 3x3 inertia.
-void ChVariablesBodyAddedMass::Build_M(ChSparseMatrix& storage, int insrow, int inscol, const double c_a) {
-    for (int row = 0; row < Get_ndof(); ++row)
-        for (int col = 0; col < Get_ndof(); ++col)
+void ChVariablesBodyAddedMass::PasteMassInto(ChSparseMatrix& storage, unsigned int insrow, unsigned int inscol, const double c_a) const {
+    for (int row = 0; row < GetDOF(); ++row)
+        for (int col = 0; col < GetDOF(); ++col)
             storage.SetElement(insrow + row, inscol + col, c_a * Mfullmass(row, col));
 }
 

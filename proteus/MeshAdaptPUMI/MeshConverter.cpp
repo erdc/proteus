@@ -1,5 +1,5 @@
 #include <algorithm>
-
+#include <valarray>
 #include "MeshAdaptPUMI.h"
 #include <PCU.h>
 #include "mesh.h"
@@ -633,12 +633,11 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays2(Mesh& mesh)
 #include "apfConvert.h"
 #include "apfMesh2.h"
 #include "apf.h"
+#include "apfConvert.h"
 #include "apfNumbering.h"
 #include <map>
 
 namespace apf {
-
-typedef int Gid;
 
 static void constructVerts(
     Mesh2* m, int nverts,
@@ -795,7 +794,7 @@ static void constructRemotes(Mesh2* m, GlobalToVert& globalToVert)
   }
 }
 
-void construct(Mesh2* m, const int* conn, const int* conn_b, int nelem, 
+void construct(Mesh2* m, const Gid* conn, const Gid* conn_b, int nelem, 
     int nelem_b, int nverts,int etype, int etype_b, int* local2globalMap,
     GlobalToVert& globalToVert)
 {
@@ -985,13 +984,13 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
 
 
   //create the mappings from proteus data structures
-  int* local2global_elementBoundaryNodes;
-  local2global_elementBoundaryNodes = (int*) malloc(sizeof(int)*mesh.nElementBoundaries_global*apf::Mesh::adjacentCount[etype_b][0]);
+  apf::Gid* local2global_elementBoundaryNodes;
+  local2global_elementBoundaryNodes = (apf::Gid*) malloc(sizeof(int)*mesh.nElementBoundaries_global*apf::Mesh::adjacentCount[etype_b][0]);
   for(int i=0;i<mesh.nElementBoundaries_global*apf::Mesh::adjacentCount[etype_b][0];i++){ //should use adjacent count function from core
     local2global_elementBoundaryNodes[i] = globalMesh.nodeNumbering_subdomain2global[mesh.elementBoundaryNodesArray[i]];
   }
-  int* local2global_elementNodes;
-  local2global_elementNodes = (int*) malloc(sizeof(int)*mesh.nElements_global*apf::Mesh::adjacentCount[etype][0]);
+  apf::Gid* local2global_elementNodes;
+  local2global_elementNodes = (apf::Gid*) malloc(sizeof(int)*mesh.nElements_global*apf::Mesh::adjacentCount[etype][0]);
   for(int i=0;i<mesh.nElements_global*apf::Mesh::adjacentCount[etype][0];i++){ //should use adjacent count function from core
     local2global_elementNodes[i] = globalMesh.nodeNumbering_subdomain2global[mesh.elementNodesArray[i]];
   }
@@ -1384,7 +1383,11 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus2(Mesh& mesh,int* isModelVert,int* 
 
     gmi_model* tempModel  = gmi_load(".null");
     m = apf::makeEmptyMdsMesh(tempModel,dim,false);
-    apf::construct(m,mesh.elementNodesArray,mesh.nElements_global,elementType,outMap);
+    std::valarray<apf::Gid> elementNodesArray(mesh.nElements_global*apf::Mesh::adjacentCount[elementType][0]);
+    for(int i=0;i<mesh.nElements_global*apf::Mesh::adjacentCount[elementType][0];i++){
+      elementNodesArray[i] = mesh.elementNodesArray[i];
+    }
+    apf::construct(m,&elementNodesArray[0],mesh.nElements_global,elementType,outMap);
 
     apf::setCoords(m,mesh.nodeArray,mesh.nNodes_global,outMap);
 
