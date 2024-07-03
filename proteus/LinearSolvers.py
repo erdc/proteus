@@ -23,7 +23,7 @@ from . import Quadrature
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 import math
-from .Profiling import logEvent
+from .Profiling import logEvent, memory
 from .mprans import cArgumentsDict
 
 class LinearSolver(object):
@@ -444,10 +444,12 @@ class KSP_petsc4py(LinearSolver):
                 newton_its=None):
         #pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
         #pc_setup_stage.push()
+        memory()
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.petsc_L.proteus_jacobian is not None:
             self.csr_rep[2][self.petsc_L.nzval_proteus2petsc] = self.petsc_L.proteus_csr_rep[2][:]
+        logEvent(memory("init ","KSP_petsc4py"))
         if self.par_fullOverlap == True:
             self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
         else:
@@ -457,21 +459,28 @@ class KSP_petsc4py(LinearSolver):
             else:
                 self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)
             self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
+        logEvent(memory("setValuesLocalCSR ","KSP_petsc4py"))
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
+        logEvent(memory("assmebly ","KSP_petsc4py"))
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
+        logEvent(memory("setOperators ","KSP_petsc4py"))
         if self.pc is not None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
                 self.preconditioner.setUp(self.ksp,newton_its)
+            logEvent(memory("pc/preconditioner setUp ","KSP_petsc4py"))
         self.ksp.setUp()
+        logEvent(memory("ksp.setUp ","KSP_petsc4py"))
         self.ksp.pc.setUp()
+        logEvent(memory("pc.setUp ","KSP_petsc4py"))
         #pc_setup_stage.pop()
 
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
         #solve_stage = p4pyPETSc.Log.Stage('lin_solve')
         #solve_stage.push()
+        memory()
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
@@ -492,9 +501,9 @@ class KSP_petsc4py(LinearSolver):
             self.matcontext.par_b = par_b
 
         #self.null_space.apply_ns(par_b)
-
+        logEvent(memory("ksp.solve init ","KSP_petsc4py"))
         self.ksp.solve(par_b,par_u)
-
+        logEvent(memory("ksp.solve ","KSP_petsc4py"))
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.is_converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
                                                                                                              self.ksp.is_converged,
