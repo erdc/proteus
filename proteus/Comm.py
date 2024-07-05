@@ -4,10 +4,6 @@ Module for controlling MPI
 .. inheritance-diagram:: proteus.Comm
    :parts: 1
 """
-from __future__ import absolute_import
-
-from builtins import range
-from builtins import object
 import ctypes
 import sys
 

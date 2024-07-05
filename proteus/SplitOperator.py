@@ -4,12 +4,6 @@ A class hierarchy for split operator methods.
 .. inheritance-diagram:: proteus.SplitOperator
    :parts: 1
 """
-from __future__ import absolute_import
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from .Profiling import logEvent 
 
 class System(object):
@@ -58,15 +52,15 @@ class SO_base(object):
                 logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last
                 logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
-            elif( tExact*(1.0+self.stepExactEps) - (self.t_system_last + self.dt_system) < old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
+            elif( tExact*(1.0+self.stepExactEps) - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
                 logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
-                self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                self.dt_system = (tExact - self.t_system_last)/2.0
                 logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
         if (self.dt_system < 0.0):
             if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
-            elif( tExact - (self.t_system_last + self.dt_system) > old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                self.dt_system = old_div((tExact - self.t_system_last),2.0)
+            elif( tExact - (self.t_system_last + self.dt_system) > self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                self.dt_system = (tExact - self.t_system_last)/2.0
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:
@@ -234,15 +228,15 @@ class Sequential_NonUniformFixedStep(SO_base):
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
-                elif( tExact - (self.t_system_last + self.dt_system) < old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                    self.dt_system = (tExact - self.t_system_last)/2.0
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
-                elif( tExact - (self.t_system_last + self.dt_system) > old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                elif( tExact - (self.t_system_last + self.dt_system) > self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                    self.dt_system = (tExact - self.t_system_last)/2.0
         self.dt_system = tExact - self.t_system_last
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
@@ -300,15 +294,15 @@ class Sequential_MinModelStep(SO_base):
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
-                elif( tExact - (self.t_system_last + self.dt_system) < old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                    self.dt_system = (tExact - self.t_system_last)/2.0
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
-                elif( tExact - (self.t_system_last + self.dt_system) > old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                elif( tExact - (self.t_system_last + self.dt_system) > self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                    self.dt_system = (tExact - self.t_system_last)/2.0
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:
@@ -487,15 +481,15 @@ class Sequential_MinAdaptiveModelStep(SO_base):
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
-                elif( tExact - (self.t_system_last + self.dt_system) < old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                    self.dt_system = (tExact - self.t_system_last)/2.0
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
-                elif( tExact - (self.t_system_last + self.dt_system) > old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                elif( tExact - (self.t_system_last + self.dt_system) > self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                    self.dt_system = (tExact - self.t_system_last)/2.0
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:
@@ -618,15 +612,15 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
-                elif( tExact - (self.t_system_last + self.dt_system) < old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                    self.dt_system = (tExact - self.t_system_last)/2.0
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
-                elif( tExact - (self.t_system_last + self.dt_system) > old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                elif( tExact - (self.t_system_last + self.dt_system) > self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                    self.dt_system = (tExact - self.t_system_last)/2.0
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:
@@ -747,15 +741,15 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
-                elif( tExact - (self.t_system_last + self.dt_system) < old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
+                elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
                     logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                    self.dt_system = (tExact - self.t_system_last)/2.0
                     logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
-                elif( tExact - (self.t_system_last + self.dt_system) > old_div(self.dt_system,2.0) ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    self.dt_system = old_div((tExact - self.t_system_last),2.0)
+                elif( tExact - (self.t_system_last + self.dt_system) > self.dt_system/2.0): #if next step would be within dt/2 ball go ahead and cut a little bit
+                    self.dt_system = (tExact - self.t_system_last)/2.0
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
         for model in self.modelList:

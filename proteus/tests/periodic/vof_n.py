@@ -70,4 +70,3 @@ useEisenstatWalker = False#True
 
 maxNonlinearIts = 50
 maxLineSearches = 0
-

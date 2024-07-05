@@ -1,7 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -104,7 +100,7 @@ elif pspaceOrder == 2:
 # Domain and mesh
 #L = (0.584,0.350)
 L = (1.0, 1.0)
-he = old_div(L[0],float(4*Refinement-1))
+he = L[0]/float(4*Refinement-1)
 he*=0.5
 he*=0.5
 #he*=0.5
@@ -179,7 +175,7 @@ else:
         #domain.writePLY("mesh")
         #domain.writeAsymptote("mesh")
         domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"mesh"
-        domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+        domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
 
 domain.MeshOptions.genMesh = genMesh
 
@@ -194,7 +190,7 @@ if ct.isHotStart:
 else:
     dt_init = min(dt_init,0.5*dt_fixed)
 runCFL=0.33
-nDTout = int(round(old_div(T,dt_fixed)))
+nDTout = int(round(T/dt_fixed))
 if dt_init<dt_fixed:
     tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
 else:

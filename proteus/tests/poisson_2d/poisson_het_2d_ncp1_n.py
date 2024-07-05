@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import range
 from proteus import *
 from proteus.default_n import *
 from .poisson_het_2d_p import *
@@ -61,4 +59,3 @@ l_atol_res = 1.0e-10
 
 cfluxtag  = 'p1-nc'
 conservativeFlux =  dict((i,cfluxtag) for i in range(nc))
-

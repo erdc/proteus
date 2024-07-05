@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import object
-from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
@@ -39,8 +36,8 @@ rectangle = RectangularDomain(L=L, x=origin)
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
-nny = old_div((nnx - 1), 10) + 1
-he = old_div(L[0], float(nnx - 1))
+nny = (nnx - 1)//10 + 1
+he = L[0]/float(nnx-1)
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 if opts.structured:
     domain = rectangle
@@ -60,7 +57,7 @@ g = 9.81
 h0 = 0.5
 alpha = 0.2 * h0
 xs = 5.0
-r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
+r = np.sqrt(3.*alpha/(4.*h0**2*(h0+alpha)))
 c = np.sqrt(g * (h0 + alpha))
 
 
@@ -89,7 +86,7 @@ class water_height_at_t0(object):
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
         h = h0 + solitary_wave(X[0], 0)
-        return h * c * old_div(h - h0, h)
+        return h * c * h-h0/h
 
 
 class y_mom_at_t0(object):
@@ -118,7 +115,7 @@ class hw_at_t0(object):
         sechSqd = (1.0 / np.cosh(r * (X[0] - xs)))**2.0
         h = h0 + solitary_wave(X[0], 0)
         hPrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
-        hw = -h**2 * old_div(c * h0 * hPrime, h**2)
+        hw = -h**2 * c*h0*hPrime/h**2
         return hw
 
 ###################################

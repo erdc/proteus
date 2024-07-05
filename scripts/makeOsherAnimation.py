@@ -1,9 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
-
-from builtins import str
-from past.utils import old_div
 import sys
 import os
 import Gnuplot
@@ -23,7 +17,7 @@ i = 0
 
 while (i <= totalNumberOfIndex):
 
-    time  = T_start + i*( old_div((T_stop-T_start),totalNumberOfIndex) )
+    time  = T_start + i*( (T_stop-T_start)/totalNumberOfIndex )
 
     g = Gnuplot.Gnuplot(debug=1)
     g('set style data lines')
@@ -34,7 +28,7 @@ while (i <= totalNumberOfIndex):
     PlotTitle = "S_e vs x at time: " + str(time)
     g.title(PlotTitle)
     g('set term postscript eps enhanced color solid')
-    Fraction = old_div(float(time),float(T_stop)) + FudgeFactor
+    Fraction = float(time)/float(T_stop) + FudgeFactor
     outFile = 'set output \"' + str('Se') + 'plotFraction' + str(Fraction) + 'MakeAnimations.eps\"'
     g(outFile)
     Plot = 'plot \'' + str(datFile) + '\' index ' + str(i) + ' title \"\"'

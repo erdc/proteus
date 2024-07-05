@@ -50,4 +50,3 @@ if __name__ == '__main__':
     comm = Comm.init()
     test_BDM_P1()
 #    test_BDM2_P2()
-

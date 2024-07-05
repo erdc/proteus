@@ -1,8 +1,6 @@
 """
 danbreak 2-D
 """
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
@@ -81,7 +79,7 @@ tank.BC['x-'].setFreeSlip()
 he = tank_dim[0]*opts.he
 domain.MeshOptions.he = he
 st.assembleDomain(domain)
-domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshDambreak"
 domain.MeshOptions.triangleFlag=0
 domain.MeshOptions.genMesh=False

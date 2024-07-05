@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from LinearAlgebra import *
 from TimeIntegrationTools import *
 from NonlinearSolvers import *
@@ -310,7 +305,7 @@ if __name__ == '__main__':
     ode.timeIntegrator.runCFL = targetCFL
     t = t0
     nsteps = 0
-    dtFix = old_div(T,ntMax)
+    dtFix = T/ntMax
     L2err = 0.0
     LIerr = 0.0
     errT  = 0.0

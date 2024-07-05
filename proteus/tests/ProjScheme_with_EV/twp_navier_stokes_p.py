@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from .NS_convergence import *
@@ -285,4 +283,3 @@ class pressure(object):
     def uOfXT(self,x,t):
         return np.cos(x[0])*np.sin(x[1]+t)
 analyticalPressureSolution={0:pressure()}
-

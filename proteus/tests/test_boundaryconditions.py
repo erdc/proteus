@@ -1,5 +1,3 @@
-
-
 """
 Testing module for proteus.BoundaryConditions
 Work in progress
@@ -10,11 +8,6 @@ setHydrostaticPressureOutlet()
 setHydrostaticPressureOutletWithDepth()
 wallFunctions()
 """
-from __future__ import division
-
-
-from past.utils import old_div
-from builtins import object
 import os, sys
 import random
 import unittest
@@ -680,7 +673,7 @@ class TestBC(unittest.TestCase):
             U = H*wind_speed + (1-H)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
-            if wavePhi >= old_div(smoothing,2.):
+            if wavePhi >= smoothing/2.:
                 Hvof = 1.
             elif smoothing > 0 and -smoothing/2. < wavePhi < smoothing/2.:
                 Hvof = smoothedHeaviside(smoothing, wavePhi)
@@ -739,8 +732,8 @@ class TestBC(unittest.TestCase):
         water = 0.
         kInflow = 0.00005
         dissipationInflow = 0.00001
-        kInflowAir = old_div(kInflow, 10.)
-        dissipationInflowAir = old_div(dissipationInflow, 10.)
+        kInflowAir = kInflow/10.
+        dissipationInflowAir = dissipationInflow/10.
         BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
         # setting variables
         uDir, vDir, wDir, vofDir, pAdv, kDir, dissipationDir = [],[],[],[],[],[],[]

@@ -1,7 +1,3 @@
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import proteus
 from proteus.mprans.cCLSVOF import *
 import numpy as np
@@ -439,7 +435,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('u',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('H(u)',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('mH(u)',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('dV_u',0)] = (old_div(1.0,self.mesh.nElements_global))*np.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dV_u',0)] = (1.0/self.mesh.nElements_global)*np.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('m',0)] = self.q[('u',0)]
         self.q[('m_last',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -550,14 +546,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN,k] = old_div(self.numericalFlux.penalty_constant,(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN,k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         #penalty term
         #cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE,k] = old_div(self.numericalFlux.penalty_constant,self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
@@ -934,8 +930,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_V0 = globalSum(global_V0)
         self.global_sV = globalSum(global_sV)
         self.global_sV0 = globalSum(global_sV0)
-        self.global_V_err = old_div(np.abs(self.global_V-self.global_V0),self.global_V0)
-        self.global_sV_err = old_div(np.abs(self.global_sV-self.global_sV0),self.global_sV0)
+        self.global_V_err = np.abs(self.global_V-self.global_V0)/self.global_V0
+        self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
         # metrics about distance property
         self.global_D_err = globalSum(global_D_err)
         # compute global_R and global_sR
@@ -992,13 +988,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.global_V0 = globalSum(global_V0)
         self.global_sV = globalSum(global_sV)
         self.global_sV0 = globalSum(global_sV0)
-        self.global_V_err = old_div(np.abs(self.global_V-self.global_V0),self.global_V0)
-        self.global_sV_err = old_div(np.abs(self.global_sV-self.global_sV0),self.global_sV0)
+        self.global_V_err = np.abs(self.global_V-self.global_V0)/self.global_V0
+        self.global_sV_err = np.abs(self.global_sV-self.global_sV0)/self.global_sV0
         # distance property metric
         self.global_D_err = globalSum(global_D_err)
         # L2 error on level set
         self.global_L2_err = globalSum(global_L2_err)
-        self.global_L2Banded_err = old_div(globalSum(global_L2Banded_err),globalSum(global_area_band))
+        self.global_L2Banded_err = globalSum(global_L2Banded_err)/globalSum(global_area_band)
         self.global_sH_L2_err = globalSum(global_sH_L2_err)
 
     ###############################################

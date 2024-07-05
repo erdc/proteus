@@ -1,5 +1,3 @@
-from builtins import range
-from builtins import object
 from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt

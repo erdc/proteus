@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus import *
 from proteus import iproteus as ip
 from proteus.default_p import *

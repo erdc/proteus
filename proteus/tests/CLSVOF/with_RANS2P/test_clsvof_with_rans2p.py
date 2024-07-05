@@ -2,8 +2,6 @@
 """
 Test module for clsvof with rans2p
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -88,4 +86,3 @@ class TestCLSVOFWithRans2p(object):
         assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
         expected.close()
         actual.close()
-

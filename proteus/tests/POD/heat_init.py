@@ -3,10 +3,6 @@
 Fine-scale heat equation solver
 The equation is du/du - Laplace u + u + f(x,y,z,t) = 0
 """
-from __future__ import division
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from proteus.iproteus import *
 
 class Heat(TransportCoefficients.TC_base):
@@ -79,7 +75,7 @@ physics.initialConditions = {0:Initial()}
 #numerics
 
 nDTout = 100
-DT = old_div(T,float(nDTout))
+DT = T/float(nDTout)
 
 numerics=default_n
 numerics.timeIntegration=TimeIntegration.BackwardEuler

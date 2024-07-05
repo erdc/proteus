@@ -2,8 +2,6 @@
 """
 Test module for projection scheme
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()

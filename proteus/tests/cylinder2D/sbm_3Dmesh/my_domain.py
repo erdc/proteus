@@ -1,4 +1,3 @@
-from builtins import range
 from proteus import Domain
 #         |y
 #         |
@@ -545,4 +544,4 @@ def get_pseudo_3D_cylinder_box_domain(
                                                  facetHoles=facetHoles3d,
                                                  regions=regions,regionFlags=regionFlags,regionConstraints=regionConstraints)
     domain.boundaryTags = boundaryTags
-    return domain,boundaryTags
+    return domain,boundaryTag

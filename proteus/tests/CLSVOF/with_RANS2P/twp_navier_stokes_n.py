@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import (StepControl,
                      TimeIntegration,
                      NonlinearSolvers,

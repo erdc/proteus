@@ -2,9 +2,6 @@
 """
 Test module for Elliptic Re-distancing
 """
-from __future__ import print_function
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()

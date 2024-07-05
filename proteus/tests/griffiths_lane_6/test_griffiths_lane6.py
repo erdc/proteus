@@ -9,11 +9,8 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-from __future__ import print_function
-from builtins import object
 from proteus.iproteus import *
 import os
-from past.utils import old_div
 import numpy as np
 import tables
 from . import re_gl_6_3d_p

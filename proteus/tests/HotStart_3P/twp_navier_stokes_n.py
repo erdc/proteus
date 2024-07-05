@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import *
 from .twp_navier_stokes_p import *
 from .NS_hotstart import *
@@ -67,4 +66,4 @@ maxNonlinearIts = 50
 maxLineSearches = 0
 #conservativeFlux = {0:'point-eval'}
 #auxiliaryVariables=[pointGauges,lineGauges]
-isHotStart = ct.isHotStart
+isHotStart = ct.isHotStar

@@ -1,10 +1,4 @@
 #! /usr/bin/env python
-
-from __future__ import print_function
-from __future__ import division
-from builtins import input
-from builtins import range
-from past.utils import old_div
 from proteus import *
 import numpy
 def generateTrajectories(mesh,v,x_source,t_0,t_f):
@@ -14,8 +8,8 @@ def generateTrajectories(mesh,v,x_source,t_0,t_f):
         x_0 = x_traj[-1]; t_0 = t_traj[-1]; e_0 = e_traj[-1]
         x_1 = mesh.nodeArray[mesh.elementNodesArray[e_0,1],0]
         x_12 = 0.5*(x_0+x_1)
-        t_12= t_0 + old_div((x_12-x_0),v) #include midpoint to test search alg
-        t_1 = t_0 + old_div((x_1-x_0),v)
+        t_12= t_0 + (x_12-x_0)/v #include midpoint to test search alg
+        t_1 = t_0 + (x_1-x_0)/v
         e_12= e_0
         e_1 = mesh.elementNeighborsArray[e_0,0]
         if e_1 == -1: e_1 = e_0
@@ -64,7 +58,7 @@ def test_onesource(nx=11,Lx=1.0,ndt=20,q=1.0,theta=1.0,timeflag=0,testflag=0,plo
     mesh.generateEdgeMeshFromRectangularGrid(nx,Lx)
 
     #assume uniform porosity and velocity to make tracking simple
-    v = old_div(q,theta);
+    v = q/theta;
     #source located at inflow, track over [t_0,t_f] with one particle
     x_source = 0.0; t_0 = 0.0; t_f=1.0; n_p = 1;
 
@@ -98,7 +92,7 @@ def test_onesource(nx=11,Lx=1.0,ndt=20,q=1.0,theta=1.0,timeflag=0,testflag=0,plo
         ct.fill(0.0)
         accumulateSourceContribution(tau,traj_offsets,x_traj,t_traj,e_traj,massSource_t,massSource_m,decay,retardation,particleFlags,ct)
         ct /= aqueousVolume
-        caq = old_div(ct,retardation[:,0])
+        caq = ct/retardation[:,0]
         if plotSolution:
             ax = pylab.plot(xc,caq,'r*-',xc,ct,'bo-',hold=False);  pylab.legend(('c_aq','c_t')); pylab.title('tau= %s ' % tau)
             if wait4plot:

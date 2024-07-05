@@ -2,8 +2,6 @@
 """
 Test module for surface tension
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -269,4 +267,3 @@ class TestSurfaceTension(object):
         #expected.close()
         #actual.close()                        
         self.compare_files('comparison_files',self.so.name)        
-

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <sys/types.h> 
 #include <string.h>
-#include "ncurses/curses.h"
+#include "ncursesw/curses.h"
 #include <stdlib.h>
 #define	ANSI
 #include "Allocation.h"

@@ -1,6 +1,4 @@
 """Tests for 2d flow around a cylinder with shifted boundary method"""
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
@@ -33,5 +31,4 @@ initialConditions  = {0:init_cond()}
 dirichletConditions = {0: lambda x, flag: domain.bc[flag].vof_dirichlet.init_cython()}
 advectiveFluxBoundaryConditions = {0: lambda x, flag: domain.bc[flag].vof_advective.init_cython()}
 diffusiveFluxBoundaryConditions = {0:{}}
-
 

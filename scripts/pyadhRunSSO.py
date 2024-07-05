@@ -1,13 +1,4 @@
-from __future__ import print_function
-## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
-
 #! /usr/bin/env python
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import input
-from builtins import zip
-from builtins import range
 import os
 
 ## need to insert more comments

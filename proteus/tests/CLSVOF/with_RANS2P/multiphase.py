@@ -1,9 +1,6 @@
 """
 Multiphase Water Test
 """
-from __future__ import division
-from builtins import str
-from past.utils import old_div
 import numpy as np
 from math import sqrt
 from proteus import (Domain, Context,
@@ -134,7 +131,7 @@ else:
     dt_fixed = 0.01
 dt_init = min(0.1 * dt_fixed, 0.001)
 runCFL = 0.33
-nDTout = int(round(old_div(T, dt_fixed)))
+nDTout = int(round(T/dt_fixed))
 
 # ----- DOMAIN ----- #
 
@@ -162,10 +159,10 @@ tank.BC['x-'].setFreeSlip()
 
 # ----- MESH CONSTRUCTION ----- #
 
-he = old_div(tank_dim[0], float(4 * refinement - 1))
+he = tank_dim[0]/float(4*refinement-1)
 domain.MeshOptions.he = he
 st.assembleDomain(domain)
-triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
 
 # ----- STRONG DIRICHLET ----- #
 

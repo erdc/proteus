@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import zip
-from builtins import range
-from past.utils import old_div
 import numpy as np
 from scipy import signal as sn
 #from pylab import *
@@ -44,7 +39,7 @@ def readProbeFile(filename):
         return datalist
 
 def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
-    dt = old_div((time[-1]-time[0]),(len(time)-1))
+    dt = (time[-1]-time[0])/(len(time)-1)
     doInterp = False
     data1 = np.zeros(data.shape,)
     
@@ -69,7 +64,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
             data = data1
             nprobes = -1
     nfft = len(time)
-    dt = old_div((time[-1]-time[0]),(len(time)-1))
+    dt = (time[-1]-time[0])/(len(time)-1)
     freq = np.fft.fftfreq(nfft,dt)   
     i1 = np.where(freq > maxfreq)[0]
     i3 = np.where(freq < -maxfreq)[0]
@@ -150,7 +145,7 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
         period = np.mean(period)
     elif type(mode) == "int":
         height = np.sort(zCH)
-        ii = len(height) - old_div(float(len(height)),float(mode))
+        ii = len(height) - float(len(height))/float(mode)
         height = np.mean(height[ii:])
         period = np.mean(period)
     else:
@@ -162,22 +157,22 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
 def pressureToHeight(data,Z,depth,wavelength,rho,g):
     k = 2*math.pi/wavelength
     Kp = rho*g*cosh(k*(depth+Z))/cosh(k*depth)
-    return old_div(data,Kp)
+    return data/Kp
 
 
 def ReflStat(H1,H2,H3,dx,wavelength):
     D = 2*math.pi*dx/wavelength
-    Amp =np.array([old_div(H1,2.),old_div(H2,2.),old_div(H3,2.)])
+    Amp =np.array([H1/2.,H2/2.,H3/2.])
     A1 = Amp[0]*Amp[0]
     A2 = Amp[1]*Amp[1]
     A3 = Amp[2]*Amp[2]
-    Lamda = old_div((A1 + A3 - 2.*A2*cos(2*D)),(4.*sin(D)*sin(D)))
+    Lamda = (A1+A3-2.*A2*cos(2*D))/(4.*sin(D)*sin(D))
     Gamma = 0.5*sqrt(
-        (old_div((2*A2-A1-A3),(2.*sin(D)*sin(D))))**2+(old_div((A1-A3),sin(2*D)))**2)
+        ((2*A2-A1-A3)/(2.*sin(D)*sin(D)))**2+((A1-A3)/sin(2*D))**2)
     
     Hi = sqrt(Lamda + Gamma) + sqrt(Lamda - Gamma)
     Hr = sqrt(Lamda + Gamma) - sqrt(Lamda - Gamma)
-    Rf = old_div(Hr,(Hi+1e-15))
+    Rf = Hr/(Hi+1e-15)
     return [Hi,Hr,Rf]
 
 #    i3 = np.where(freq[np.where(freq<0)[0]]
@@ -193,4 +188,3 @@ def ReflStat(H1,H2,H3,dx,wavelength):
 
 #    return [time_lin,data1]
         
-

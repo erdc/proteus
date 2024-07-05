@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
@@ -25,9 +22,9 @@ domain = Domain.PiecewiseLinearComplexDomain()
 nd=3
 tank_dim = [5.,5.,5.]
 tank = st.Tank3D(domain, dim=tank_dim)
-rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[old_div(tank_dim[0],2.),
-                                                 old_div(tank_dim[1],2.),
-                                                 old_div(tank_dim[2],2.)])
+rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[tank_dim[0]/2.,
+                                                 tank_dim[1]/2.,
+                                                 tank_dim[2]/2.])
 rect.setHoles(holes=np.array([rect.coords]))
 
 domain.MeshOptions.he = he

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from .default import *
     
 platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C']

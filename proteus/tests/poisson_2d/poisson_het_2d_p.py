@@ -1,5 +1,3 @@
-from builtins import range
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus import defaults
@@ -145,6 +143,5 @@ coefficients = TransportCoefficients.PoissonEquationCoefficients(aOfX,fOfX,nc,nd
 coefficients.variableNames=list('u%d' % i for i in range(nc))
    
 fluxBoundaryConditions = dict((i,'setFlow') for i in range(nc))
-
 
 

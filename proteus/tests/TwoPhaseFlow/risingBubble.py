@@ -1,8 +1,6 @@
 """
 Rising bubble test
 """
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
@@ -80,11 +78,11 @@ else:
     #domain.polyfile="meshMarin"
     domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"meshRisingBubble"
     #domain.writePoly("meshRisingBubble")
-    he = old_div(tank_dim[0], float(4 * refinement - 1))
+    he = tank_dim[0]/float(4*refinement-1)
     domain.MeshOptions.he = opts.he
     domain.MeshOptions.genMesh=False
     domain.MeshOptions.triangleFlag=0
-    triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+    triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
 
 # ****************************** #
 # ***** INITIAL CONDITIONS ***** #

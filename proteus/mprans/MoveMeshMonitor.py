@@ -535,4 +535,4 @@ def calculate_area(x, detJ, weights):
         area = 0
         for k in range(N_k):
             area += detJ[k]*weights[k]
-        return area
+        return are

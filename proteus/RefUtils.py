@@ -6,9 +6,6 @@ for doing FEM calculations on reference elements, etc
 .. inheritance-diagram:: proteus.RefUtils
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
 from .EGeometry import *
 from .Quadrature import *
 

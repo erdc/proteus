@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import str
-from builtins import range
 import proteus
 import sys
 import numpy
@@ -610,7 +607,7 @@ class PUMI_helper:
                 #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
                 for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
                   self.modelList[0].levelModelList[0].mesh.size_scale[i,0] =  1e-1
-                  self.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (old_div(self.modelList[0].levelModelList[0].mesh.nodeArray[i,1],0.584))*1e-1
+                  self.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (self.modelList[0].levelModelList[0].mesh.nodeArray[i,1]/0.584)*1e-1
                   for j in range(3):
                     for k in range(3):
                       if(j==k):

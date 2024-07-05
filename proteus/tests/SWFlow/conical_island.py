@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import object
-from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 from proteus import (Domain, Context,
@@ -46,8 +43,8 @@ rectangle = RectangularDomain(L=L)
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
-nny = old_div((nnx - 1), 1) + 1
-he = old_div(L[0], float(nnx - 1))
+nny = nnx
+he = L[0]/float(nnx-1)
 if opts.structured:
     domain = rectangle
 else:
@@ -70,7 +67,7 @@ if opts.which_case == 1:
     alpha = 0.091 * h0
     xs = 6.81474
 
-r = np.sqrt(old_div(3. * alpha, (4. * h0**2 * (h0 + alpha))))
+r = np.sqrt(3.*alpha/(4.*h0**2*(h0+alpha)))
 c = np.sqrt(g * (h0 + alpha))
 
 # stuff for cone bathymetry
@@ -113,7 +110,7 @@ class x_mom_at_t0(object):
     def uOfXT(self, X, t):
         hTilde = h0 + solitary_wave(X[0], 0)
         h = max(hTilde - bathymetry_function(X), 0.)
-        return h * c * old_div(hTilde - h0, hTilde)
+        return h * c * hTilde-h0/hTilde
 
 
 class y_mom_at_t0(object):
@@ -143,7 +140,7 @@ class hw_at_t0(object):
         hTilde = h0 + solitary_wave(X[0], 0)
         h = max(hTilde - bathymetry_function(X), 0.)
         hTildePrime = -2.0 * alpha * r * np.tanh(r * (X[0] - xs)) * sechSqd
-        hw = -h**2 * old_div(c * h0 * hTildePrime, hTilde**2)
+        hw = -h**2 * c*h0*hTildePrime/hTilde**2
         return hw
 
 

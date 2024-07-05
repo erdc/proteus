@@ -233,4 +233,3 @@ for s in system.subcomponents:
         for i in s.boundaryFlags:
             flags_rigidbody[i] = 1
 m['addedMass'].p.coefficients.flags_rigidbody = flags_rigidbody
-

@@ -4,12 +4,6 @@ A class hierarchy for numerical integration on reference domains in 1,2, and 3D.
 .. inheritance-diagram:: proteus.Quadrature
    :parts: 1
 """
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from .EGeometry import *
 from .Profiling import logEvent
 from math import *
@@ -64,25 +58,25 @@ class GaussEdge(Q_base):
         [p8,w8]=numpy.polynomial.legendre.leggauss(8); p8=0.5*(p8+1); w8=0.5*w8
         [p9,w9]=numpy.polynomial.legendre.leggauss(9); p9=0.5*(p9+1); w9=0.5*w9
         #mwf for convenience, see Ern and Guermond
-        a1 = 0.5*sqrt(old_div((15.0+2.0*sqrt(30)),35.0))
-        a2 = 0.5*sqrt(old_div((15.0-2.0*sqrt(30)),35.0))
-        w1 = 0.25 - old_div(sqrt(old_div(5.,6.)),12.)
-        w2 = 0.25 + old_div(sqrt(old_div(5.,6.)),12.)
+        a1 = 0.5*sqrt((15.0+2.0*sqrt(30))/35.0)
+        a2 = 0.5*sqrt((15.0-2.0*sqrt(30))/35.0)
+        w1 = 0.25 - sqrt(5./6.)/12.
+        w2 = 0.25 + sqrt(5./6.)/12.
         Q_base.__init__(self,order)
         self.pointsAll=(
             (EVec(0.5),), #n=1
-            (EVec(old_div((sqrt(3.0)-1.0),(2.0*sqrt(3.0)))), #n=2
-             EVec(old_div((sqrt(3.0)+1.0),(2.0*sqrt(3.0))))),
-            (EVec(old_div((sqrt(5.0) - sqrt(3.0)),(2.0*sqrt(5)))), #n=3
+            (EVec((sqrt(3.0)-1.0)/(2.0*sqrt(3.0))), #n=2
+             EVec((sqrt(3.0)+1.0)/(2.0*sqrt(3.0)))),
+            (EVec((sqrt(5.0)-sqrt(3.0))/(2.0*sqrt(5))), #n=3
              EVec(0.5),
-             EVec(old_div((sqrt(5.0) + sqrt(3.0)),(2.0*sqrt(5))))),
+             EVec((sqrt(5.0)+sqrt(3.0))/(2.0*sqrt(5)))),
             (EVec(0.5+a1),EVec(0.5-a1), #n=4
              EVec(0.5+a2),EVec(0.5-a2)),
             (EVec(0.5), #n=5
-             EVec(0.5*(old_div(sqrt(5.0-2.0*sqrt(old_div(10.0,7.0))),3.0)) + 0.5),
-             EVec(0.5*(old_div(-sqrt(5.0-2.0*sqrt(old_div(10.0,7.0))),3.0)) + 0.5),
-             EVec(0.5*(old_div(sqrt(5.0+2.0*sqrt(old_div(10.0,7.0))),3.0)) + 0.5),
-             EVec(0.5*(old_div(-sqrt(5.0+2.0*sqrt(old_div(10.0,7.0))),3.0)) + 0.5)),
+             EVec(0.5*(sqrt(5.0-2.0*sqrt(10.0/7.0))/3.0) + 0.5),
+             EVec(0.5*(-sqrt(5.0-2.0*sqrt(10.0/7.0))/3.0) + 0.5),
+             EVec(0.5*(sqrt(5.0+2.0*sqrt(10.0/7.0))/3.0) + 0.5),
+             EVec(0.5*(-sqrt(5.0+2.0*sqrt(10.0/7.0))/3.0) + 0.5)),
             (EVec(p6[0]), #n=6
              EVec(p6[1]),
              EVec(p6[2]),
@@ -118,11 +112,11 @@ class GaussEdge(Q_base):
             (1.0,), #n=1
             (0.5, #n=2
              0.5),
-            (old_div(5.0,18.0), #n=3
-             old_div(8.0,18.0),
-             old_div(5.0,18.0)),
+            (5.0/18.0, #n=3
+             8.0/18.0,
+             5.0/18.0),
             (w1,w1,w2,w2), #n=4
-            (0.5*(old_div(128.0,225.0)), #n=5
+            (0.5*(128.0/225.0), #n=5
              0.5*(322.0+13.0*sqrt(70.0))/900.0,
              0.5*(322.0+13.0*sqrt(70.0))/900.0,
              0.5*(322.0-13.0*sqrt(70.0))/900.0,
@@ -151,7 +145,7 @@ class LobattoEdge(Q_base):
     def __init__(self,order=1):
         Q_base.__init__(self,order)
         a1 = 0.2*sqrt(5.0)
-        a2 = old_div(sqrt(21.0),7.0)
+        a2 = sqrt(21.0)/7.0
         self.pointsAll=(
             (EVec(0.0),EVec(1.0)),
             (EVec(0.0),EVec(0.5),EVec(1.0)),
@@ -160,9 +154,9 @@ class LobattoEdge(Q_base):
             )
         self.weightsAll=(
             (0.5,0.5),
-            (old_div(1.0,6.0), old_div(4.0,6.0), old_div(1.0,6.0)),
-            (old_div(1.0,12.0), old_div(5.0,12.0),old_div(5.0,12.0),old_div(1.0,12.0)),
-            (old_div(1.0,20.0),old_div(49.0,180.0),old_div(32.0,90.0),old_div(49.0,180.0),old_div(1.0,20.0))
+            (1.0/6.0, 4.0/6.0, 1.0/6.0),
+            (1.0/12.0, 5.0/12.0,5.0/12.0,1.0/12.0),
+            (1.0/20.0,49.0/180.0,32.0/90.0,49.0/180.0,1.0/20.0)
             )
         self.setOrder(order)
 
@@ -173,7 +167,7 @@ class LobattoEdgeAlt(Q_base):
     def __init__(self,order=1):
         Q_base.__init__(self,order)
         a1 = 0.2*sqrt(5.0)
-        a2 = old_div(sqrt(21),7.0)
+        a2 = sqrt(21)/7.0
         self.pointsAll=(
             (EVec(-1.0),EVec(1.0)),
             (EVec(-1.0),EVec(0.0),EVec(1.0)),
@@ -181,9 +175,9 @@ class LobattoEdgeAlt(Q_base):
             (EVec(-1.0),EVec(-a2),EVec(0.0),EVec(a2),EVec(1.0)),)
         self.weightsAll=(
             (1.0,1.0),
-            (old_div(1.0,3.0), old_div(4.0,3.0), old_div(1.0,3.0)),
-            (old_div(1.0,6.0), old_div(5.0,6.0),old_div(5.0,6.0),old_div(1.0,6.0)),
-            (old_div(1.0,10.0),old_div(49.0,90.0),old_div(32.0,45.0),old_div(49.0,90.0),old_div(1.0,10.0)),)
+            (1.0/3.0, 4.0/3.0, 1.0/3.0),
+            (1.0/6.0, 5.0/6.0,5.0/6.0,1.0/6.0),
+            (1.0/10.0,49.0/90.0,32.0/45.0,49.0/90.0,1.0/10.0),)
         self.setOrder(order)
 
 
@@ -199,7 +193,7 @@ class CompositeTrapezoidalEdge(Q_base):
         pointsList = []
         weightsList= []
         for nintervals in range(1,self.maxOrder+1):
-            dx = old_div(1.0,float(nintervals))
+            dx = 1.0/float(nintervals)
             points=numpy.arange(nintervals+1,dtype='d')*dx
             weights=numpy.zeros(nintervals+1,'d'); weights.fill(dx)
             weights[0] *= 0.5; weights[-1] *= 0.5
@@ -241,14 +235,14 @@ class GaussTriangle(Q_base):
         w1 = 0.223381589678010*0.5
         w2 = 0.109951743655322*0.5
         #5th order
-        a5= (old_div((6.-sqrt(15.0)),21.0),old_div((6. + sqrt(15.0)),21.0))
+        a5= ((6.-sqrt(15.0))/21.0,(6.+sqrt(15.0))/21.0)
         w5= (0.5*(155. - sqrt(15))/1200.,0.5*(155. + sqrt(15))/1200.)
         fifthOrderPoints = []; fifthOrderWeights = []
         for i in range(2):
             fifthOrderPoints.append((a5[i],a5[i])); fifthOrderWeights.append(w5[i])
             fifthOrderPoints.append((1.-2.*a5[i],a5[i])); fifthOrderWeights.append(w5[i])
             fifthOrderPoints.append((a5[i],1.-2.*a5[i])); fifthOrderWeights.append(w5[i])
-        fifthOrderPoints.append((old_div(1.,3.),old_div(1.,3.))); fifthOrderWeights.append(0.5*9.0/40.0)
+        fifthOrderPoints.append((1./3.,1./3.)); fifthOrderWeights.append(0.5*9.0/40.0)
 
         #6th order
         a6  = (0.063089014491502,0.249286745170910)
@@ -268,9 +262,9 @@ class GaussTriangle(Q_base):
 
         Q_base.__init__(self,order)
         self.pointsAll=(
-            ( EVec(old_div(1.0,3.0),old_div(1.0,3.0)),),
-            ( EVec(old_div(1.0,2.0),old_div(1.0,2.0)), EVec(0.0,old_div(1.0,2.0)), EVec(old_div(1.0,2.0),0.0)),
-            ( EVec(old_div(1.0,3.0),old_div(1.0,3.0)), EVec(old_div(3.0,5.0),old_div(1.0,5.0)), EVec(old_div(1.0,5.0),old_div(3.0,5.0)),EVec(old_div(1.0,5.0),old_div(1.0,5.0))),
+            ( EVec(1.0/3.0,1.0/3.0),),
+            ( EVec(1.0/2.0,1.0/2.0), EVec(0.0,1.0/2.0), EVec(1.0/2.0,0.0)),
+            ( EVec(1.0/3.0,1.0/3.0), EVec(3.0/5.0,1.0/5.0), EVec(1.0/5.0,3.0/5.0),EVec(1.0/5.0,1.0/5.0)),
             ( EVec(a1,a1),EVec(1.0-2.0*a1,a1),EVec(a1,1.0-2.0*a1),
               EVec(a2,a2),EVec(1.0-2.0*a2,a2),EVec(a2,1.0-2.0*a2)),
             tuple(EVec(p[0],p[1]) for p in fifthOrderPoints),
@@ -279,8 +273,8 @@ class GaussTriangle(Q_base):
 
         self.weightsAll=(
             (0.5,),
-            (old_div(1.0,6.0), old_div(1.0,6.0), old_div(1.0,6.0)),
-            (old_div(-27.0,96.0), old_div(25.0,96.0), old_div(25.0,96.0), old_div(25.0,96.0)),
+            (1.0/6.0, 1.0/6.0, 1.0/6.0),
+            (-27.0/96.0, 25.0/96.0, 25.0/96.0, 25.0/96.0),
             (w1,w1,w1,w2,w2,w2),
             tuple(fifthOrderWeights),
             tuple(sixthOrderWeights)
@@ -296,8 +290,8 @@ class CompositeTriangle(Q_base):
     # uniform refine the reference cell until size < hk.
     def __init__(self,quad_rule,hk):
 
-        N = int(floor(old_div(1.0,hk)))
-        h1= old_div(1.0,N)
+        N = int(floor(1.0/hk))
+        h1= 1.0/N
         h2= 1.0/N/N
         npt = len(quad_rule.points)
 
@@ -343,7 +337,7 @@ class CompositeTetrahedron(Q_base):
         return max([h1, h2, h3, h4, h5, h6])
 
     def get_max_h_of_all_tetrahedron(self, all_tet):
-        n_tet = old_div(all_tet.shape[0], 4)
+        n_tet = all_tet.shape[0]//4
         h = []
         for i in range(n_tet):
             h.append(self.get_h_of_Tetrahedron(all_tet[i * 4:(i + 1) * 4, :]))
@@ -412,7 +406,7 @@ class CompositeTetrahedron(Q_base):
 
 
     def get_sub_tet_of_all_tet(self, all_tet):
-        n_tet = old_div(all_tet.shape[0], 4)
+        n_tet = all_tet.shape[0]//4
         all_sub_tet = numpy.zeros((n_tet * 8 * 4, 3), 'd')
         for i in range(n_tet):
             all_sub_tet[i * 8 * 4:(i + 1) * 8 * 4,
@@ -437,7 +431,7 @@ class CompositeTetrahedron(Q_base):
 
         self.h = max_h
 
-        n_tet = old_div(all_tetrahedron.shape[0], 4)
+        n_tet = all_tetrahedron.shape[0]//4
         quad_weights = numpy.asarray(quad_rule.weights, 'd')
         quad_points = numpy.asarray(quad_rule.points, 'd')
         n_quad_per_tet = quad_weights.shape[0]
@@ -472,12 +466,12 @@ class LobattoTriangle(Q_base):
         a = 0.2763932023; b = 1.0-a; wv = 0.03333333333333*0.25; wab = 0.16666666666667*0.25
         self.pointsAll=(
             ( EVec(0.0,0.0),EVec(1.0,0.0),EVec(0.0,1.0)),
-            ( EVec(old_div(1.0,3.0),old_div(1.0,3.0)),
+            ( EVec(1.0/3.0,1.0/3.0),
               EVec(0.,0.),EVec(1.0,0.0),EVec(0.0,1.0),
               EVec(0,a),EVec(b,0),EVec(a,b),EVec(a,0.),EVec(b,a),EVec(0,b)),
             )
         self.weightsAll=(
-            (old_div(1.0,6.0),old_div(1.0,6.0),old_div(1.0,6.0)),
+            (1.0/6.0,1.0/6.0,1.0/6.0),
             (0.5-3.0*wv-6*wab,
              wv,wv,wv,
              wab,wab,wab,wab,wab,wab),
@@ -505,7 +499,7 @@ class CompositeTrapezoidalTriangle(Q_base):
         weightsList= []
         parentArea = 0.5
         for nintervals in range(1,self.maxOrder+1):
-            dx = old_div(1.0,float(nintervals))
+            dx = 1.0/float(nintervals)
             #uniform subdivisions in terms of barycentric coordinates
             baryvals = numpy.arange(nintervals+1,dtype='d')*dx
             combos = []; weights = []
@@ -516,14 +510,14 @@ class CompositeTrapezoidalTriangle(Q_base):
                     if i == 0 or i == nintervals: iInBoundary = 1
                     if j == 0 or j == nintervals-i: jInBoundary = 1
                     if iInBoundary+jInBoundary == 2:
-                        weights.append(old_div(parentArea,3.0))
+                        weights.append(parentArea/3.0)
                     elif iInBoundary+jInBoundary == 1:
                         weights.append(parentArea)
                     else:
                         weights.append(parentArea*2.0)
             pointsList.append([tuple(p) for p in combos])
             weightsList.append([w for w in weights])
-            parentArea = 0.5*(old_div(1.0,float(nintervals+1)))**2
+            parentArea = 0.5*(1.0/float(nintervals+1))**2
         self.pointsAll =tuple(tuple(pL) for pL in pointsList)
         self.weightsAll=tuple(tuple(wL) for wL in weightsList)
         self.setOrder(order)
@@ -539,10 +533,10 @@ class FaceBarycenterTriangle(Q_base):
         order=1
         Q_base.__init__(self,order)
         self.pointsAll=(
-            ( EVec(old_div(1.0,2.0),old_div(1.0,2.0)), EVec(0.0,old_div(1.0,2.0)), EVec(old_div(1.0,2.0),0.0)),
+            ( EVec(1.0/2.0,1.0/2.0), EVec(0.0,1.0/2.0), EVec(1.0/2.0,0.0)),
             )
         self.weightsAll=(
-            (old_div(1.0,6.0), old_div(1.0,6.0), old_div(1.0,6.0)),
+            (1.0/6.0, 1.0/6.0, 1.0/6.0),
             )
         self.setOrder(order)
     def setOrder(self,k):
@@ -556,10 +550,10 @@ class GaussTetrahedron(Q_base):
     def __init__(self,order=1):
         Q_base.__init__(self,order)
         #mwf for convenience, see Guern Ermond 360
-        a1=old_div((7.0-sqrt(15.)),34.0)
-        a2=old_div((7.0+sqrt(15.)),34.0)
-        a =old_div((10.0-2.0*sqrt(5.)),40.0)
-        Vf=old_div(1.0,6.0)
+        a1=(7.0-sqrt(15.))/34.0
+        a2=(7.0+sqrt(15.))/34.0
+        a =(10.0-2.0*sqrt(5.))/40.0
+        Vf=1.0/6.0
         w1=(2665.0+14.0*sqrt(15.0))/37800.0*Vf
         w2=(2665.0-14.0*sqrt(15.0))/37800.0*Vf
         wa=10.0/189.0*Vf
@@ -571,10 +565,10 @@ class GaussTetrahedron(Q_base):
              EVec(0.138196601125011,0.138196601125011,0.585410196624969),
              EVec(0.138196601125011,0.138196601125011,0.138196601125011)),
             (EVec(0.25,0.25,0.25),#3rd degree
-             EVec(old_div(1.0,2.0), old_div(1.0,6.0), old_div(1.0,6.0)),
-             EVec(old_div(1.0,6.0), old_div(1.0,2.0), old_div(1.0,6.0)),
-             EVec(old_div(1.0,6.0), old_div(1.0,6.0), old_div(1.0,2.0)),
-             EVec(old_div(1.0,6.0), old_div(1.0,6.0), old_div(1.0,6.0))),
+             EVec(1.0/2.0, 1.0/6.0, 1.0/6.0),
+             EVec(1.0/6.0, 1.0/2.0, 1.0/6.0),
+             EVec(1.0/6.0, 1.0/6.0, 1.0/2.0),
+             EVec(1.0/6.0, 1.0/6.0, 1.0/6.0)),
             (EVec(0.50,0.50,0.0),#4th degree
              EVec(0.50,0.0,0.50),
              EVec(0.0,0.50,0.50),
@@ -735,16 +729,16 @@ class GaussTetrahedron(Q_base):
 #               EVec(a,0.5-a,0.5-a),
 #               EVec(0.5-a,a,0.5-a)))
         self.weightsAll=(
-            (old_div(1.0,6.0),),
-            (old_div(1.0,24.0),#2nd degree
-             old_div(1.0,24.0),
-             old_div(1.0,24.0),
-             old_div(1.0,24.0)),
-            (old_div(-4.0,30.0),#3rd degree
-             old_div(9.0,120.0),
-             old_div(9.0,120.0),
-             old_div(9.0,120.0),
-             old_div(9.0,120.0)),
+            (1.0/6.0,),
+            (1.0/24.0,#2nd degree
+             1.0/24.0,
+             1.0/24.0,
+             1.0/24.0),
+            (-4.0/30.0,#3rd degree
+             9.0/120.0,
+             9.0/120.0,
+             9.0/120.0,
+             9.0/120.0),
             (0.317460317460317450e-2, #4th degree
              0.317460317460317450e-2,
              0.317460317460317450e-2,
@@ -908,7 +902,7 @@ class LobattoTetrahedron(Q_base):
               EVec(0.0,1.0,0.0),
               EVec(0.0,0.0,1.0)),)
         self.weightsAll=(
-            (old_div(1.0,24.0),old_div(1.0,24.0),old_div(1.0,24.0),old_div(1.0,24.0)),)
+            (1.0/24.0,1.0/24.0,1.0/24.0,1.0/24.0),)
         self.setOrder(order)
     def setOrder(self,k):
         self.order = 1
@@ -920,10 +914,10 @@ class FaceBarycenterTetrahedron(Q_base):
         order=1
         Q_base.__init__(self,order)
         self.pointsAll=(
-            ( EVec(old_div(1.0,3.0),old_div(1.0,3.0),old_div(1.0,3.0)), EVec(0.0,old_div(1.0,3.0),old_div(1.,3.)), EVec(old_div(1.0,3.0),0.0,old_div(1.0,3.0)),EVec(old_div(1.,3.),old_div(1.,3.),0.0)),
+            ( EVec(1.0/3.0,1.0/3.0,1.0/3.0), EVec(0.0,1.0/3.0,1./3.), EVec(1.0/3.0,0.0,1.0/3.0),EVec(1./3.,1./3.,0.0)),
             )
         self.weightsAll=(
-            (old_div(1.0,24.0), old_div(1.0,24.0), old_div(1.0,24.0)),
+            (1.0/24.0, 1.0/24.0, 1.0/24.0),
             )
         self.setOrder(order)
     def setOrder(self,k):
@@ -1079,5 +1073,4 @@ def buildUnion(quadratureDict):
                 quadraturePointIndeces[I].append(k)
     return (quadraturePoints,quadratureWeights,quadraturePointIndeces)
 ## @}
-
 

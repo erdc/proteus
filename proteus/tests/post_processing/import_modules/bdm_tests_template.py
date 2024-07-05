@@ -1,5 +1,3 @@
-from builtins import range
-from builtins import object
 from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n

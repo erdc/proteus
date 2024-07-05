@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import proteus
 from proteus import FemTools
 from proteus import LinearAlgebraTools as LAT
@@ -102,11 +97,11 @@ class RKEV(proteus.TimeIntegration.SSP):
 
         maxCFL = max(maxCFL, max(adjusted_maxCFL,
                                  globalMax(self.edge_based_cfl.max())))
-        self.dt = old_div(self.runCFL, maxCFL)
+        self.dt = self.runCFL/maxCFL
 
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt, self.dtLast) > self.dtRatioMax:
+        if self.dt/self.dtLast > self.dtRatioMax:
             self.dt = self.dtLast * self.dtRatioMax
         self.t = self.tLast + self.dt
         # Ignoring dif. time step levels
@@ -153,7 +148,7 @@ class RKEV(proteus.TimeIntegration.SSP):
             elif self.lstage == 2:
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
-                    self.u_dof_lstage[ci] *= old_div(1., 4.)
+                    self.u_dof_lstage[ci] *= 1./4.
                     self.u_dof_lstage[ci] += 3. / 4. * self.u_dof_last[ci]
                 # update u_dof_old
                 self.transport.h_dof_old[:] = self.u_dof_lstage[0]
@@ -166,7 +161,7 @@ class RKEV(proteus.TimeIntegration.SSP):
             else:
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
-                    self.u_dof_lstage[ci][:] *= old_div(2.0, 3.0)
+                    self.u_dof_lstage[ci][:] *= 2.0/3.0
                     self.u_dof_lstage[ci][:] += 1.0 / 3.0 * self.u_dof_last[ci]
                     # update solution to u[0].dof
                     self.transport.u[ci].dof[:] = self.u_dof_lstage[ci]
@@ -198,7 +193,7 @@ class RKEV(proteus.TimeIntegration.SSP):
             else:
                 for ci in range(self.nc):
                     self.u_dof_lstage[ci][:] = self.transport.u[ci].dof
-                    self.u_dof_lstage[ci][:] *= old_div(1., 2.)
+                    self.u_dof_lstage[ci][:] *= 1./2.
                     self.u_dof_lstage[ci][:] += 1. / 2. * self.u_dof_last[ci]
                     # update solution to u[0].dof
                     self.transport.u[ci].dof[:] = self.u_dof_lstage[ci]
@@ -680,13 +675,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary), 'd')
         self.ebq_global[('velocityAverage', 0)] = np.zeros((self.mesh.nElementBoundaries_global,
                                                             self.nElementBoundaryQuadraturePoints_elementBoundary, self.nSpace_global), 'd')
-        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * \
+        self.q[('dV_u', 0)] = (1.0/self.mesh.nElements_global) * \
             np.ones((self.mesh.nElements_global,
                      self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 1)] = (old_div(1.0, self.mesh.nElements_global)) * \
+        self.q[('dV_u', 1)] = (1.0/self.mesh.nElements_global) * \
             np.ones((self.mesh.nElements_global,
                      self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 2)] = (old_div(1.0, self.mesh.nElements_global)) * \
+        self.q[('dV_u', 2)] = (1.0/self.mesh.nElements_global) * \
             np.ones((self.mesh.nElements_global,
                      self.nQuadraturePoints_element), 'd')
         self.q['dV'] = self.q[('dV_u', 0)]
@@ -961,16 +956,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant,
-                                                                 (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant,
-                                                            self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default
@@ -1338,7 +1331,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # fill vector rowptr_cMatrix
         for i in range(1, rowptr_cMatrix.size):
             rowptr_cMatrix[i] = rowptr_cMatrix[i - 1] + \
-                old_div((rowptr[6 * (i - 1) + 1] - rowptr[6 * (i - 1)]), 6)
+                (rowptr[6 * (i - 1) + 1] - rowptr[6 * (i - 1)])//6
 
         # fill vector colind_cMatrix
         i_cMatrix = 0  # ith row of cMatrix
@@ -1349,8 +1342,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     offset_cMatrix = list(
                         range(rowptr_cMatrix[i_cMatrix], rowptr_cMatrix[i_cMatrix + 1]))
                     if (j % 6 == 0):
-                        colind_cMatrix[offset_cMatrix[old_div(j, 6)]] = old_div(
-                            colind[offset], 6)
+                        colind_cMatrix[offset_cMatrix[j//6]] = colind[offset]//6
                 i_cMatrix += 1
         # END OF SPARSITY PATTERN FOR C MATRICES
 

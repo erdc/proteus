@@ -54,4 +54,3 @@ def test_2DparallelLoadPUMI(verbose=0):
     assert mesh.nNodes_global == 10
     assert mesh.nEdges_global == 17
     assert mesh.nElementBoundaries_global == 17
-

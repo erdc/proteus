@@ -94,4 +94,3 @@ class Test_ibm():
         expected_path = 'comparison_files/' + 'comparison_u_t2.csv'
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2),decimal=10)
         actual.close()
-

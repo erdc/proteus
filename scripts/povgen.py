@@ -2,7 +2,6 @@
 """
 A script for generating povray frames of zero level set
 """
-from builtins import range
 import argparse
 import tables
 import numpy as np

@@ -6,10 +6,6 @@ The equation is
 
 .. math: \frac{\partial u}{\partial t} + \nabla \cdot (\frac{1}{2} u^2 - \epsilon \nabla u) = 0
 """
-from __future__ import division
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from proteus.iproteus import *
 
 class Burgers(TransportCoefficients.TC_base):
@@ -116,7 +112,7 @@ physics.fluxBoundaryConditions = {0:'outFlow'}
 #numerics
 
 nDTout = 100
-DT = old_div(T,float(nDTout))
+DT = T/float(nDTout)
 
 numerics=default_n
 numerics.timeIntegration = TimeIntegration.BackwardEuler_cfl

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
@@ -111,4 +109,3 @@ def zeroadv(x):
 
 advectiveFluxBoundaryConditions =  {0:zeroadv}
 diffusiveFluxBoundaryConditions = {0:{}}
-

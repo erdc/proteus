@@ -55,6 +55,7 @@ def get_xtensor_include():
     return [str(get_pybind_include()),
             str(get_pybind_include(user=True)),
             str(get_numpy_include()),
+            os.path.join(prefix, 'include'),
             os.path.join(sys.prefix, 'include'),
             os.path.join(sys.prefix, 'Library', 'include'),
             'proteus',

@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from . import blockDomain
@@ -165,7 +160,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                 x = cebq_global['x'][ebN,k];
                                 numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                 denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = old_div(numer,denom)
+                                cebq_global[('a',ci,ci)][eN,k,i*nd+j] = numer/denom
             for eN in range(cebq['x'].shape[0]):
                 for ebN_local in range(cebq['x'].shape[1]):
                     ebN = self.elementBoundariesArray[eN,ebN_local]
@@ -181,7 +176,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                 for j in range(nd):
                                     numer = 2.0*self.a_types[material_left](x,t)[i,j]*self.a_types[material_right](x,t)[i,j]
                                     denom = self.a_types[material_left](x,t)[i,j] + self.a_types[material_right](x,t)[i,j] + 1.0e-20
-                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = old_div(numer,denom)
+                                    cebq[('a',ci,ci)][eN,ebN_local,k,i*nd+j] = numer/denom
                     #
                 #
             #

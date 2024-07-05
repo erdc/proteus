@@ -1,15 +1,11 @@
 #!/usr/bin/env python
-
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
 from burgers_init import use_deim
 from proteus import deim_utils,Archiver
 from proteus.deim_utils import read_snapshots
 
 T = 1.0
 nDTout = 100
-DT = old_div(T,float(nDTout))
+DT = T/float(nDTout)
 
 archive = Archiver.XdmfArchive(".",burgers_init.physics.name,readOnly=True)
 

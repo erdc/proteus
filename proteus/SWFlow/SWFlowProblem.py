@@ -1,5 +1,3 @@
-from __future__ import division
-from past.utils import old_div
 from proteus import FemTools as ft
 from proteus import MeshTools as mt
 
@@ -136,7 +134,7 @@ class OutputStepping:
         # COMPUTE dt_init #
         dt_init = min(0.1 * self.dt_output, self.dt_init)
         if self.nDTout is None:
-            self.nDTout = int(round(old_div(self.final_time, self.dt_output)))
+            self.nDTout = int(round(self.final_time/self.dt_output))
         else:
             self.dt_output = float(self.final_time) / float(self.nDTout)
         #

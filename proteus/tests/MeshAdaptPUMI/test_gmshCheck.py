@@ -186,4 +186,3 @@ def test_2DmultiRegion(verbose=0):
     mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
     assert mesh.elementMaterialTypes[0]==1
     assert mesh.elementMaterialTypes[-1]==2
-

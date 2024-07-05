@@ -1,5 +1,3 @@
-from __future__ import division
-from past.utils import old_div
 import unittest
 import numpy.testing as npt
 import numpy as np
@@ -50,13 +48,13 @@ class TestGMSH(unittest.TestCase):
         #    npt.assert_equal(elefile.readline(), '6664 3 1\n')
         with open('gmsh_mesh_test_2D.node', 'r') as nodefile:
             numNodes = int(nodefile.readline().split(' ', 1)[0]) 
-            assert abs(1.0-old_div(numNodes,numNodes_reference_2D)) < THRESHOLD
+            assert abs(1.0-numNodes//numNodes_reference_2D) < THRESHOLD
         with open('gmsh_mesh_test_2D.edge', 'r') as edgefile:
             numEdges = int(edgefile.readline().split(' ', 1)[0]) 
-            assert abs(1.0-old_div(numEdges,numEdges_reference_2D)) < THRESHOLD
+            assert abs(1.0-numEdges//numEdges_reference_2D) < THRESHOLD
         with open('gmsh_mesh_test_2D.ele', 'r') as elefile:
             numElements = int(elefile.readline().split(' ', 1)[0]) 
-            assert abs(1.0-old_div(numElements,numElements_reference_2D)) < THRESHOLD
+            assert abs(1.0-numElements//numElements_reference_2D) < THRESHOLD
 
 
     def test_gmsh_generation_3D(self):
@@ -77,13 +75,13 @@ class TestGMSH(unittest.TestCase):
         # with open('gmsh_mesh_test_3D.ele', 'r') as elefile:
         #     npt.assert_equal(elefile.readline(), '37473 4 1\n')
         with open('gmsh_mesh_test_3D.node', 'r') as nodefile:
-            assert(old_div(abs(int(nodefile.readline().split()[0]) - numNodes_reference_3D ),numNodes_reference_3D ) < THRESHOLD)
+            assert(abs(int(nodefile.readline().split()[0]) - numNodes_reference_3D )//numNodes_reference_3D < THRESHOLD)
         with open('gmsh_mesh_test_3D.edge', 'r') as edgefile:
-            assert(old_div(abs(int(edgefile.readline().split()[0]) - numEdges_reference_3D ),numEdges_reference_3D ) < THRESHOLD)
+            assert(abs(int(edgefile.readline().split()[0]) - numEdges_reference_3D )//numEdges_reference_3D < THRESHOLD)
         with open('gmsh_mesh_test_3D.face', 'r') as facefile:
-            assert(old_div(abs(int(facefile.readline().split()[0]) - numFaces_reference_3D ),numFaces_reference_3D ) < THRESHOLD)
+            assert(abs(int(facefile.readline().split()[0]) - numFaces_reference_3D )//numFaces_reference_3D < THRESHOLD)
         with open('gmsh_mesh_test_3D.ele', 'r') as elefile:
-            assert(old_div(abs(int(elefile.readline().split()[0]) - numElements_reference_3D ),numElements_reference_3D ) < THRESHOLD)
+            assert(abs(int(elefile.readline().split()[0]) - numElements_reference_3D )//numElements_reference_3D < THRESHOLD)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

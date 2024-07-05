@@ -1,8 +1,6 @@
 """
 Rising bubble test
 """
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import (Domain, Context)
 from proteus.Profiling import logEvent
@@ -324,5 +322,4 @@ m['flow'].p.coefficients.forceTerms = forceTerms
 m['flow'].p.coefficients.useVF = 1.0
 m['flow'].p.coefficients.eb_penalty_constant = 1e6
 m['flow'].n.ShockCapturingOptions.shockCapturingFactor = 0.5
-
 

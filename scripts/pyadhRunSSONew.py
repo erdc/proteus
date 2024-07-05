@@ -1,14 +1,4 @@
 #!/usr/bin/env python
-
-from __future__ import print_function
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import input
-from builtins import zip
-from builtins import range
-from past.utils import old_div
 import os
 import sys
 import socket
@@ -638,7 +628,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     timeValues = [tnList[opts.masterModel]]
     failedFlag=False
     mM = mList[opts.masterModel]
-    dt = old_div(pList[opts.masterModel].T,nList[opts.masterModel].nDTout)
+    dt = pList[opts.masterModel].T/nList[opts.masterModel].nDTout
     dtInit=1.0e-5
     print("master T",pList[opts.masterModel].T)
     print("master nDTout",nList[opts.masterModel].nDTout)

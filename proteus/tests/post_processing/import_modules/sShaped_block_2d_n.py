@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from .sShaped_block_2d_p import *
@@ -100,4 +98,3 @@ levelLinearSolver = LU
 #levelLinearSolver = PETSc
 
 linTolFac = 1.0e-10
-

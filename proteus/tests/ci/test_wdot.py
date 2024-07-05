@@ -1,4 +1,3 @@
-from __future__ import print_function
 from pytest import approx
 
 def test_wdot():

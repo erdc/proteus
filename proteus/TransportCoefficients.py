@@ -7,13 +7,6 @@ this module define common PDE's.
 .. inheritance-diagram:: proteus.TransportCoefficients
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from math import *
 from warnings import warn
 import numpy
@@ -268,7 +261,7 @@ class TC_base(object):
             ctemp = {}
             for ci in range(self.nc):
                 ctemp[('u',ci)] = numpy.zeros(nPoints,'d')
-                delta_u = old_div((uMax-uMin),float(nPoints-1))
+                delta_u = (uMax-uMin)/(nPoints-1)
                 for i in range(nPoints):
                     ctemp[('u',ci)] = i*delta_u + uMin
             for ci,cjDict in self.mass.items():
@@ -302,7 +295,7 @@ class TC_base(object):
             for ci in range(self.nc):
                 uMin = min(c[('u',ci)].flat)
                 uMax = max(c[('u',ci)].flat)
-                delta_u = old_div((uMax-uMin),float(nPoints-1))
+                delta_u = (uMax-uMin)/(nPoints-1)
                 for i in range(nPoints):
                     ctemp[('u',ci)].flat[i]=i*delta_u+uMin
         return ctemp
@@ -2741,9 +2734,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cq['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.q_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
-                    self.q_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
-                    self.q_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
+                    self.q_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
+                    self.q_n_s.flat[2*i+0] = u/math.sqrt(u**2+v**2)
+                    self.q_n_s.flat[2*i+1] = v/math.sqrt(u**2+v**2)
         else:
             try:
                 self.defaultSolidProfile(t,cq['x'],self.q_phi_s,self.q_n_s)
@@ -2774,9 +2767,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cebq['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.ebq_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
-                    self.ebq_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
-                    self.ebq_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
+                    self.ebq_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
+                    self.ebq_n_s.flat[2*i+0] = u/math.sqrt(u**2+v**2)
+                    self.ebq_n_s.flat[2*i+1] = v/math.sqrt(u**2+v**2)
         else:
             try:
                 self.defaultSolidProfile(t,cebq['x'],self.ebq_phi_s,self.ebq_n_s)
@@ -2807,9 +2800,9 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     y = cebqe['x'].flat[i*3+1]
                     u =x-0.5
                     v =y-0.5
-                    self.ebqe_phi_s.flat[i] = math.sqrt(u**2 + v**2) - old_div(0.25,2.0)
-                    self.ebqe_n_s.flat[2*i+0] = old_div(u,math.sqrt(u**2 + v**2))
-                    self.ebqe_n_s.flat[2*i+1] = old_div(v,math.sqrt(u**2 + v**2))
+                    self.ebqe_phi_s.flat[i] = math.sqrt(u**2 + v**2) - 0.25/2.0
+                    self.ebqe_n_s.flat[2*i+0] = u/math.sqrt(u**2+v**2)
+                    self.ebqe_n_s.flat[2*i+1] = v/math.sqrt(u**2+v**2)
         else:
             try:
                 self.defaultSolidProfile(t,cebqe['x'],self.ebqe_phi_s,self.ebqe_n_s)
@@ -4436,7 +4429,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
             if c[('f',0)].shape[2] == 2:
                 volFact =0.5
             elif c[('f',0)].shape[2] == 3:
-                volFact = old_div(1.,6.)
+                volFact = 1./6.
             for eN in range(c[('dV_u',0)].shape[0]):
                 vol = 0.0;
                 for k in range(c[('dV_u',0)].shape[1]):
@@ -4782,27 +4775,27 @@ class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
         
 def VGM_to_BCB_Simple(vgm_alpha,vgm_n):
     bcb_lambda = vgm_n-1
-    bcb_pd = old_div(1.0,vgm_alpha)
+    bcb_pd = 1.0/vgm_alpha
     return (bcb_lambda,bcb_pd)
 def BCB_to_VGM_Simple(bcb_pd,bcb_lambda):
     vgm_n = bcb_lambda + 1
-    vgm_alpha = old_div(1.0,bcb_pd)
+    vgm_alpha = 1.0/bcb_pd
     return (vgm_alpha,vgm_n)
 
 def VGM_to_BCB_Johns(vgm_alpha,vgm_n):
-    vgm_m = 1.0 - old_div(1.0,vgm_n)
-    bcb_lambda = vgm_m/(1.0-vgm_m)*(1.0-(0.5)**(old_div(1.0,vgm_m)))
+    vgm_m = 1.0 - 1.0/vgm_n
+    bcb_lambda = vgm_m/(1.0-vgm_m)*(1.0-(0.5)**(1.0/vgm_m))
     thetaStar=0.72-0.35*exp(-vgm_n**4);
-    bcb_pd = (thetaStar**(old_div(1.0,bcb_lambda)))/vgm_alpha*(thetaStar**(old_div(-1.0,vgm_m))-1.0)**( 1.0-vgm_m)
+    bcb_pd = (thetaStar**(1.0/bcb_lambda))/vgm_alpha*(thetaStar**(-1.0/vgm_m)-1.0)**( 1.0-vgm_m)
     return (bcb_lambda,bcb_pd)
 
 def VGM_to_BCB_MorelSeytoux(vgm_alpha,vgm_n):
-    vgm_m = 1.0 - old_div(1.0,vgm_n)
-    p = 1.0 + old_div(2.0,vgm_m)
-    bcb_pd = ((old_div(1.0,vgm_alpha))*
-              (old_div((p+3.0),((2.0*p)*(p-1.0))))*
-              (old_div((147.8 + 8.1*p + 0.092*p**2),(55.6+7.4*p+p**2))))
-    bcb_lambda = old_div(2.0,(p-3.0))
+    vgm_m = 1.0 - 1.0/vgm_n
+    p = 1.0 + 2.0/vgm_m
+    bcb_pd = ((1.0/vgm_alpha)*
+              ((p+3.0)/((2.0*p)*(p-1.0)))*
+              ((147.8+8.1*p+0.092*p**2)/(55.6+7.4*p+p**2)))
+    bcb_lambda = 2.0/(p-3.0)
     return (bcb_lambda,bcb_pd)
 
 from .ctransportCoefficients import  conservativeHeadRichardsBrooksCoreyBurdineHomEvaluate
@@ -9608,7 +9601,7 @@ class DiffusiveWave_1D(TC_base):
 
     This implements the regularized formulation in M. Santillana's thesis (ref).
     """
-    def __init__(self,alpha=old_div(5.0,3.0),gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, reactionFunc=None, analyticalSoln=None):
+    def __init__(self,alpha=5.0/3.0,gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, reactionFunc=None, analyticalSoln=None):
         """
         Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.
 
@@ -9715,7 +9708,7 @@ class DiffusiveWave_2D(TC_base):
 
     This implements the regularized formulation in M. Santillana's thesis (ref).
     """
-    def __init__(self,nd=2,alpha=old_div(5.0,3.0),gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, bathymetryGradientFunc=None):
+    def __init__(self,nd=2,alpha=5.0/3.0,gamma=0.5,epsilon=1.0e-6,bathymetryFunc=None, bathymetryGradientFunc=None):
         """
         Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.
 

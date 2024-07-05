@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """ Test modules for Driven Cavity Stokes preconditioners. """
-
 import proteus.test_utils.TestTools as TestTools
 import proteus.LinearAlgebraTools as LAT
 import proteus.LinearSolvers as LS

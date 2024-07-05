@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from past.utils import old_div
 from proteus import Domain
 from proteus import Norms
 from proteus import Profiling
@@ -58,7 +55,7 @@ nn=nnx=nny=(2**refinement)*10+1
 nnz=1
 L=[1.0,1.0]
 # definition of he
-he=old_div(1.0,(nnx-1.0))
+he=1.0/(nnx-1.0)
 clsvof_nl_atol_res = 1.0e-10#max(1.0e-10, 0.01 * he ** 2)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid

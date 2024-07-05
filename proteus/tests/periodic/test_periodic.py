@@ -130,4 +130,3 @@ def test_periodic_3D_amg(load_periodic_opts_3D_T2,
 
 
 
-

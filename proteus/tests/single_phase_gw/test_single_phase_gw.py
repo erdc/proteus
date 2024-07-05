@@ -9,10 +9,6 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
-from builtins import object
 import os
 import numpy as np
 import numpy.testing as npt

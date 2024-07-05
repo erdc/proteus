@@ -1,7 +1,6 @@
 """
 The default values for problem definition modules
 """
-from __future__ import absolute_import
 try:
     from importlib import reload
 except:

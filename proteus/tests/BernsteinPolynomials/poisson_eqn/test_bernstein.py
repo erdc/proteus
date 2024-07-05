@@ -2,7 +2,6 @@
 """
 Test module for Berstein basis FE
 """
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()

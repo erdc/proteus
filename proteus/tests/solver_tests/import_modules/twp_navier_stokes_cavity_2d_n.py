@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import *
 try:
     from . import cavity2d
@@ -119,4 +118,3 @@ nl_atol_res = 1.0e-8
 
 maxNonlinearIts = 100
 maxLineSearches =0
-

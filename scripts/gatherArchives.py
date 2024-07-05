@@ -1,11 +1,4 @@
 #!/usr/bin/env python
-
-from __future__ import print_function
-from __future__ import division
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import numpy
 import os
 from xml.etree.ElementTree import *
@@ -130,7 +123,7 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
     if nStepsOnly != None:
         nSteps = nStepsOnly
     print("nSteps",nSteps)
-    stepsToGather=[i*stride for i in range(old_div(nSteps,stride))]
+    stepsToGather=[i*stride for i in range(nSteps//stride)]
     for tn  in stepsToGather:
         fAll = open(os.path.join(dataDir,filename+"_t"+str(tn) + addname+str(size)+".xmf"),"w")
         fAll.write(r"""<?xml version="1.0" ?>

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """ Test modules for Driven Cavity Stokes preconditioners. """
-from __future__ import absolute_import
-
 import proteus.test_utils.TestTools as TestTools
 import proteus
 from proteus import LinearAlgebraTools as LAT

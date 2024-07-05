@@ -253,4 +253,3 @@ def load_system(soModule, path='.'):
         if k not in system_excluded_keys:
             system_object.__dict__[k] = v
     return system_object
-

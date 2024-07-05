@@ -234,7 +234,7 @@ else:
             
             regions = [[0.95*L[0], 0.2],[0.2-0.15,0.2],[0.2,0.2]]
             regionFlags = [1,2,3]
-            regionConstraints=[0.5*he**2,0.5*(old_div(he,2.0))**2,0.5*(old_div(he,6.0))**2]
+            regionConstraints=[0.5*he**2,0.5*(he/2.0)**2,0.5*(he/6.0)**2]
             domain = Domain.PlanarStraightLineGraphDomain(vertices=vertices,
                                                           vertexFlags=vertexFlags,
                                                           segments=segments,

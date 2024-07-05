@@ -2,8 +2,6 @@
 """
 Test module for CLSVOF with RANS3PF
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -149,4 +147,3 @@ class TestCLSVOF_with_RANS3PF(object):
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2),decimal=10)
 
         actual.close()        
-

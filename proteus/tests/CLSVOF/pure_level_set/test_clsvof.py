@@ -2,8 +2,6 @@
 """
 Test module for CLSVOF
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()

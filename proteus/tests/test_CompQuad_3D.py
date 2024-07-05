@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from proteus import (Comm, Profiling, Quadrature)
 from proteus.Profiling import logEvent
 
@@ -40,7 +37,7 @@ def ex2(N, hk, x0=1, y0=1, z0=1):
     comp_quad = Quadrature.CompositeTetrahedron(quad, hk)
 
     ii = np.sum(comp_quad.weights[np.less_equal(
-        old_div(comp_quad.points[:, 0], x0) + old_div(comp_quad.points[:, 1], y0) + old_div(+ comp_quad.points[:, 2], z0), 1.0)])
+        comp_quad.points[:,0]/x0 + comp_quad.points[:,1]/y0 + +comp_quad.points[:,2]/z0, 1.0)])
 
     ee = np.abs(ii - x0 * y0 * z0 / 6.0)
 
@@ -172,7 +169,7 @@ def get_convergence_rate(hh, ee, cc):
         convergence rate: :math:`cc[i]=log(ee[i]/ee[i-1])/log(hh[i]/hh[i-1]), i>0`
     """
     for i in range(1, hh.shape[0]):
-        cc[i] = old_div(np.log(old_div(ee[i], (ee[i - 1] + 1e-15))), np.log(old_div(hh[i], hh[i - 1])))
+        cc[i] = np.log(ee[i]/(ee[i - 1] + 1e-15))/np.log(hh[i]/hh[i - 1])
 
 
 class TestCompQuad(unittest.TestCase):
@@ -183,7 +180,7 @@ class TestCompQuad(unittest.TestCase):
         #======================================================================
         M = 5
         for i in range(M):
-            hk, error = ex2(1, old_div(1.0, 2**i), 1.0, 1.0, 1.0)
+            hk, error = ex2(1, 1.0/2**i, 1.0, 1.0, 1.0)
             assert np.allclose(error, 0.0, atol=1e-10)
 
     def test_1st_poly_exact(self):
@@ -192,7 +189,7 @@ class TestCompQuad(unittest.TestCase):
         #======================================================================
         M = 5
         for i in range(M):
-            hk, error = ex4(1, old_div(1.0, 2**i))
+            hk, error = ex4(1, 1.0/2**i)
             assert np.allclose(error, 0.0, atol=1e-10)
 
     def test_2nd_poly_exact(self):
@@ -201,7 +198,7 @@ class TestCompQuad(unittest.TestCase):
         #======================================================================
         M = 5
         for i in range(M):
-            hk, error = ex5(2, old_div(1.0, 2**i))
+            hk, error = ex5(2, 1.0/2**i)
             assert np.allclose(error, 0.0, atol=1e-10)
 
     def test_3rd_poly_exact(self):
@@ -210,7 +207,7 @@ class TestCompQuad(unittest.TestCase):
         #======================================================================
         M = 5
         for i in range(M):
-            hk, error = ex6(3, old_div(1.0, 2**i))
+            hk, error = ex6(3, 1.0/2**i)
             assert np.allclose(error, 0.0, atol=1e-10)
 
     def test_plane(self):
@@ -223,7 +220,7 @@ class TestCompQuad(unittest.TestCase):
         convergence_rate = np.zeros((M,), 'd')
 
         for i in range(M):
-            cell_size[i], error[i] = ex2(1, old_div(1.0, 2**i), 0.5, 0.6, 0.7)
+            cell_size[i], error[i] = ex2(1, 1.0/2**i, 0.5, 0.6, 0.7)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -232,7 +229,7 @@ class TestCompQuad(unittest.TestCase):
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
         for i in range(M):
-            cell_size[i], error[i] = ex2(2, old_div(1.0, 2**i), 0.5, 0.6, 0.7)
+            cell_size[i], error[i] = ex2(2, 1.0/2**i, 0.5, 0.6, 0.7)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -241,7 +238,7 @@ class TestCompQuad(unittest.TestCase):
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
         for i in range(M):
-            cell_size[i], error[i] = ex2(3, old_div(1.0, 2**i), 0.5, 0.6, 0.7)
+            cell_size[i], error[i] = ex2(3, 1.0/2**i, 0.5, 0.6, 0.7)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -250,7 +247,7 @@ class TestCompQuad(unittest.TestCase):
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
         for i in range(M):
-            cell_size[i], error[i] = ex2(4, old_div(1.0, 2**i), 0.5, 0.6, 0.7)
+            cell_size[i], error[i] = ex2(4, 1.0/2**i, 0.5, 0.6, 0.7)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -268,7 +265,7 @@ class TestCompQuad(unittest.TestCase):
         convergence_rate = np.zeros((M,), 'd')
 
         for i in range(M):
-            cell_size[i], error[i] = ex3(1, old_div(1.0, 2**i), 0.5)
+            cell_size[i], error[i] = ex3(1, 1.0/2**i, 0.5)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -277,7 +274,7 @@ class TestCompQuad(unittest.TestCase):
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
         for i in range(M):
-            cell_size[i], error[i] = ex3(2, old_div(1.0, 2**i), 0.5)
+            cell_size[i], error[i] = ex3(2, 1.0/2**i, 0.5)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -286,7 +283,7 @@ class TestCompQuad(unittest.TestCase):
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
         for i in range(M):
-            cell_size[i], error[i] = ex3(3, old_div(1.0, 2**i), 0.5)
+            cell_size[i], error[i] = ex3(3, 1.0/2**i, 0.5)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %
@@ -295,7 +292,7 @@ class TestCompQuad(unittest.TestCase):
             convergence_rate[1:]), 1.0, "convergence should be > 1")
 
         for i in range(M):
-            cell_size[i], error[i] = ex3(4, old_div(1.0, 2**i), 0.5)
+            cell_size[i], error[i] = ex3(4, 1.0/2**i, 0.5)
 
         get_convergence_rate(cell_size, error, convergence_rate)
         logEvent("average convergence rate is %f" %

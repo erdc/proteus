@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-from builtins import range
 import math
 
 

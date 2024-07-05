@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import dot, sum
 import numpy.testing as npt
 from proteus.EGeometry import (X,Y,Z)

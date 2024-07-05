@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from .default import *
 
 platform_extra_link_args = ['-Wl,'+ "-L" + PROTEUS_LIB_DIR]

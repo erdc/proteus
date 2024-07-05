@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
 from proteus import *
 from proteus.default_n import *
 from vos_p import *
@@ -82,4 +79,3 @@ tnList=[0.]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
 
 #tnList=[0.,0.001,0.002,0.003]
 #tnList=[0.001*i for i in range(10)]
-

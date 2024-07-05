@@ -106,4 +106,3 @@ class TestCable(unittest.TestCase):
     #     T = mooring.getTensionBack()
     #     T_sol = -np.ones(3)*g*rho*(np.pi*d**2/4.*L)
     #     npt.assert_almost_equal(T, T_sol)
-

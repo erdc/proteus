@@ -77,4 +77,3 @@ maxNonLinearIts = 1
 maxLineSearches = 0
 periodicDirichletCOnditions = None
 conservativeFlux = None
-

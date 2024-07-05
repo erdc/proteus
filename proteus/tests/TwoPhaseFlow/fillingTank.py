@@ -1,8 +1,6 @@
 """
 Multiphase Flow Test
 """
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import (Domain, Context,
                      MeshTools as mt)
@@ -76,7 +74,7 @@ else:
     #domain.writePoly("meshFilling")
     he = opts.he
     domain.MeshOptions.he = he
-    domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+    domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
     domain.MeshOptions.genMesh=False
 
 

@@ -1,6 +1,4 @@
 """Tests for 2d flow around an immersed boundary cylinder with rans3p"""
-from builtins import range
-from builtins import object
 import pytest
 from proteus.iproteus import *
 from proteus import Comm

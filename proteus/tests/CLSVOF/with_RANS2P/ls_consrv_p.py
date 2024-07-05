@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus.default_p import *
 from proteus.mprans import MCorr
 from .multiphase import *
@@ -26,7 +24,6 @@ class zero_phi(object):
         return 0.0
 
 initialConditions  = {0:zero_phi()}
-
 
 
 

@@ -51,4 +51,3 @@ if __name__=='__main__':
     domain.writePoly("tank3d")
     domain.writePLY("tank3d")
     os.system("asy -V tank3d")
-

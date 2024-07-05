@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import object
-from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
@@ -44,7 +41,7 @@ rectangle = RectangularDomain(L=L)
 # CREATE REFINEMENT #
 nnx = 50
 nny = 50
-he = old_div(L[0], float(nnx - 1))
+he = L[0]/float(nnx-1)
 if opts.structured:
     domain = rectangle
 else:

@@ -1,9 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-import math
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import proteus
 from proteus import Profiling
 import numpy as np
@@ -202,7 +196,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
-                 angFriction=old_div(math.pi,6.0),
+                 angFriction=math.pi/6.0,
                  vos_function=None,
                  staticSediment=False,
                  vos_limiter = 0.05,
@@ -706,7 +700,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.model.timeIntegration.timeOrder == 1: 
                 r = 1.
             else:
-                r = old_div(self.model.timeIntegration.dt,self.model.timeIntegration.dt_history[0]) 
+                r = self.model.timeIntegration.dt/self.model.timeIntegration.dt_history[0] 
             self.model.q[('velocityStar',0)][:] = (1+r)*self.model.q[('velocity',0)] - r*self.model.q[('velocityOld',0)]
         self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
         self.model.dt_last = self.model.timeIntegration.dt
@@ -1460,8 +1454,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, (
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
@@ -1469,8 +1462,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/\self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         log("setting up post-processing")

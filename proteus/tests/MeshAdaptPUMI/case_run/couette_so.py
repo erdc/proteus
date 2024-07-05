@@ -1,4 +1,3 @@
-from builtins import range
 from proteus.default_so import *
 import couette
 from proteus.MeshAdaptPUMI import MeshAdapt

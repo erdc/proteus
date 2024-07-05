@@ -1,7 +1,3 @@
-from __future__ import division
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 """
@@ -41,7 +37,7 @@ hull_center = (0.5*hull_length,
 
 nLevels = 1
 
-he = old_div(L[0],10.0)
+he = L[0]/10.0
 #he = hull_draft/1.0
 #he = hull_draft/6.0
 genMesh=True#False
@@ -86,13 +82,13 @@ else:
     holes=[]
     if vessel is 'wigley':
         from math import log
-        he_hull = old_div(log(64.0*he+1.0),64.0)
+        he_hull = log(64.0*he+1.0)/64.0
         #print he,he_hull
         #he_hull = he
-        n_points_length = int(ceil(old_div(hull_length,he_hull)))+1
-        n_points_draft  = 2*int(ceil(old_div(hull_draft,he_hull)))+1
+        n_points_length = int(ceil(hull_length/he_hull))+1
+        n_points_draft  = 2*int(ceil(hull_draft/he_hull))+1
         #print "points",n_points_length,n_points_draft
-        dx = old_div(hull_length,float(n_points_length-1))
+        dx = hull_length/float(n_points_length-1)
         dz = 2.0*hull_draft/float(n_points_draft-1)
         #print "he",he,dx,dz
         #grid on right half of hull
@@ -101,7 +97,7 @@ else:
                 x = i*dx - 0.5*hull_length
                 z = j*dz - hull_draft
                 zStar = min(0.0,z)
-                y = 0.5*hull_beam*(1.0 - 4.0*(old_div(x,hull_length))**2) * (1.0 - (old_div(zStar,hull_draft))**2)
+                y = 0.5*hull_beam*(1.0 - 4.0*(x/hull_length)**2) * (1.0 - (zStar/hull_draft)**2)
                 vertices.append([x+hull_center[0],
                                  y+hull_center[1],
                                  z+hull_center[2]])
@@ -110,7 +106,7 @@ else:
             return 8 + i*n_points_draft+j
         for i in range(n_points_length-1):
             for j in range(n_points_draft-1):
-                if i < old_div(n_points_length,2):
+                if i < n_points_length/2:
                     facets.append([[vN_right(i,j),vN_right(i+1,j+1),vN_right(i+1,j)]])
                     facetFlags.append(boundaryTags['obstacle'])
                     facets.append([[vN_right(i,j),vN_right(i,j+1),vN_right(i+1,j+1)]])
@@ -126,7 +122,7 @@ else:
                 x = i*dx - 0.5*hull_length
                 z = j*dz - hull_draft
                 zStar = min(0.0,z)
-                y = 0.5*hull_beam*(1.0 - 4.0*(old_div(x,hull_length))**2) * (1.0 - (old_div(zStar,hull_draft))**2)
+                y = 0.5*hull_beam*(1.0 - 4.0*(x/hull_length)**2) * (1.0 - (zStar/hull_draft)**2)
                 vertices.append([x+hull_center[0],
                                  hull_center[1] - y,
                                  z+hull_center[2]])
@@ -140,7 +136,7 @@ else:
                 return 8 + n_points_length*n_points_draft+(i-1)*(n_points_draft-1)+j-1
         for i in range(n_points_length-1):
             for j in range(n_points_draft-1):
-                if i < old_div(n_points_length,2):
+                if i < n_points_length/2:
                     facets.append([[vN_left(i,j),vN_left(i+1,j+1),vN_left(i+1,j)]])
                     facetFlags.append(boundaryTags['obstacle'])
                     facets.append([[vN_left(i,j),vN_left(i,j+1),vN_left(i+1,j+1)]])

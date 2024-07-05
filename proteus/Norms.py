@@ -4,8 +4,6 @@ Tools for calculating norms on function spaces.
 .. inheritance-diagram:: proteus.Norms
    :parts: 1
 """
-from __future__ import absolute_import
-from builtins import range
 from .FemTools import *
 from .Quadrature import *
 from .Comm import globalSum,globalMax
