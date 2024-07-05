@@ -314,71 +314,71 @@ void cppRigidBody::poststep()
   }
 }
 
-// void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
-//                                              std::vector<double> x,
-//                                              std::vector<double> y,
-//                                              std::vector<double> z,
-//                                              std::vector<double> ang,
-//                                              std::vector<double> ang2,
-//                                              std::vector<double> ang3,
-//                                              double t_max) {
-//   auto fixed_body = chrono_types::make_shared<ChBody>();
-//   fixed_body->SetPos(body->GetPos());
-//   fixed_body->SetFixed(true);
-//   system->system->Add(fixed_body);
-//   lock_motion = chrono_types::make_shared<ChLinkLockLock>();
-//   lock_motion_t_max = t_max;
-//   lock_motion->Initialize(body, fixed_body, fixed_body->GetFrameCOMToAbs());
-//   system->system->Add(lock_motion);
-//   if (x.size() > 0) {
-//     auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
-//     for (int i = 0; i < x.size(); i++) {
-//       forced_motion->AddPoint(t[i], x[i]);
-//     }
-//     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-//     lock_motion->SetMotion_X(forced_ptr);
-//   }
-//   if (y.size() > 0) {
-//     auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
-//     for (int i = 0; i < y.size(); i++) {
-//       forced_motion->AddPoint(t[i], y[i]);
-//     }
-//     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-//     lock_motion->SetMotion_Y(forced_ptr);
-//   }
-//   if (z.size() > 0) {
-//     auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
-//     for (int i = 0; i < z.size(); i++) {
-//       forced_motion->AddPoint(t[i], z[i]);
-//     }
-//     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-//     lock_motion->SetMotion_Z(forced_ptr);
-//   }
-//   if (ang.size() > 0) {
-//     auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
-//     for (int i = 0; i < ang.size(); i++) {
-//       forced_motion->AddPoint(t[i], ang[i]);
-//     }
-//     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-//     lock_motion->SetMotion_ang(forced_ptr);
-//   }
-//   if (ang2.size() > 0) {
-//     auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
-//     for (int i = 0; i < ang2.size(); i++) {
-//       forced_motion->AddPoint(t[i], ang2[i]);
-//     }
-//     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-//     lock_motion->SetMotion_ang2(forced_ptr);
-//   }
-//   if (ang3.size() > 0) {
-//     auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
-//     for (int i = 0; i < ang3.size(); i++) {
-//       forced_motion->AddPoint(t[i], ang3[i]);
-//     }
-//     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-//     lock_motion->SetMotion_ang3(forced_ptr);
-//   }
-// }
+void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
+                                             std::vector<double> x,
+                                             std::vector<double> y,
+                                             std::vector<double> z,
+                                             std::vector<double> ang,
+                                             std::vector<double> ang2,
+                                             std::vector<double> ang3,
+                                             double t_max) {
+  auto fixed_body = chrono_types::make_shared<ChBody>();
+  fixed_body->SetPos(body->GetPos());
+  fixed_body->SetFixed(true);
+  system->system->Add(fixed_body);
+  lock_motion = chrono_types::make_shared<ChLinkLockLock>();
+  lock_motion_t_max = t_max;
+  lock_motion->Initialize(body, fixed_body, fixed_body->GetFrameCOMToAbs());
+  system->system->Add(lock_motion);
+  if (x.size() > 0) {
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
+    for (int i = 0; i < x.size(); i++) {
+      forced_motion->AddPoint(t[i], x[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotionX(forced_ptr);
+  }
+  if (y.size() > 0) {
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
+    for (int i = 0; i < y.size(); i++) {
+      forced_motion->AddPoint(t[i], y[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotionY(forced_ptr);
+  }
+  if (z.size() > 0) {
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
+    for (int i = 0; i < z.size(); i++) {
+      forced_motion->AddPoint(t[i], z[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotionZ(forced_ptr);
+  }
+  if (ang.size() > 0) {
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
+    for (int i = 0; i < ang.size(); i++) {
+      forced_motion->AddPoint(t[i], ang[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotionAng1(forced_ptr);
+  }
+  if (ang2.size() > 0) {
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
+    for (int i = 0; i < ang2.size(); i++) {
+      forced_motion->AddPoint(t[i], ang2[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotionAng2(forced_ptr);
+  }
+  if (ang3.size() > 0) {
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
+    for (int i = 0; i < ang3.size(); i++) {
+      forced_motion->AddPoint(t[i], ang3[i]);
+    }
+    std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+    lock_motion->SetMotionAng3(forced_ptr);
+  }
+}
 
 void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
   auto fixed_body = chrono_types::make_shared<ChBody>();

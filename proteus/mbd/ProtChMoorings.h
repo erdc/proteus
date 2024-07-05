@@ -240,7 +240,7 @@ class cppMultiSegmentedCable {
   void updateDragForces();
   void updateAddedMassForces();
   void applyForces();
-  std::vector<std::shared_ptr<ChVectorDynamic<double>>> getNodalPositions();
+  std::vector<std::shared_ptr<ChVector3d>> getNodalPositions();
   void buildNodes();
   void buildElements();
   void buildCable();  // builds the multi-segmented cable
@@ -497,14 +497,14 @@ ChVector3d cppMultiSegmentedCable::getTensionElement(int i, const double eta=0.)
   return force;
 }
 
-std::vector<std::shared_ptr<ChVectorDynamic<double>>> cppMultiSegmentedCable::getNodalPositions() {
-  std::vector<std::shared_ptr<ChVectorDynamic<double>>> nodal_positions;
+std::vector<std::shared_ptr<ChVector3d>> cppMultiSegmentedCable::getNodalPositions() {
+  std::vector<std::shared_ptr<ChVector3d>> nodal_positions;
   for (int i = 0; i < nodes.size(); ++i) {
     auto pos = nodes[i]->GetPos();
     double x = pos.x();
     double y = pos.y();
     double z = pos.z();
-    auto nodal_position = chrono_types::make_shared<ChVectorDynamic<double>>(x, y, z);
+    auto nodal_position = chrono_types::make_shared<ChVector3d>(x, y, z);
     nodal_positions.push_back(nodal_position);
   }
   return nodal_positions;

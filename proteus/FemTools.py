@@ -619,7 +619,7 @@ class BernsteinOnCube(LocalFunctionSpace):
     from math import factorial 
 
     def nChooseK(self,n,k):
-        return factorial(n)/factorial(k)/factorial(n-k)
+        return factorial(n)/(factorial(k)*factorial(n-k))
     
     def __init__(self,nd=3, order=2):
         self.referenceElement = ReferenceCube(nd)
@@ -788,7 +788,7 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
         from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
-        LocalFunctionSpace.__init__(self, fact(nd+2)/(2*fact(nd)),
+        LocalFunctionSpace.__init__(self, fact(nd+2)//(2*fact(nd)),
                                     self.referenceElement)
         self.gradientList=[]
         self.basisHessians=[]
@@ -1074,7 +1074,7 @@ class BernsteinOnSimplex(LocalFunctionSpace):
         from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
-        LocalFunctionSpace.__init__(self, fact(nd+2)/(2*fact(nd)),
+        LocalFunctionSpace.__init__(self, fact(nd+2)//(2*fact(nd)),
                                     self.referenceElement)
         self.gradientList=[]
         self.basisHessians=[]
@@ -1863,7 +1863,7 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
         from .RefUtils import fact
         from .RefUtils import p2refNodes
         sdim  = referenceElement.dim
-        self.nInterpNodes= fact(2+sdim)/(2*fact(sdim))
+        self.nInterpNodes= fact(2+sdim)//(2*fact(sdim))
         InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
         self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
         for k in range(self.nInterpNodes):
