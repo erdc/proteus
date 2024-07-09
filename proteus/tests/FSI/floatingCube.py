@@ -123,7 +123,7 @@ class PHI_IC:
 # System
 g = np.array([0., 0., -9.81])
 system = fsi.ProtChSystem()
-system.ChSystem.Set_G_acc(pychrono.ChVectorD(g[0], g[1], g[2]))
+system.ChSystem.SetGravitationalAcceleration(pychrono.ChVector3d(g[0], g[1], g[2]))
 system.setTimeStep(1e-5)
 #system.setCouplingScheme("CSS", prediction="backwardEuler")
 # Body
@@ -132,9 +132,9 @@ body.attachShape(caisson)
 #body.Aij_factor = 1/width
 chbod = body.ChBody
 x, y, z = caisson.barycenter
-pos = pychrono.ChVectorD(x, y, z)
+pos = pychrono.ChVector3d(x, y, z)
 mass = (2.*radius)**3*rho_0*rhor
-inertia = pychrono.ChVectorD(1., 1., 1.)
+inertia = pychrono.ChVector3d(1., 1., 1.)
 chbod.SetPos(pos)
 chbod.SetMass(mass)
 chbod.SetInertiaXX(inertia)

@@ -195,7 +195,7 @@ def y_mom_DBC(X, flag):
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
 outputStepping = SWFlowProblem.OutputStepping(
-    opts.final_time, dt_output=opts.dt_output)
+    opts.final_time, dt_output=opts.dt_output, dt_init=0.00001)
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': Zero(),

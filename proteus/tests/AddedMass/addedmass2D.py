@@ -2,9 +2,9 @@ import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
 from proteus.mbd import CouplingFSI as fsi
+import pychrono as chrono
 from proteus.TwoPhaseFlow import TwoPhaseFlowProblem as tpf
 from proteus.TwoPhaseFlow.utils import Parameters
-import pychrono as chrono
 import os
 
 rho_0 = 1000.
@@ -26,7 +26,6 @@ rect = st.Rectangle(domain, dim=[1.,1.], coords=[tank_dim[0]/2., tank_dim[1]/2.]
 rect.setHoles(holes=np.array([rect.coords]))
 
 domain.MeshOptions.he = he
-
 # BOUNDARY CONDITIONS
 
 tank.BC['x+'].setNoSlip()
@@ -42,11 +41,11 @@ rect.BC['y-'].setNoSlip()
 # CHRONO
 
 system = fsi.ProtChSystem()
-system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], 0.))
+system.ChSystem.SetGravitationalAcceleration(chrono.ChVector3d(g[0], g[1], 0.))
 body = fsi.ProtChBody(system=system)
 body.attachShape(rect)
 body.ChBody.SetMass(500.)
-body.ChBody.SetBodyFixed(True)  # fixing body
+body.ChBody.SetFixed(True)  # fixing body
 
 # OTHER PARAMS
 st.assembleDomain(domain)
@@ -95,9 +94,7 @@ myTpFlowProblem.SystemPhysics.setDefaults()
 
 myTpFlowProblem.SystemNumerics.cfl = 0.4
 myTpFlowProblem.SystemNumerics.useSuperlu=False
-
 myTpFlowProblem.SystemPhysics.movingDomain = False
-
 params = myTpFlowProblem.SystemPhysics
 
 # PHYSICAL PARAMETERS
@@ -117,8 +114,8 @@ myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['u']=AtRest(
 myTpFlowProblem.SystemPhysics.modelDict['flow'].p.initialConditions['v']=AtRest()
 myTpFlowProblem.SystemPhysics.modelDict['addedMass'].p.initialConditions['addedMass']=AtRest()
 
-m['flow'].p.coefficients.NONCONSERVATIVE_FORM=0.0
-m['flow'].p.coefficients.useVF=1.0
+m['flow'].p.coefficients.useVF = 1.0
+m['flow'].p.coefficients.NONCONSERVATIVE_FORM = 0.0
 
 # auxiliary variables
 m['flow'].auxiliaryVariables += [system]
@@ -135,6 +132,8 @@ max_flag = max(domain.facetFlags+[max_flag])
 flags_rigidbody = np.zeros(max_flag+1, dtype='int32')
 for s in system.subcomponents:
     if type(s) is fsi.ProtChBody:
-        for flag in body.boundaryFlags:
+        for flag in s.boundaryFlags:
             flags_rigidbody[flag] = 1
 m['addedMass'].p.coefficients.flags_rigidbody = flags_rigidbody
+m['addedMass'].n.linTolFac=0.0
+m['addedMass'].n.l_atol_res=1.0e-10

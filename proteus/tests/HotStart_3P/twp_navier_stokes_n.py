@@ -66,4 +66,4 @@ maxNonlinearIts = 50
 maxLineSearches = 0
 #conservativeFlux = {0:'point-eval'}
 #auxiliaryVariables=[pointGauges,lineGauges]
-isHotStart = ct.isHotStar
+isHotStart = ct.isHotStart

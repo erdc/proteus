@@ -47,11 +47,11 @@ rect.BC['z-'].setNoSlip()
 # CHRONO
 
 system = fsi.ProtChSystem()
-system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], 0.))
+system.ChSystem.SetGravitationalAcceleration(chrono.ChVector3d(g[0], g[1], g[2]))
 body = fsi.ProtChBody(system=system)
 body.attachShape(rect)
 body.ChBody.SetMass(500.)
-body.ChBody.SetBodyFixed(True)  # fixing body
+body.ChBody.SetFixed(True)  # fixing body
 
 # OTHER PARAMS
 st.assembleDomain(domain)
@@ -83,7 +83,6 @@ class AtRest:
     def uOfXT(self,x,t):
         return 0.0
 
-
 #  _   _                           _
 # | \ | |_   _ _ __ ___   ___ _ __(_) ___ ___
 # |  \| | | | | '_ ` _ \ / _ \ '__| |/ __/ __|
@@ -102,7 +101,6 @@ myTpFlowProblem.outputStepping.dt_fixed = 0.001
 myTpFlowProblem.SystemPhysics.setDefaults()
 
 myTpFlowProblem.SystemNumerics.cfl = 0.4
-
 myTpFlowProblem.SystemNumerics.useSuperlu=False
 myTpFlowProblem.SystemPhysics.movingDomain = False
 
@@ -147,4 +145,5 @@ for s in system.subcomponents:
         for flag in s.boundaryFlags:
             flags_rigidbody[flag] = 1
 m['addedMass'].p.coefficients.flags_rigidbody = flags_rigidbody
-
+m['addedMass'].n.linTolFac=0.0
+m['addedMass'].n.l_atol_res=1.0e-10
