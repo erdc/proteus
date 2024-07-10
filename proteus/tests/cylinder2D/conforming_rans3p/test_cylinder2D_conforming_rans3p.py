@@ -82,3 +82,6 @@ class Test_rans3p(object):
         #write comparison file
         #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
         np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t2']).flatten(),decimal=10)
+
+
+
