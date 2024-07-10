@@ -13,7 +13,7 @@ import os
 import sys
 import inspect
 import numpy as np
-import tables
+import h5py
 import pickle
 import petsc4py
 import pytest
@@ -86,12 +86,12 @@ def test_periodic_2D(load_periodic_opts_2D,
                                    opts)
     ns.calculateSolution('test_run')
     script_dir = os.path.dirname(__file__)
-    actual = tables.open_file('ductq1t12dpghe0.0975609756097561.h5')
+    actual = h5py.File('ductq1t12dpghe0.0975609756097561.h5')
 
     expected_path = 'comparison_files/' + 'comparison_' + 'ductq1t12dpghe0.0975609756097561' + '_velocity_t25.csv'
     #write comparison file
-    #np.array(actual.root.velocity_t25).tofile(os.path.join(script_dir, expected_path),sep=",")
-    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=7)
+    #np.array(actual['velocity_t25']).tofile(os.path.join(script_dir, expected_path),sep=",")
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual['velocity_t25']).flatten(),decimal=7)
     actual.close()
 
 
@@ -106,12 +106,12 @@ def test_periodic_3D(load_periodic_opts_3D,
     ns.calculateSolution('test_run')
 
     script_dir = os.path.dirname(__file__)
-    actual = tables.open_file('ductp1t13dpghe0.4.h5')
+    actual = h5py.File('ductp1t13dpghe0.4.h5')
 
     expected_path = 'comparison_files/' + 'comparison_' + 'ductp1t13dpghe0.4' + '_velocity_t25.csv'
     #write comparison file
-    #np.array(actual.root.velocity_t25).tofile(os.path.join(script_dir, expected_path),sep=",")
-    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=10)
+    #np.array(actual['velocity_t25']).tofile(os.path.join(script_dir, expected_path),sep=",")
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual['velocity_t25']).flatten(),decimal=10)
     actual.close()
 
 def test_periodic_3D_amg(load_periodic_opts_3D_T2,
@@ -124,7 +124,7 @@ def test_periodic_3D_amg(load_periodic_opts_3D_T2,
     ns.calculateSolution('test_run')
 
     script_dir = os.path.dirname(__file__)
-    actual = tables.open_file('ductp1t13dpghe0.4.h5')
+    actual = h5py.File('ductp1t13dpghe0.4.h5')
     expected_path = 'comparison_files/' + 'comparison_' + 'ductp1t13dpghe0.4' + '_velocity_t25.csv'
-    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.velocity_t25).flatten(),decimal=6)
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual['velocity_t25']).flatten(),decimal=6)
     actual.close()

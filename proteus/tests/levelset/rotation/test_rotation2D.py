@@ -5,7 +5,7 @@ Test module for level set transport
 from proteus.iproteus import *
 import os
 import numpy as np
-import tables
+import h5py
 
 class TestRotation2D(object):
 
@@ -76,21 +76,21 @@ class TestRotation2D(object):
         ns.calculateSolution(ls_rotation_2d_so.name)
         self.aux_names.append(ls_rotation_2d_so.name)
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file(ls_rotation_2d_so.name+'.h5','r')
+        actual = h5py.File(ls_rotation_2d_so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + ls_rotation_2d_so.name + '_u_t10.csv'
         #write comparison file
-        #np.array(actual.root.u_t10).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t10).flatten(),decimal=6)
+        #np.array(actual['u_t10']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t10']).flatten(),decimal=6)
 
         expected_path = 'comparison_files/' + 'comparison_' + ls_rotation_2d_so.name + '_phid_t10.csv'
         #write comparison file
-        #np.array(actual.root.phid_t10).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phid_t10).flatten(),decimal=10)
+        #np.array(actual['phid_t10']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phid_t10']).flatten(),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_' + ls_rotation_2d_so.name + '_vof_t10.csv'
         #write comparison file
-        #np.array(actual.root.vof_t10).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t10).flatten(),decimal=10)
+        #np.array(actual['vof_t10']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['vof_t10']).flatten(),decimal=10)
 
         actual.close()
         del ns

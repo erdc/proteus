@@ -5,7 +5,7 @@ from proteus import Context
 from proteus import MeshTools
 from proteus import Domain
 from proteus.MeshAdaptPUMI import MeshAdapt
-import tables
+import h5py
 import importlib
 import subprocess
 import pytest

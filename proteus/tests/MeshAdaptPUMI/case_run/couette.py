@@ -4,7 +4,7 @@ from proteus import Domain
 from proteus.default_n import *
 from proteus import Profiling
 from proteus.MeshAdaptPUMI import MeshAdapt
-from tables import *
+from h5py import *
 from proteus import Comm
 import os
 comm = Comm.init()
