@@ -3,7 +3,7 @@ from importlib import reload
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
-import tables
+import h5py
 import importlib
 
 comm = Comm.get()
@@ -83,8 +83,8 @@ class Test_HotStart_rans3p(object):
         ns.calculateSolution(my_so.name)
         if check_result:
             # COMPARE VS SAVED FILES #
-            actual= tables.open_file( my_so.name + '.h5')
+            actual= h5py.File( my_so.name + '.h5')
             expected_path = 'comparison_files/' + 'comparison_' + self.compare_name + '_u_t2.csv'
             #write comparison file
             #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-            np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+            np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t2']).flatten(),decimal=10)

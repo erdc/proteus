@@ -13,7 +13,7 @@ import os
 import sys
 import inspect
 import numpy as np
-import tables
+import h5py
 import pickle
 import petsc4py
 from petsc4py import PETSc

@@ -9,7 +9,8 @@ Profiling.logLevel=1
 Profiling.verbose=True
 import os
 import numpy as np
-import tables
+import h5py
+#import tables
 import pytest
 from proteus import default_so
 from . import (multiphase_so, multiphase,
@@ -81,8 +82,8 @@ class TestCLSVOFWithRans2p(object):
         ns.calculateSolution('2D_falling_bubble')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/multiphase_2D_falling_bubble.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('multiphase_2D_falling_bubble.h5','r')
-        assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-10)
+        expected= h5py.File(os.path.join(self._scriptdir,expected_path))
+        actual = h5py.File('multiphase_2D_falling_bubble.h5','r')
+        assert np.allclose(expected['phi_t2'],actual['phi_t2'],atol=1e-10)       
         expected.close()
         actual.close()

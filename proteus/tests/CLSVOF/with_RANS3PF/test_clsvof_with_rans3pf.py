@@ -8,7 +8,7 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy as np
-import tables
+import h5py
 import pytest
 from proteus import default_so
 from . import (parameters,
@@ -103,11 +103,12 @@ class TestCLSVOF_with_RANS3PF(object):
             assert 0, "Calculate solution failed" 
 
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('multiphase_2D_falling_bubble.h5','r')
+        actual = h5py.File('multiphase_2D_falling_bubble.h5','r')
+        
         expected_path = 'comparison_files/' + 'comparison_2D_phi_t2.csv'
         #write comparison file
         #np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phi_t2']),decimal=10)
         actual.close()
 
     def test_3D_falling_bubble(self):
@@ -140,10 +141,10 @@ class TestCLSVOF_with_RANS3PF(object):
                                                opts)
         ns.calculateSolution('3D_falling_bubble')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('multiphase_3D_falling_bubble.h5','r')
+        actual = h5py.File('multiphase_3D_falling_bubble.h5','r')
         expected_path = 'comparison_files/' + 'comparison_3D_phi_t2.csv'
         #write comparison file
         #np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phi_t2']),decimal=10)
 
         actual.close()        

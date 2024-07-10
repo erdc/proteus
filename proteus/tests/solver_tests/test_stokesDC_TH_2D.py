@@ -10,7 +10,7 @@ import os
 import sys
 import inspect
 import numpy as np
-import tables
+import h5py
 import pickle
 import petsc4py
 from petsc4py import PETSc
@@ -95,11 +95,11 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
                                             self.so.sList,
                                             opts)
         self.ns.calculateSolution('stokes')
-        actual = tables.open_file('drivenCavityStokesTrial.h5','r')
+        actual = h5py.File('drivenCavityStokesTrial.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + 'drivenCavityStokes' + '_velocity_t1.csv'
         #write comparison file
         #np.array(actual.root.velocity_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.velocity_t1).flatten(),decimal=2)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['velocity_t1']).flatten(),decimal=2)
         actual.close()
 
     @pytest.mark.slowTest

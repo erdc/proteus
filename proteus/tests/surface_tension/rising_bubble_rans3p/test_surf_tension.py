@@ -9,7 +9,7 @@ Profiling.logLevel=1
 Profiling.verbose=True
 import os
 import numpy as np
-import tables
+import h5py
 import pytest
 from proteus import default_so
 from . import (parameters,
@@ -70,19 +70,19 @@ class TestSurfaceTension(object):
         pass
     
     def compare_files(self,path,name):
-        actual = tables.open_file(name+'.h5','r')
+        actual = h5py.File(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_phi_t2.csv'
         #write comparison file
         #np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phi_t2']).flatten(),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_p_t2.csv'
         #np.array(actual.root.p_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.p_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['p_t2']).flatten(),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_velocity_t2.csv'
         #np.array(actual.root.velocity_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.velocity_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['velocity_t2']).flatten(),decimal=10)
 
         actual.close()
 
