@@ -58,7 +58,6 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         #np.savetxt(os.path.join(self._scriptdir,relpath),actual.root.velocity_t7.read(),delimiter=',')
         expected = np.loadtxt(os.path.join(self._scriptdir,relpath),delimiter=',')
         assert np.allclose(expected,
-                           #actual.root.velocity_t7.read(),
                            actual['velocity_t7'][:],
                            rtol=1e-8, atol=1e-8) 
         actual.close()
