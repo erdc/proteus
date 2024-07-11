@@ -10,7 +10,6 @@ Profiling.verbose=True
 import os
 import numpy as np
 import h5py
-#import tables
 import pytest
 from proteus import default_so
 from . import (multiphase_so, multiphase,

@@ -65,12 +65,6 @@ class TestCLSVOF(object):
 
     def compare_files(self,path,name, write=False):
         # COMPARE VS SAVED FILES #
-        #expected_path = path+'/'+name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(name+'.h5','r')
-        #assert np.allclose(expected.root.u_t1,actual.root.u_t1,atol=1e-10)
-        #expected.close()
-
         actual = h5py.File(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_u_t1.csv'
         #write comparison file

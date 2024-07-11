@@ -9,7 +9,6 @@ Profiling.logLevel=1
 Profiling.verbose=True
 import os
 import numpy as np
-#import tables
 import h5py
 import pytest
 from proteus import default_so
@@ -43,13 +42,6 @@ class TestCLSVOF(object):
 
     def compare_files(self,path,name):
         # COMPARE VS SAVED FILES #
-        #expected_path = path+'/'+name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(name+'.h5','r')
-        #assert np.allclose(expected.root.u_t1,actual.root.u_t1,atol=1e-10)
-        #expected.close()
-
-        #actual = tables.open_file(name+'.h5','r')
         actual = h5py.File(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_u_t2.csv'
         #write comparison file
@@ -84,14 +76,7 @@ class TestCLSVOF(object):
                                                opts)
         ns.calculateSolution('test_case_1')
         # COMPARE VS SAVED FILES #
-
         self.compare_files('comparison_files',self.so.name)
-        #expected_path = 'comparison_files/clsvof_test_case_1.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('clsvof_test_case_1.h5','r')
-        #assert np.allclose(expected.root.u_t2,actual.root.u_t2,atol=1e-10)
-        #expected.close()
-        #actual.close()
 
     def test_case_2(self):
         # Set parameters for this test
@@ -121,13 +106,7 @@ class TestCLSVOF(object):
         ns.calculateSolution('test_case_2')
         # COMPARE VS SAVED FILES #
         self.compare_files('comparison_files',self.so.name)
-        #expected_path = 'comparison_files/clsvof_test_case_2.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('clsvof_test_case_2.h5','r')
-        #assert np.allclose(expected.root.u_t2,actual.root.u_t2,atol=1e-10)
-        #expected.close()
-        #actual.close()
-
+        
     def test_case_3(self):
         # Set parameters for this test
         parameters.ct.test_case=3
@@ -156,12 +135,6 @@ class TestCLSVOF(object):
         ns.calculateSolution('test_case_3')
         # COMPARE VS SAVED FILES #
         self.compare_files('comparison_files',self.so.name)
-        #expected_path = 'comparison_files/clsvof_test_case_3.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('clsvof_test_case_3.h5','r')
-        #assert np.allclose(expected.root.u_t2,actual.root.u_t2,atol=1e-10)
-        #expected.close()
-        #actual.close()
 
     def test_case_4(self):
         # Set parameters for this test
@@ -191,9 +164,4 @@ class TestCLSVOF(object):
         ns.calculateSolution('test_case_4')
         # COMPARE VS SAVED FILES #
         self.compare_files('comparison_files',self.so.name)
-        #expected_path = 'comparison_files/clsvof_test_case_4.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('clsvof_test_case_4.h5','r')
-        #assert np.allclose(expected.root.u_t2,actual.root.u_t2,atol=1e-10)
-        #expected.close()
-        #actual.close()
+
