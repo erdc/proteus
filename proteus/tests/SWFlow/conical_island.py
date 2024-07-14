@@ -110,7 +110,7 @@ class x_mom_at_t0(object):
     def uOfXT(self, X, t):
         hTilde = h0 + solitary_wave(X[0], 0)
         h = max(hTilde - bathymetry_function(X), 0.)
-        return h * c * hTilde-h0/hTilde
+        return h * c * (hTilde-h0)/hTilde
 
 
 class y_mom_at_t0(object):
@@ -170,7 +170,7 @@ def y_mom_DBC(X, flag):
 # ***** Create mySWFlowProblem ***** #
 # ********************************** #
 outputStepping = SWFlowProblem.OutputStepping(
-    opts.final_time, dt_output=opts.dt_output, dt_init=0.000001)
+    opts.final_time, dt_output=opts.dt_output)
 initialConditions = {'water_height': water_height_at_t0(),
                      'x_mom': x_mom_at_t0(),
                      'y_mom': y_mom_at_t0(),

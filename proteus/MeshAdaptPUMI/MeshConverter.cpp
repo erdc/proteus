@@ -985,12 +985,12 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
 
   //create the mappings from proteus data structures
   apf::Gid* local2global_elementBoundaryNodes;
-  local2global_elementBoundaryNodes = (apf::Gid*) malloc(sizeof(int)*mesh.nElementBoundaries_global*apf::Mesh::adjacentCount[etype_b][0]);
+  local2global_elementBoundaryNodes = (apf::Gid*) malloc(sizeof(apf::Gid)*mesh.nElementBoundaries_global*apf::Mesh::adjacentCount[etype_b][0]);
   for(int i=0;i<mesh.nElementBoundaries_global*apf::Mesh::adjacentCount[etype_b][0];i++){ //should use adjacent count function from core
     local2global_elementBoundaryNodes[i] = globalMesh.nodeNumbering_subdomain2global[mesh.elementBoundaryNodesArray[i]];
   }
   apf::Gid* local2global_elementNodes;
-  local2global_elementNodes = (apf::Gid*) malloc(sizeof(int)*mesh.nElements_global*apf::Mesh::adjacentCount[etype][0]);
+  local2global_elementNodes = (apf::Gid*) malloc(sizeof(apf::Gid)*mesh.nElements_global*apf::Mesh::adjacentCount[etype][0]);
   for(int i=0;i<mesh.nElements_global*apf::Mesh::adjacentCount[etype][0];i++){ //should use adjacent count function from core
     local2global_elementNodes[i] = globalMesh.nodeNumbering_subdomain2global[mesh.elementNodesArray[i]];
   }

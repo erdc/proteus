@@ -38,10 +38,9 @@ hull_center = (0.5*hull_length,
 nLevels = 1
 
 he = L[0]/10.0
-he /=8
 #he = hull_draft/1.0
 #he = hull_draft/6.0
-genMesh=False
+genMesh=True
 vessel = None
 #vessel = 'cube'
 #vessel = 'wigley'

@@ -49,6 +49,11 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
 
 
     def example_setting(self, pre_setting):
+        from petsc4py import PETSc
+        import sys
+        OptDB = PETSc.Options()
+        OptDB.clear()
+        sys.path.insert(0,modulepath)
         Context.contextOptionsString = pre_setting
 
         my_so = defaults.load_system("cylinder_so",modulepath)

@@ -86,7 +86,7 @@ class x_mom_at_t0(object):
     def uOfXT(self, X, t):
         hTilde = h0 + solitary_wave(X[0], 0)
         h = max(hTilde - bathymetry_function(X), 0.)
-        return h * c * hTilde-h0/hTilde
+        return h * c * (hTilde-h0)/hTilde
 
 """
 heta and hw are needed for the hyperbolic serre-green-naghdi equations.

@@ -2,6 +2,7 @@
 """
 Test module for TwoPhaseFlow
 """
+import h5py
 import pytest
 import numpy as np
 import proteus.defaults
@@ -34,7 +35,7 @@ class TestTwoPhaseFlow(object):
                 pass
 
     def compare_vs_saved_files(self,name,write=False):
-        actual = h5py.Open(name+'.h5','r')
+        actual = h5py.File(name+'.h5','r')
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_phi_t2.csv'
         #write comparison file

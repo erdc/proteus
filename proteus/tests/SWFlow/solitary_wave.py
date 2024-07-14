@@ -86,7 +86,7 @@ class water_height_at_t0(object):
 class x_mom_at_t0(object):
     def uOfXT(self, X, t):
         h = h0 + solitary_wave(X[0], 0)
-        return h * c * h-h0/h
+        return h * c * (h-h0)/h
 
 
 class y_mom_at_t0(object):

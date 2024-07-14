@@ -50,4 +50,4 @@ class getIBC_phi(object):
 dirichletConditions = {0:getDBC_phi }
 advectiveFluxBoundaryConditions = {0:getAdvectiveFlux_qt}
 diffusiveFluxBoundaryConditions = {0:{0:getDiffusiveFlux_phi}}
-initialConditions = {0:getIBC_phi()
+initialConditions = {0:getIBC_phi()}
