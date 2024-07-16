@@ -141,4 +141,6 @@ else:
                                          density=dimensionless_density,
                                          beta=0.0001,
                                          diagonal_conductivity=True,
+                                         STABILIZATION_TYPE=0,
+                                         FCT=False,
                                          getSeepageFace=getSeepageFace)

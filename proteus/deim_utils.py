@@ -11,7 +11,7 @@ def read_from_hdf5(hdfFile,label,dof_map=None):
     If dof_map is not none, this determines shape of the output array
     """
     assert hdfFile is not None, "requires hdf5 for heavy data"
-    vals = hdfFile.get_node(label).read()
+    vals = hdfFile[label][:]
     if dof_map is not None:
         dof = vals[dof_map]
     else:
@@ -26,7 +26,7 @@ def read_snapshots(archive,nsnap,val_name):
 
     loads these into a matrix and returns
     """
-    label_base="/%s%d"
+    label_base="/%s_t%d"
     u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0))
     S = np.reshape(u,(u.shape[0],1))
     for i in range(1,nsnap):

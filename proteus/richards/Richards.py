@@ -851,7 +851,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')        
-        self.forceStrongConditions=True
+        self.forceStrongConditions=False
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -1194,8 +1194,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.ebqe[('diffusiveFlux_bc',0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         #     self.ebqe[('diffusiveFlux_bc_flag',0)][t[0],t[1]] = 1
         #self.shockCapturing.lag=True
+        self.bc_mask = np.ones_like(self.u[0].dof)
         if self.forceStrongConditions:
-            self.bc_mask = np.ones_like(self.u[0].dof)
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)

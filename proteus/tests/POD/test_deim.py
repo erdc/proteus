@@ -136,8 +136,8 @@ def test_deim_indices():
         test_svd_space_res(file_prefix='F_s')
     U = np.loadtxt(basis_file)
     from proteus.deim_utils import calculate_deim_indices
-    rho_half = calculate_deim_indices(U[:,:U.shape[1]/2])
-    assert rho_half.shape[0] == U.shape[1]/2
+    rho_half = calculate_deim_indices(U[:,:U.shape[1]//2])
+    assert rho_half.shape[0] == U.shape[1]//2
 
     rho = calculate_deim_indices(U)    
     assert rho.shape[0] == U.shape[1]
