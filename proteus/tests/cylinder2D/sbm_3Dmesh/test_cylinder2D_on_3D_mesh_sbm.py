@@ -4,12 +4,12 @@ from proteus import Comm, defaults
 from proteus import Context
 import h5py
 import importlib
-
+import os
+import numpy as np
 
 comm = Comm.get()
 Profiling.logLevel = 7
 Profiling.verbose = False
-import numpy as np
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
@@ -53,7 +53,7 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
         import sys
         OptDB = PETSc.Options()
         OptDB.clear()
-        sys.path.insert(0,modulepath)
+
         Context.contextOptionsString = pre_setting
 
         my_so = defaults.load_system("cylinder_so",modulepath)
@@ -66,7 +66,9 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
         sList=[]
         for (pModule,nModule) in my_so.pnList:
             pList.append(defaults.load_physics(pModule,modulepath))
+            sys.modules[pModule]=pList[-1]
             nList.append(defaults.load_numerics(nModule,modulepath))
+            sys.modules[nModule]=nList[-1]
             if pList[-1].name == None:
                 pList[-1].name = pModule
 
