@@ -52,7 +52,7 @@ context_options += [
     ]
 # run time options
 context_options += [
-    ("T", 3. ,"Simulation time in s"),
+    ("T", 0.1 ,"Simulation time in s"),
     ("dt_init", 0.001 ,"Value of initial time step"),
     ("dt_fixed", None, "Value of maximum time step"),
     ("archiveAllSteps", False, "archive every steps"),
@@ -171,7 +171,7 @@ else:
                            'y-': np.array([  0.0, -1.0,  0.0]),
                            'y+': np.array([  0.0,  1.0,  0.0]),
                        })
-    tank.facets = np.array([[[0, 1, 2, 3, 4, 5, 6]]])
+    tank.facets = np.array([[[0, 1, 2, 3, 4, 5]]])
     tank.facetFlags = np.array([1])
 
 
@@ -388,7 +388,7 @@ def signedDistance(x, t):
 
 
 myTpFlowProblem = TpFlow.TwoPhaseFlowProblem()
-myTpFlowProblem.outputStepping.final_time = 0.1
+myTpFlowProblem.outputStepping.final_time = opts.T
 myTpFlowProblem.outputStepping.dt_init = 0.01
 myTpFlowProblem.outputStepping.dt_output = 0.1
 myTpFlowProblem.outputStepping.dt_fixed = 0.01

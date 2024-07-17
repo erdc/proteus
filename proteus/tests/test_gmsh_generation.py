@@ -34,8 +34,11 @@ class TestGMSH(unittest.TestCase):
                            [5., 0., 0.],
                            [5., 5., 0.],
                            [0., 5., 0.]]
+        domain.vertexFlags = [1,2,3,4]
         domain.segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
+        domain.segmentFlags =[1,2,3,4]
         domain.facets = [[[0, 1, 2, 3]]]
+        domain.facetFlags = [1]
         domain.writeGeo('gmsh_mesh_test_2D', he_max=0.1)
         gmsh_cmd = "gmsh {0:s} -v 10 -2 -o {1:s} -format msh2".format(domain.geofile+".geo", domain.geofile+".msh")
         check_call(gmsh_cmd, shell=True)
