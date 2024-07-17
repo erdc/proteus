@@ -6,16 +6,11 @@ dependencies:
   - compilers
   - python
   - numpy
-  - matplotlib
-  - pip
   - setuptools
+  - pip
   - make
   - cmake
   - cython
   - swig
-  - mpich
-  - mpich-mpicc
-  - mpich-mpicxx
-  - mpi4py
   - ncurses
   - xtensor-python
