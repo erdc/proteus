@@ -5041,9 +5041,9 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 self.meshList[0].elementOffsets_subdomain_owned[-1] = self.meshList[0].nElements_global
 
                 for node in range(self.meshList[0].nNodes_global):
-                    self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
+                    self.meshList[0].nodeNumbering_subdomain2global[node] = node
                 for element in range(self.meshList[0].nElements_global):
-                    self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
+                    self.meshList[0].elementNumbering_subdomain2global[element] = element
 
                 self.meshList[0].buildNodeStarArrays()
                 for l in range(1,refinementLevels):
@@ -5107,9 +5107,9 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
         self.meshList[-1].elementOffsets_subdomain_owned[-1] = self.meshList[-1].nElements_global
 
         for node in range(self.meshList[-1].nNodes_global):
-            self.meshList[-1].nodeNumbering_subdomain2global.itemset(node,node)
+            self.meshList[-1].nodeNumbering_subdomain2global[node]=node
         for element in range(self.meshList[-1].nElements_global):
-            self.meshList[-1].elementNumbering_subdomain2global.itemset(element,element)
+            self.meshList[-1].elementNumbering_subdomain2global[element]=element
         self.elementChildren.append(childrenDict)
 
 
