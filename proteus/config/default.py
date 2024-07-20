@@ -177,6 +177,7 @@ if os.getenv('SIM_INCLUDE_DIR') is not None:
 
 PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_PETSC_INCLUDE_DIR
 PROTEUS_SUPERLU_LIB_DIR = pjoin(prefix, 'lib64')
+PROTEUS_SUPERLU_LIB_DIR = pjoin(prefix, 'lib')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
 PROTEUS_SUPERLU_LIB = 'superlu'
 
