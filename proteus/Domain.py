@@ -599,7 +599,7 @@ class GMSH_3D_Domain(D_base):
                  units="m",
                  length_scale=1.0,
                  permute_dims=[0,1,2]):
-        D_base.__init__(self, 2, name, units)
+        D_base.__init__(self, 3, name, units)
         self.geofile=geofile+".geo"
         self.polyfile=geofile
         self.he = he
