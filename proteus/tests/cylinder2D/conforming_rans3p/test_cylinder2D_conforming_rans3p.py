@@ -1,10 +1,8 @@
 """Tests for 2d flow around a cylinder with a conforming mesh and rans3p"""
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
-import tables
+import h5py
 import importlib
 
 comm = Comm.get()
@@ -79,8 +77,11 @@ class Test_rans3p(object):
         self.aux_names.append(ns.modelList[0].name)
         ns.calculateSolution(my_so.name)
         # COMPARE VS SAVED FILES #
-        actual=tables.open_file( my_so.name + '.h5')
+        actual=h5py.File( my_so.name + '.h5')
         expected_path = 'comparison_files/' + 'comparison_' + self.compare_name + '_u_t2.csv'
         #write comparison file
         #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t2']).flatten(),decimal=10)
+
+
+

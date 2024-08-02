@@ -325,7 +325,7 @@ cdef class cCoefficients:
         cdef double[:] coords = np.zeros(3)
         cdef int b_i, b_i_global
         cdef double[:] bound_bar
-        cdef int[:] result
+        cdef int[3] result
         cdef int[:] result2
         cdef bool found
         cdef double array_size_local = 0
@@ -427,7 +427,7 @@ cdef class cCoefficients:
                                 coords[ndi] += dphi[ndi]*dt*fixed_dir[ndi]
                                 xx[node, ndi] = coords[ndi]
                         else:  # find node that moved already (search)
-                            result = findN(coords=coords,
+                            findN(coords=coords,
                                            nodeArray=nodeArray,
                                            nodeStarOffsets=nodeStarOffsets,
                                            nodeStarArray=nodeStarArray,
@@ -453,7 +453,8 @@ cdef class cCoefficients:
                                            elementBoundaryOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned,
                                            nodeMaterialTypes=nodeMaterialTypes,
                                            elementNodesArray=elementNodesArray,
-                                           nNel=nNel)
+                                           nNel=nNel,
+                                  result_out = result)
                             nearestN = result[0]
                             typeN = result[1]
                             new_rank = result[2]
@@ -634,7 +635,7 @@ cdef class cCoefficients:
                         fixed_dir[1] = coords_2doArray[iN, 13]
                         fixed_dir[2] = coords_2doArray[iN, 14]
                         if solFound_2doArray[iN] == 0:
-                            result = findN(coords=coords,
+                            findN(coords=coords,
                                            nodeArray=nodeArray,
                                            nodeStarOffsets=nodeStarOffsets,
                                            nodeStarArray=nodeStarArray,
@@ -660,7 +661,8 @@ cdef class cCoefficients:
                                            elementBoundaryOffsets_subdomain_owned=elementBoundaryOffsets_subdomain_owned,
                                            nodeMaterialTypes=nodeMaterialTypes,
                                            elementNodesArray=elementNodesArray,
-                                           nNel=nNel)
+                                           nNel=nNel,
+                                  result_out=result)
                             nearestN = result[0]
                             typeN = result[1]
                             new_rank = result[2]
@@ -1629,7 +1631,7 @@ cdef tuple checkOwnedVariable(int variable_nb_local,
 #         return tofind_2do
 
 
-cdef int[:] findN(double[:] coords,
+cdef void findN(double[:] coords,
                   double[:,:] nodeArray,
                   int[:] nodeStarOffsets,
                   int[:] nodeStarArray,
@@ -1655,9 +1657,9 @@ cdef int[:] findN(double[:] coords,
                   int[:] elementBoundaryOffsets_subdomain_owned,
                   int[:,:] elementNodesArray,
                   int[:] nodeMaterialTypes,
-                  int nNel):
+                  int nNel,
+                  int[3] result_out):
     cdef int[:] result_in
-    cdef int[3] result_out
     cdef double[:] starting_coords = np.zeros(3)
     cdef int rank = my_rank # rank of owning processor
     cdef bool stop = False
@@ -1753,7 +1755,6 @@ cdef int[:] findN(double[:] coords,
     result_out[0] = nearestN
     result_out[1] = typeN
     result_out[2] = rank
-    return result_out
 
 # def mpicomm(dict_2rank, ):
 #     comm = Comm.get().comm.tompi4py()

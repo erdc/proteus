@@ -4,13 +4,6 @@ Collect higher level tools for running simulation, processing results, etc
 .. inheritance-diagram:: proteus.SimTools
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import input
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from . import Norms
 import numpy
 import numpy as np
@@ -788,7 +781,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                                 #end if
@@ -821,7 +814,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)                                
                             #end if
@@ -851,7 +844,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -911,7 +904,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -948,7 +941,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1006,7 +999,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1042,7 +1035,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1082,7 +1075,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1122,7 +1115,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1159,7 +1152,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1194,7 +1187,7 @@ class SimulationProcessor(object):
                             self.errorData[ci][il][kexa].append(exa)
                             if self.flags['echo']:
                                 if self.flags['echoRelativeErrors']:
-                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,old_div(err,(exa+1E-15))),level=0)
+                                    logEvent("""\nt= %g; %s[%d][%d]= %g; relative_error= %g;""" % (tsim,kerr,ci,il,err,err/(exa+1E-15)),level=0)
                                 else:
                                     logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
@@ -1766,7 +1759,7 @@ class SimulationProcessor(object):
         for eN in range(mlvt.levelModelList[-1].mesh.nElements_global):
             for k in range(mlvt.levelModelList[-1].nQuadraturePoints_element):
                 for i in range(mlvt.levelModelList[-1].q[ckey].shape[-1]):
-                    uOut.write('%12.5e' % (old_div(mlvt.levelModelList[-1].q[ckey][eN,k,i],vmax)))
+                    uOut.write('%12.5e' % (mlvt.levelModelList[-1].q[ckey][eN,k,i]/vmax))
                 for i in range(mlvt.levelModelList[-1].q[ckey].shape[-1],3):
                     uOut.write('%12.5e' % (0.0))
                 if n%2==1:
@@ -1848,7 +1841,7 @@ class SimulationProcessor(object):
         for ebN in range(mlvt.levelModelList[-1].mesh.nElementBoundaries_global):
             for k in range(mlvt.levelModelList[-1].nElementBoundaryQuadraturePoints_elementBoundary):
                 for i in range(mlvt.levelModelList[-1].ebq_global[ckey].shape[-1]):
-                    uOut.write('%12.5e' % (old_div(mlvt.levelModelList[-1].ebq_global[ckey][ebN,k,i],vmax)))
+                    uOut.write('%12.5e' % (mlvt.levelModelList[-1].ebq_global[ckey][ebN,k,i]/vmax))
                 for i in range(mlvt.levelModelList[-1].ebq_global[ckey].shape[-1],3):
                     uOut.write('%12.5e' % (0.0))
                 if n%2==1:
@@ -2097,8 +2090,8 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     x = mFine.q['x'][eN,iq,:]
                     v = velciprojFine[eN,iq,:]
                     Viewers.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[0],x[1],
-                                                                              old_div(v[0],scale),
-                                                                              old_div(v[1],scale)))
+                                                                              v[0]/scale,
+                                                                              v[1]/scale))
             Viewers.datFile.write("\n \n#end velciproj ci=%d level=%d" % (ci,level))
             title = "velciproj ci=%d level=%d " % (ci,level)
             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (Viewers.windowNumber,
@@ -2121,8 +2114,8 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     x = mCoarse.q['x'][eN,iq,:]
                     v = mCoarse.q[('velocity',ci)][eN,iq,:]
                     Viewers.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[0],x[1],
-                                                                              old_div(v[0],scale),
-                                                                              old_div(v[1],scale)))
+                                                                              v[0]/scale,
+                                                                              v[1]/scale))
             Viewers.datFile.write("\n \n#end coarse velocity ci=%d level=%d" % (ci,level))
             title = "coarse velocity ci=%d level=%d " % (ci,level)
             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (Viewers.windowNumber,

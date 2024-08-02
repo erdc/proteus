@@ -11,7 +11,7 @@ import os
 import sys
 import inspect
 import numpy as np
-import tables
+import h5py
 import pickle
 import petsc4py
 import pytest
@@ -53,12 +53,12 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         # output. It needs to be confirmed that the new ouput is
         # in fact correct and drivenCavityNSE_LSC_expected.h5 should
         # be updated accordingly.
-        actual = tables.open_file('drivenCavityNSETrial.h5','r')
+        actual = h5py.File('drivenCavityNSETrial.h5','r')
         relpath = 'comparison_files/drivenCavityNSE_LSC_expected.csv'
         #np.savetxt(os.path.join(self._scriptdir,relpath),actual.root.velocity_t7.read(),delimiter=',')
         expected = np.loadtxt(os.path.join(self._scriptdir,relpath),delimiter=',')
         assert np.allclose(expected,
-                           actual.root.velocity_t7.read(),
+                           actual['velocity_t7'][:],
                            rtol=1e-8, atol=1e-8) 
         actual.close()
 

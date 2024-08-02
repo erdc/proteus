@@ -2,17 +2,13 @@
 """
 Test module for the conservative LS with EV
 """
-from __future__ import absolute_import
-
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
 Profiling.logLevel=2
 Profiling.verbose=True
 import numpy as np
-import tables
+import h5py
 import pytest
 from . import thelper_cons_ls
 from . import thelper_cons_ls_so
@@ -83,12 +79,12 @@ class TestMCorr(object):
                                                opts)
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file('cons_ls_level_0_supg.h5','r')
+        actual = h5py.File('cons_ls_level_0_supg.h5','r')
         #expected.close()
         expected_path = 'comparison_files/' + 'comparison_' + 'cons_ls_level_0' + '_vof_t2.csv'
         #write comparison file
-        #np.array(actual.root.vof_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t2).flatten(),decimal=10)
+        #np.array(actual['vof_t2']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['vof_t2']).flatten(),decimal=10)
         actual.close()
 
     @pytest.mark.skip(reason="results can't be reproduced reliably")
@@ -130,10 +126,10 @@ class TestMCorr(object):
         ns.calculateSolution('vof')
         # COMPARE VS SAVED FILES #
         expected_path = 'comparison_files/cons_ls_level_3_edge_based_EV.h5'
-        expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        actual = tables.open_file('cons_ls_level_3_edge_based_EV.h5','r')
+        expected = h5py.File(os.path.join(self._scriptdir,expected_path))
+        actual = h5py.File('cons_ls_level_3_edge_based_EV.h5','r')
         assert np.allclose(expected.root.vof_t2,
-                           actual.root.vof_t2,
+                           actual['vof_t2'],
                            atol=1e-5)
         expected.close()
         actual.close()        

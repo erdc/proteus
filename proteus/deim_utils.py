@@ -2,9 +2,6 @@
 """
 utility module for generating deim interpolants
 """
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 import numpy as np
 
 def read_from_hdf5(hdfFile,label,dof_map=None):
@@ -14,7 +11,7 @@ def read_from_hdf5(hdfFile,label,dof_map=None):
     If dof_map is not none, this determines shape of the output array
     """
     assert hdfFile is not None, "requires hdf5 for heavy data"
-    vals = hdfFile.get_node(label).read()
+    vals = hdfFile[label][:]
     if dof_map is not None:
         dof = vals[dof_map]
     else:
@@ -29,7 +26,7 @@ def read_snapshots(archive,nsnap,val_name):
 
     loads these into a matrix and returns
     """
-    label_base="/%s%d"
+    label_base="/%s_t%d"
     u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0))
     S = np.reshape(u,(u.shape[0],1))
     for i in range(1,nsnap):
@@ -77,7 +74,7 @@ def calculate_deim_indices(Uin):
         Up=U[rho]#Up= np.dot(Pt,U)
         up=u[rho]#up= np.dot(Pt,u)
         if j==1:
-            c=old_div(up,Up)
+            c=up/Up
             r=u-U*c
         else:
             c =np.linalg.solve(Up,up)

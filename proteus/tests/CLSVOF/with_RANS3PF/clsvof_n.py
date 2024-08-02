@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 try:
@@ -42,4 +41,3 @@ if useSuperlu:
 
 linear_solver_options_prefix = 'clsvof_'
 linearSolverConvergenceTest = 'r-true'
-

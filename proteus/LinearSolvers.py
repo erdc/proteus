@@ -4,14 +4,6 @@ A hierarchy of classes for linear algebraic system solvers.
 .. inheritance-diagram:: proteus.LinearSolvers
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import input
-from builtins import zip
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from .LinearAlgebraTools import *
 from . import LinearAlgebraTools as LAT
 from . import FemTools
@@ -140,7 +132,7 @@ class LinearSolver(object):
         else:
             if self.its > 0:
                 if self.norm_r < self.lastNorm_r:
-                    self.ratio_r_current = old_div(self.norm_r,self.lastNorm_r)
+                    self.ratio_r_current = self.norm_r/self.lastNorm_r
                 else:
                     self.convergenceHistoryIsCorrupt=True
                     return
@@ -150,12 +142,12 @@ class LinearSolver(object):
                     self.convergenceHistoryIsCorrupt
                     return
                 self.ratio_r_solve *= self.ratio_r_current
-                self.rReductionFactor = pow(self.ratio_r_solve,old_div(1.0,self.its))
+                self.rReductionFactor = pow(self.ratio_r_solve, 1.0/self.its)
                 if self.its > 1:
-                    self.rReductionOrder = old_div(log_ratio_r_current, \
-                                           self.last_log_ratio_r)
+                    self.rReductionOrder = log_ratio_r_current/ \
+                                           self.last_log_ratio_r
                     if self.norm_du < self.lastNorm_du:
-                        ratio_du_current = old_div(self.norm_du,self.lastNorm_du)
+                        ratio_du_current = self.norm_du/self.lastNorm_du
                     else:
                         self.convergenceHistoryIsCorrupt=True
                         return
@@ -166,10 +158,10 @@ class LinearSolver(object):
                         return
                     self.ratio_du_solve *= ratio_du_current
                     self.duReductionFactor = pow(self.ratio_du_solve,
-                                                 old_div(1.0,(self.its-1)))
+                                                 1.0/(self.its-1))
                     if self.its > 2:
-                        self.duReductionOrder = old_div(log_ratio_du_current, \
-                                                self.last_log_ratio_du)
+                        self.duReductionOrder = log_ratio_du_current/ \
+                                                self.last_log_ratio_du
                     self.last_log_ratio_du = log_ratio_du_current
                 self.last_log_ratio_r = log_ratio_r_current
                 self.lastNorm_du = self.norm_du
@@ -557,19 +549,19 @@ class KSP_petsc4py(LinearSolver):
                                                                                                                              ksp.atol,
                                                                                                                              ksp.rtol))
             else:
-                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7 )
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm/ self.rnorm0), level=7 )
                 logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                                   truenorm,
-                                                                                                  (old_div(truenorm, self.rnorm0)),
+                                                                                                  (truenorm/self.rnorm0),
                                                                                                   ksp.atol,
                                                                                                   ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm), level=7)
-            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7)
+            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm/ self.rnorm0), level=7)
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
-                                                                                              (old_div(truenorm, self.rnorm0)),
+                                                                                              (truenorm/self.rnorm0),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
@@ -1711,19 +1703,19 @@ class SchurPrecon(KSP_Preconditioner):
         if its == 0:
             self.rnorm0 = truenorm
             logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm), level=7)
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7 )
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm/self.rnorm0), level=7 )
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
-                                                                                              (old_div(truenorm, self.rnorm0)),
+                                                                                              (truenorm/self.rnorm0),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm), level=7)
-            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(old_div(truenorm, self.rnorm0)), level=7)
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm/self.rnorm0), level=7)
             logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
                                                                                               truenorm,
-                                                                                              (old_div(truenorm, self.rnorm0)),
+                                                                                              (truenorm/self.rnorm0),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
@@ -1993,7 +1985,7 @@ class Schur_Qp(SchurPrecon) :
         self.operator_constructor.updateQ()
         self.Qp = self.Q.createSubMatrix(self.operator_constructor.linear_smoother.isp,
                                          self.operator_constructor.linear_smoother.isp)
-        self.Qp.scale(old_div(1.,self.L.pde.coefficients.nu))
+        self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
 
         # Setup a PETSc shell for the inverse Qp operator
@@ -2404,9 +2396,9 @@ class SimpleDarcyFC(object):
         print("L_sizes",L_sizes)
         neqns = L_sizes[0][0]
         print("neqns",neqns)
-        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+old_div(neqns,2),dtype="i")
+        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
         #print "saturation",self.saturationDOF
-        self.pressureDOF = numpy.arange(L_range[0]+old_div(neqns,2),L_range[0]+neqns,dtype="i")
+        self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
         #print "pressure",self.pressureDOF
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
@@ -2487,8 +2479,8 @@ class SimpleDarcyFC(object):
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
         neqns = L_sizes[0][0]
-        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+old_div(neqns,2),dtype="i")
-        self.pressureDOF = numpy.arange(L_range[0]+old_div(neqns,2),L_range[0]+neqns,dtype="i")
+        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
+        self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()
@@ -2535,7 +2527,7 @@ class Jacobi(LinearSolver):
         self.node_order=numpy.arange(self.n,dtype="i")
     def prepare(self,b=None):
         if type(self.L).__name__ == 'ndarray':
-            self.M = old_div(self.w,numpy.diagonal(self.L))
+            self.M = self.w/numpy.diagonal(self.L)
         elif type(self.L).__name__ == 'SparseMatrix':
             self.csmoothers.jacobi_NR_prepare(self.L,self.w,1.0e-16,self.M)
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
@@ -2587,7 +2579,7 @@ class GaussSeidel(LinearSolver):
         self.sym=sym
     def prepare(self,b=None):
         if type(self.L).__name__ == 'ndarray':
-            self.M = old_div(self.w,numpy.diagonal(self.L))
+            self.M = self.w/numpy.diagonal(self.L)
         elif type(self.L).__name__ == 'SparseMatrix':
             self.csmoothers.gauss_seidel_NR_prepare(self.L,self.w,1.0e-16,self.M)
             #self.csmoothers.jacobi_NR_prepare(self.L,self.w,1.0e-16,self.M)
@@ -3079,7 +3071,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
             if l > 0:
                 if smootherType == Jacobi:
                     if relaxationFactor is None:
-                        relaxationFactor = old_div(4.0,5.0)
+                        relaxationFactor = 4.0/5.0
                     preSmootherList.append(Jacobi(L=linearOperatorList[l],
                                                   weight=relaxationFactor,
                                                   maxIts=preSmooths,
@@ -3182,7 +3174,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == Jacobi:
         if relaxationFactor is None:
-            relaxationFactor = old_div(4.0,5.0)
+            relaxationFactor = 4.0/5.0
         for l in range(nLevels):
             levelLinearSolverList.append(Jacobi(L=linearOperatorList[l],
                                                 weight=relaxationFactor,
@@ -3289,7 +3281,7 @@ if __name__ == '__main__':
     gres("set terminal x11")
     levels = 7
     n=2**levels + 1
-    h =old_div(1.0,(n-1.0))
+    h = 1.0/(n-1.0)
     freq=10
     uFine = uniform(0,1,(n))
     uFine[0]=0.0
@@ -3313,7 +3305,7 @@ if __name__ == '__main__':
         N = 2**(l+1) + 1
         L = SparseMat_old(N-2,N-2,3*(N-2),sym=True)
         LD = Mat(N-2,N-2)
-        H = old_div(1.0,(N-1.0))
+        H = 1.0/(N-1.0)
         hList.append(H)
         mgItsList.append(6)
         meshList.append(numpy.arange(0,1.0+H,H,dtype='d')[1:N-1])
@@ -3325,35 +3317,35 @@ if __name__ == '__main__':
         bList.append(b)
         beginAssembly(L)
         for i in range(N-2):
-            L[i,i] = old_div(2.0,H**2)
-            LD[i,i] = old_div(2.0,H**2)
+            L[i,i] = 2.0/H**2
+            LD[i,i] = 2.0/H**2
             if i > 0:
-                L[i,i-1] = old_div(-1.0,H**2)
-                LD[i,i-1] = old_div(-1.0,H**2)
+                L[i,i-1] = -1.0/H**2
+                LD[i,i-1] = -1.0/H**2
             if i < N-3:
-                L[i,i+1] = old_div(-1.0,H**2)
-                LD[i,i+1] = old_div(-1.0,H**2)
+                L[i,i+1] = -1.0/H**2
+                LD[i,i+1] = -1.0/H**2
             endAssembly(L)
         LList.append(L)
         LDList.append(LD)
         if l > 0:
-            cN = old_div((N - 1),2) + 1
+            cN = (N - 1)/2 + 1
             restrict = SparseMat_old(cN-2,N-2,3*(N-2))
             prolong = SparseMat_old(N-2,cN-2,3*(N-2))
             for i in range(cN-2):
-                restrict[i,2*i]   = old_div(1.0,4.0)
-                restrict[i,2*i+1] = old_div(2.0,4.0)
-                restrict[i,2*i+2] = old_div(1.0,4.0)
-                prolong[2*i,i] = old_div(1.0,2.0)
-                prolong[2*i+1,i]= old_div(2.0,2.0)
-                prolong[2*i+2,i]= old_div(1.0,2.0)
+                restrict[i,2*i]   = 1.0/4.0
+                restrict[i,2*i+1] = 2.0/4.0
+                restrict[i,2*i+2] = 1.0/4.0
+                prolong[2*i,i] = 1.0/2.0
+                prolong[2*i+1,i]= 2.0/2.0
+                prolong[2*i+2,i]= 1.0/2.0
             restrict.to_csr()
             restrictList.append(restrict)
             prolong.to_csr()
             prolongList.append(prolong)
             N = cN
-            preSmootherList.append(Jacobi(L,old_div(2.0,3.0),3))
-            postSmootherList.append(Jacobi(L,old_div(2.0,3.0),3))
+            preSmootherList.append(Jacobi(L, 2.0/3.0,3))
+            postSmootherList.append(Jacobi(L, 2.0/3.0,3))
         else:
             restrictList.append([])
             prolongList.append([])
@@ -3387,7 +3379,7 @@ if __name__ == '__main__':
         dev = DenseEigenvalues(a)
         dev.computeEigenvalues()
         evals.append(dev.eigenvalues)
-        ratio = (old_div(max(abs(dev.eigenvalues)),min(abs(dev.eigenvalues))))*(h**2)
+        ratio = (max(abs(dev.eigenvalues))/min(abs(dev.eigenvalues)))*(h**2)
         print("k*h**2 %12.5E" % ratio)
     gevals = Gnuplot.Gnuplot()
     gevals("set terminal x11")
@@ -4263,8 +4255,8 @@ class ChebyshevSemiIteration(LinearSolver):
 
         self.alpha = alpha
         self.beta = beta
-        self.relax_parameter = old_div((self.alpha + self.beta), 2.)
-        self.rho = old_div((self.beta - self.alpha), (self.alpha + self.beta))
+        self.relax_parameter = (self.alpha + self.beta)/ 2.
+        self.rho = (self.beta - self.alpha)/(self.alpha + self.beta)
 
         self.diag = self.A_petsc.getDiagonal().copy()
         self.diag.scale(self.relax_parameter)
@@ -4312,7 +4304,7 @@ class ChebyshevSemiIteration(LinearSolver):
         b_copy = b.copy()
 
         for i in range(k):
-            w = old_div(1.,(1-old_div((self.rho**2),4.)))
+            w = 1./(1-(self.rho**2)/4.)
             self.r_petsc_array.fill(0.)
             self.computeResidual(self.x_k_array,
                                  self.r_petsc_array,
@@ -4457,7 +4449,7 @@ class NavierStokesConstantPressure(SolverNullSpace):
         else:
             n_DOF_pressure = ksp.par_L.pde.u[0].femSpace.dofMap.nDOF
             tmp = null_space_vector.getArray()[0:n_DOF_pressure]
-            tmp[:] = old_div(1.0, (sqrt(N_DOF_pressure)))
+            tmp[:] = 1.0/(sqrt(N_DOF_pressure))
         null_space_vector.assemblyBegin()
         null_space_vector.assemblyEnd()
         self.global_null_space = [null_space_vector]

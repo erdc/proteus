@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from .thelper_vof_p import *
@@ -60,5 +58,4 @@ if parallel:
 else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
-
 

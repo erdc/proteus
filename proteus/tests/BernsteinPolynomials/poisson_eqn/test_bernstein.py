@@ -2,7 +2,6 @@
 """
 Test module for Berstein basis FE
 """
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -10,7 +9,7 @@ Profiling.logLevel=1
 Profiling.verbose=True
 import os
 import numpy as np
-import tables
+import h5py
 import pytest
 from . import (parameters_for_poisson,
                poisson_p,
@@ -61,18 +60,18 @@ class TestBernstein(object):
         ns.calculateSolution('poisson')
         # COMPARE VS SAVED FILES #
         #expected_path = 'comparison_files/'+self.so.name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(self.so.name+'.h5','r')
+        #expected = h5py.File(os.path.join(self._scriptdir,expected_path))
+        #actual = h5py.File(self.so.name+'.h5','r')
         #assert np.allclose(expected.root.u0_t1,
-        #                   actual.root.u0_t1,
+        #                   actual['u0_t1'],
         #                   atol=1e-10)
         #expected.close()
 
-        actual = tables.open_file(self.so.name+'.h5','r')
+        actual = h5py.File(self.so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + self.so.name + '_u0_t1.csv'
         #write comparison file
-        #np.array(actual.root.u0_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u0_t1).flatten(),decimal=10)
+        #np.array(actual['u0_t1']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u0_t1']).flatten(),decimal=10)
         actual.close()
 
     def test_2D_simplex(self):
@@ -95,16 +94,16 @@ class TestBernstein(object):
         ns.calculateSolution('poisson')
         # COMPARE VS SAVED FILES #
         #expected_path = 'comparison_files/'+self.so.name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(self.so.name+'.h5','r')
+        #expected = h5py.File(os.path.join(self._scriptdir,expected_path))
+        #actual = h5py.File(self.so.name+'.h5','r')
         #assert np.allclose(expected.root.u0_t1,
-        #                   actual.root.u0_t1,
+        #                   actual['u0_t1'],
         #                   atol=1e-10)
-        actual = tables.open_file(self.so.name+'.h5','r')
+        actual = h5py.File(self.so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + self.so.name + '_u0_t1.csv'
         #write comparison file
-        #np.array(actual.root.u0_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u0_t1).flatten(),decimal=10)
+        #np.array(actual['u0_t1']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u0_t1']).flatten(),decimal=10)
         actual.close()
 
     def test_3D_hex(self):
@@ -127,16 +126,16 @@ class TestBernstein(object):
         ns.calculateSolution('poisson')
         # COMPARE VS SAVED FILES #
         #expected_path = 'comparison_files/'+self.so.name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(self.so.name+'.h5','r')
+        #expected = h5py.File(os.path.join(self._scriptdir,expected_path))
+        #actual = h5py.File(self.so.name+'.h5','r')
         #assert np.allclose(expected.root.u0_t1,
-        #                   actual.root.u0_t1,
+        #                   actual['u0_t1'],
         #                   atol=1e-10)
-        actual = tables.open_file(self.so.name+'.h5','r')
+        actual = h5py.File(self.so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + self.so.name + '_u0_t1.csv'
         #write comparison file
-        #np.array(actual.root.u0_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u0_t1).flatten(),decimal=10)
+        #np.array(actual['u0_t1']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u0_t1']).flatten(),decimal=10)
         actual.close()
 
     def test_3D_simplex(self):
@@ -158,14 +157,14 @@ class TestBernstein(object):
         ns.calculateSolution('poisson')
         # COMPARE VS SAVED FILES #
         #expected_path = 'comparison_files/'+self.so.name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(self.so.name+'.h5','r')
+        #expected = h5py.File(os.path.join(self._scriptdir,expected_path))
+        #actual = h5py.File(self.so.name+'.h5','r')
         #assert np.allclose(expected.root.u0_t1,
-        #                   actual.root.u0_t1,
+        #                   actual['u0_t1'],
         #                   atol=1e-10)
-        actual = tables.open_file(self.so.name+'.h5','r')
+        actual = h5py.File(self.so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + self.so.name + '_u0_t1.csv'
         #write comparison file
-        #np.array(actual.root.u0_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u0_t1).flatten(),decimal=10)
+        #np.array(actual['u0_t1']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u0_t1']).flatten(),decimal=10)
         actual.close()

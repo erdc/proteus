@@ -1,5 +1,3 @@
-from __future__ import print_function
-from builtins import range
 import numpy
 #alt
 #nodes of reference hex laid out clockwise bottom to top

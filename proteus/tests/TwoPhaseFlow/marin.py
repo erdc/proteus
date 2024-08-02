@@ -1,8 +1,6 @@
 """
 TwoPhaseFlow
 """
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import (Domain, Context, Gauges,
                      MeshTools as mt)
@@ -343,5 +341,4 @@ m['pressure'].auxiliaryVariables = [pressure_gauges]
 
 myTpFlowProblem.SystemNumerics.cfl=opts.cfl
 myTpFlowProblem.SystemNumerics.useSuperlu=True
-
 

@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from math import cos, sin, sqrt, atan2, acos, asin, pi
 import csv
 import os
@@ -243,7 +240,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         a: array_like
             acceleration of current time step
         """
-        a = old_div(self.F, self.mass)
+        a = self.F/self.mass
         return a
 
     def getAngularAcceleration(self):
@@ -251,7 +248,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             self.inertia = self.getInertia(self.M, self.Shape.barycenter)
             assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
                                       'was not set correctly!'
-            self.ang_acc = old_div(self.M[:], self.inertia)
+            self.ang_acc = self.M[:]/self.inertia
         else:
             self.inertia = None
             self.ang_acc = np.array([0., 0., 0.])
@@ -261,7 +258,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         # acceleration from force
         self.acceleration = self.getAcceleration()
         # substeps for smoother motion between timesteps
-        dt_sub = old_div(dt, float(self.substeps))
+        dt_sub = dt/float(self.substeps)
 
     # Forward_Euler
         if self.scheme == 'Forward_Euler':
@@ -282,9 +279,9 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             vx0 = self.last_velocity[0]                                # x-axis velocity
             vy0 = self.last_velocity[1]                                # y-axis velocity
             vz0 = self.last_velocity[2]                                # z-axis velocity
-            ax0 = old_div((Fx - Cx * vx0 - Kx * ux0), mass)                        # x-axis acceleration
-            ay0 = old_div((Fy - Cy * vy0 - Ky * uy0), mass)                        # y-axis acceleration
-            az0 = old_div((Fz - Cz * vz0 - Kz * uz0), mass)                        # z-axis acceleration
+            ax0 = (Fx-Cx*vx0-Kx*ux0)/mass                        # x-axis acceleration
+            ay0 = (Fy-Cy*vy0-Ky*uy0)/mass                        # y-axis acceleration
+            az0 = (Fz-Cz*vz0-Kz*uz0)/mass                        # z-axis acceleration
             # solving numerical scheme
             ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=self.substeps, F=Fx, K=Kx, C=Cx, m=mass, velCheck=False)
             uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0, dt=dt_sub, substeps=self.substeps, F=Fy, K=Ky, C=Cy, m=mass, velCheck=False)
@@ -303,7 +300,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
     def getAngularDisplacement(self, dt):
         # angular acceleration from moment
         self.ang_acc = self.getAngularAcceleration()
-        dt_sub = old_div(dt, float(self.substeps))
+        dt_sub = dt/float(self.substeps)
 
     # Forward_Euler
         if self.scheme == 'Forward_Euler':
@@ -330,7 +327,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             # initial condition
             rz0 = atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])  # angular displacement
             vrz0 = self.last_ang_vel[2]                             # angular velocity
-            arz0 = old_div((Mp[2] - Crot * vrz0 - Krot * rz0), inertia)         # angular acceleration
+            arz0 = (Mp[2]-Crot*vrz0-Krot*rz0)/inertia         # angular acceleration
 
             # solving numerical scheme
             rz, vrz, arz = runge_kutta(u0=rz0, v0=vrz0, a0=arz0, dt=dt_sub, substeps=self.substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
@@ -567,7 +564,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         # making unity vector/axis of rotation
         vec = vx, vy, vz = np.array(vec)
         length_vec = np.sqrt(vx**2 + vy**2 + vz**2)
-        vec = old_div(vec, length_vec)
+        vec = vec/length_vec
         if self.nd == 2:
             I = self.It * self.mass
         elif self.nd == 3:
@@ -903,12 +900,12 @@ class CaissonBody(RigidBody):
         # making unity vector/axis of rotation
         vec = vx, vy, vz = np.array(vec)
         length_vec = np.sqrt(vx**2 + vy**2 + vz**2)
-        vec = old_div(vec, length_vec)
+        vec = vec/length_vec
         if self.Shape.Domain.nd == 2:
             L, H = self.Shape.dim
             dx, dy, dz = distance                             # To calculate It when pivot != barycenter
-            Ix = float(old_div((H**2), 12.)) + float(dy**2)             # To calculate x-component of It when pivot != barycenter
-            Iy = float(old_div((L**2), 12.)) + float(dx**2)             # To calculate y-component of It when pivot != barycenter
+            Ix = float((H**2)/12.) + float(dy**2)             # To calculate x-component of It when pivot != barycenter
+            Iy = float((L**2)/12.) + float(dx**2)             # To calculate y-component of It when pivot != barycenter
             self.It = Ix + Iy
             I = self.It * self.mass
         elif self.Shape.Domain.nd == 3:
@@ -1009,13 +1006,13 @@ class CaissonBody(RigidBody):
         """
         nd = self.Shape.Domain.nd
         substeps = 20
-        dt_sub = old_div(dt, float(substeps))
+        dt_sub = dt/float(substeps)
         # movement_functions for friction test cases
         Fx, Fy, Fz = self.F
         eps = (10**-30)  # to avoid 0/0
         mass = self.mass
-        sign_static = old_div(Fx, (abs(Fx) + eps))
-        sign_dynamic = old_div(self.last_velocity[0], (abs(self.last_velocity[0]) + eps))
+        sign_static = Fx/(abs(Fx)+eps)
+        sign_dynamic = self.last_velocity[0]/(abs(self.last_velocity[0])+eps)
         if nd == 2:
             g = np.array([0., -9.81, 0.])
             Fv = Fy
@@ -1054,7 +1051,7 @@ class CaissonBody(RigidBody):
 
             # calculation on the vertical direction for frictional force
             # solving numerical scheme
-            ay0 = old_div((Fv - Cy * vy0 - Ky * uy0), mass)
+            ay0 = (Fv-Cy*vy0-Ky*uy0)/mass
             if self.scheme == 'Runge_Kutta':
                 uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0,
                                          dt=dt_sub, substeps=substeps,
@@ -1095,7 +1092,7 @@ class CaissonBody(RigidBody):
 
             # initial condition acceleration
             # solving numerical scheme
-            ax0 = old_div((Fh - Cx * vx0 - Kx * ux0), mass)
+            ax0 = (Fh-Cx*vx0-Kx*ux0)/mass
             if self.scheme == 'Runge_Kutta':
                 ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0,
                                          dt=dt_sub, substeps=substeps,
@@ -1153,7 +1150,7 @@ class CaissonBody(RigidBody):
         """
         nd = self.Shape.Domain.nd
         substeps = 20
-        dt_sub = old_div(dt, float(substeps))
+        dt_sub = dt/float(substeps)
 
         #---------------------------------------------------------------
         def calculate_rotation(self, floating, h):
@@ -1201,7 +1198,7 @@ class CaissonBody(RigidBody):
             # initial condition
             rz0 = atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])  # angular displacement
             vrz0 = self.last_ang_vel[2]                             # angular velocity
-            arz0 = old_div((Mp[2] - Crot * vrz0 - Krot * rz0), inertia)         # angular acceleration
+            arz0 = (Mp[2]-Crot*vrz0-Krot*rz0)/inertia         # angular acceleration
 
             # solving numerical scheme
             if self.scheme == 'Runge_Kutta':
@@ -1584,19 +1581,19 @@ def runge_kutta(u0, v0, a0, dt, substeps, F, K, C, m, velCheck):
     # 2 step
         u2 = u1 + v1 * dt / 2.
         v2 = v1 + a1 * dt / 2.
-        a2 = old_div((F - C * v2 - K * u2), m)
+        a2 = (F-C*v2-K*u2)/m
     # 3 step
         u3 = u1 + v2 * dt / 2.
         v3 = v1 + a2 * dt / 2.
-        a3 = old_div((F - C * v3 - K * u3), m)
+        a3 = (F-C*v3-K*u3)/m
     # 4 step
         u4 = u1 + v3 * dt
         v4 = v1 + a3 * dt
-        a4 = old_div((F - C * v4 - K * u4), m)
+        a4 = (F-C*v4-K*u4)/m
     # calculation
-        u = u0 + (old_div(dt, 6.)) * (v1 + 2. * v2 + 2. * v3 + v4)
-        v = v0 + (old_div(dt, 6.)) * (a1 + 2. * a2 + 2. * a3 + a4)
-        a = old_div((F - C * v - K * u), m)
+        u = u0 + (dt/6.) * (v1 + 2. * v2 + 2. * v3 + v4)
+        v = v0 + (dt/6.) * (a1 + 2. * a2 + 2. * a3 + a4)
+        a = (F-C*v-K*u)/m
     # velocity check
         if velCheck == True:
             # When velocity changes sign, it means that 0-condition is passed

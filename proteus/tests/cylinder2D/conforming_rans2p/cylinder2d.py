@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -85,7 +80,7 @@ T= opts.T
 runCFL = 0.9
 dt_fixed = 0.005
 dt_init = 0.005
-nDTout = int(old_div(T,dt_fixed))
+nDTout = int(T/dt_fixed)
 dt_init = min(dt_init,0.5*dt_fixed)
 tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)] 
 if opts.onlySaveFinalSolution == True:

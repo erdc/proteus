@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
 import os
 from proteus.iproteus import *
 import unittest
@@ -34,11 +31,11 @@ class TestAddedMass3D(unittest.TestCase):
                     'addedmass2D_so.log'
                     'addedmass3D_so.log'
                     ]
-        #for file in FileList:
-        #    if os.path.isfile(file):
-        #        os.remove(file)
-        #    else:
-        #        pass
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+            else:
+                pass
 
     def test_AddedMass_3D(self):
         from proteus import defaults
@@ -85,9 +82,9 @@ class TestAddedMass3D(unittest.TestCase):
         ns.calculateSolution('addedmass3D')
         Aij = am3D.body.Aij
 
-        #np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
+        np.savetxt('Aij_sol3D.csv', Aij, delimiter=',')
         Aij_sol = np.genfromtxt(os.path.join(modulepath, 'Aij_sol3D.csv'), delimiter=',')
-        npt.assert_almost_equal(Aij, Aij_sol, decimal=5)
+        npt.assert_allclose(Aij, Aij_sol, atol=1.0e-8, rtol=0.0)
         self.teardown_method(self)
 
 if __name__ == "__main__":

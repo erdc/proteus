@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
 import numpy as np
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
@@ -25,9 +22,9 @@ domain = Domain.PiecewiseLinearComplexDomain()
 nd=3
 tank_dim = [5.,5.,5.]
 tank = st.Tank3D(domain, dim=tank_dim)
-rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[old_div(tank_dim[0],2.),
-                                                 old_div(tank_dim[1],2.),
-                                                 old_div(tank_dim[2],2.)])
+rect = st.Cuboid(domain, dim=[1.,1.,1.], coords=[tank_dim[0]/2.,
+                                                 tank_dim[1]/2.,
+                                                 tank_dim[2]/2.])
 rect.setHoles(holes=np.array([rect.coords]))
 
 domain.MeshOptions.he = he
@@ -50,11 +47,11 @@ rect.BC['z-'].setNoSlip()
 # CHRONO
 
 system = fsi.ProtChSystem()
-system.ChSystem.Set_G_acc(chrono.ChVectorD(g[0], g[1], 0.))
+system.ChSystem.SetGravitationalAcceleration(chrono.ChVector3d(g[0], g[1], g[2]))
 body = fsi.ProtChBody(system=system)
 body.attachShape(rect)
 body.ChBody.SetMass(500.)
-body.ChBody.SetBodyFixed(True)  # fixing body
+body.ChBody.SetFixed(True)  # fixing body
 
 # OTHER PARAMS
 st.assembleDomain(domain)
@@ -86,7 +83,6 @@ class AtRest:
     def uOfXT(self,x,t):
         return 0.0
 
-
 #  _   _                           _
 # | \ | |_   _ _ __ ___   ___ _ __(_) ___ ___
 # |  \| | | | | '_ ` _ \ / _ \ '__| |/ __/ __|
@@ -105,7 +101,6 @@ myTpFlowProblem.outputStepping.dt_fixed = 0.001
 myTpFlowProblem.SystemPhysics.setDefaults()
 
 myTpFlowProblem.SystemNumerics.cfl = 0.4
-
 myTpFlowProblem.SystemNumerics.useSuperlu=False
 myTpFlowProblem.SystemPhysics.movingDomain = False
 
@@ -150,4 +145,5 @@ for s in system.subcomponents:
         for flag in s.boundaryFlags:
             flags_rigidbody[flag] = 1
 m['addedMass'].p.coefficients.flags_rigidbody = flags_rigidbody
-
+m['addedMass'].n.linTolFac=0.0
+m['addedMass'].n.l_atol_res=1.0e-10

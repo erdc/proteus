@@ -1,14 +1,9 @@
 #!/usr/bin/env python
-
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from read_hdf5 import *
 
 T = 1.0
 nDTout = 100
-DT = old_div(T,float(nDTout))
+DT = T/float(nDTout)
 
 archive = Archiver.XdmfArchive(".","heat_3d",readOnly=True)
 

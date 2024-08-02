@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -114,7 +111,7 @@ else:
         #domain.writePoly("mesh")
         #domain.writePLY("mesh")
         #domain.writeAsymptote("mesh")
-        domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+        domain.MeshOptions.triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
 
         #logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
@@ -145,9 +142,9 @@ dissipation_nl_atol_res = max(1.0e-10, 0.001 * he ** 2)
 
 # Reynolds number = ?
 rho_0 = 1.205
-nu_0 = old_div(1.500e-5,1.500e-5)
+nu_0 = 1.500e-5/1.500e-5
 rho_1 = 998.2
-nu_1 = old_div(1.004e-6,1.500e-5)
+nu_1 = 1.004e-6/1.500e-5
 
 # Gravity
 g = [0.0,0.0]

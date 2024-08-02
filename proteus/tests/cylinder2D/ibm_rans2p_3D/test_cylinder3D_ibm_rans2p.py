@@ -2,7 +2,7 @@
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import Context
-import tables
+import h5py
 import importlib
 import pytest
 
@@ -90,8 +90,7 @@ class Test_ibm():
         self.aux_names.append(ns.modelList[0].name)
         ns.calculateSolution(my_so.name)
 
-        actual = tables.open_file('cylinder_ibm_T1_ibm_3D_rans2p'+'.h5','r')
+        actual = h5py.File('cylinder_ibm_T1_ibm_3D_rans2p'+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_u_t2.csv'
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t2']),decimal=10)
         actual.close()
-

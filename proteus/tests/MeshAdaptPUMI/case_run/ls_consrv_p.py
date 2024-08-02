@@ -1,4 +1,3 @@
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from couette import *
@@ -21,7 +20,6 @@ class zero_phi(object):
         return 0.0
 
 initialConditions  = {0:zero_phi()}
-
 
 
 

@@ -1,9 +1,4 @@
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
-from builtins import object
 from math import ceil, sqrt, pow
-
 import os
 import numpy as np
 import numpy.testing as npt
@@ -83,7 +78,7 @@ def gauge_setup(nd, total_nodes=None):
         nnx = nny = int(ceil(sqrt(total_nodes)))+1
         mlMesh = build2DMesh(p, nnx, nny)
     elif p.nd == 3:
-        nnx = nny = nnz = int(ceil(pow(total_nodes, old_div(1.0,3.0))))+1
+        nnx = nny = nnz = int(ceil(pow(total_nodes, 1.0/3.0)))+1
         mlMesh = build3DMesh(p, nnx, nny, nnz)
 
     model = Transport.MultilevelTransport(p, n, mlMesh)

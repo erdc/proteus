@@ -7,15 +7,16 @@ from proteus import Domain
 import os
 import pytest
 
-@pytest.mark.skip(reason=".smb file was removed during cleaning")
+#@pytest.mark.skip(reason=".smb file was removed during cleaning")
 def test_meshLoadPUMI(verbose=0):
     """Test to load serial PUMI model and mesh"""
     testDir=os.path.dirname(os.path.abspath(__file__))
     cubeMdl=testDir + '/cube.dmg'
     cube670p1=testDir + '/cube.smb'
 
-    PUMIAdapter=MeshAdaptPUMI.MeshAdapt()
-    PUMIAdapter.loadModelAndMesh(bytes(cubeMdl,'utf-8'), bytes(cube670p1,'utf-8'))
+    manager=MeshAdapt.AdaptManager()
+    PUMIAdapter=manager.PUMIAdapter
+    PUMIAdapter.loadModelAndMesh(cubeMdl.encode('ascii'), cube670p1.encode('ascii'))
 
     mesh = MeshTools.TetrahedralMesh()
     mesh.cmesh = cmeshTools.CMesh()

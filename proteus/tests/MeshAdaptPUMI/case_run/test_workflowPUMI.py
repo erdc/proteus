@@ -11,4 +11,3 @@ def test_workflowPUMI(verbose=0):
     runCommand = "cd "+currentPath+"; parun -l5 couette_so.py;"
     subprocess.check_call(runCommand,shell=True )
 
-

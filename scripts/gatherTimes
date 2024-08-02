@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-
-from builtins import str
-from builtins import range
 import numpy
 import os
 from xml.etree.ElementTree import *

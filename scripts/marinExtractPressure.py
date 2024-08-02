@@ -1,7 +1,4 @@
 #! /usr/bin/env pvpython
-
-# for use with pvpython versions at least 4.4
-from builtins import str
 from paraview import servermanager
 from paraview.simple import *
 from optparse import OptionParser

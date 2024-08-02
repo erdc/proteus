@@ -1,5 +1,3 @@
-from builtins import zip
-from builtins import range
 import math
 vertices = [ ('bottom_left' , (0.0,0.0)),
              ('weir_bottom_left' , (0.8 + 1.5 + 6.66,0.0)),

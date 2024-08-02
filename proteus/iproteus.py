@@ -12,11 +12,6 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
-
-from __future__ import print_function
-from builtins import zip
-from builtins import str
-from builtins import range
 from importlib import reload
 import os
 import proteus

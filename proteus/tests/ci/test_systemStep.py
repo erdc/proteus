@@ -9,7 +9,6 @@ This module solves equations of the form
   u_t + \nabla \cdot \left( u \mathbf{v} - a(x) \nabla u \right) = 0
 
 """
-from __future__ import absolute_import
 import pytest
 from proteus.iproteus import *
 from proteus import Comm

@@ -4,8 +4,6 @@
 Test module for generating unit_simplex elements
 
 """
-from __future__ import print_function
-from builtins import object
 import pytest
 
 from proteus.iproteus import *

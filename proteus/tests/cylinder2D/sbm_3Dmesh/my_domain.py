@@ -1,4 +1,3 @@
-from builtins import range
 from proteus import Domain
 #         |y
 #         |

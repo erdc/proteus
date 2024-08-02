@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from pyadh import *
 comm = Comm.init()
 cmeshTools.commInit()

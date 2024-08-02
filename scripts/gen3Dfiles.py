@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
 from glob import glob
 from os import system
 from sys import stdout,argv

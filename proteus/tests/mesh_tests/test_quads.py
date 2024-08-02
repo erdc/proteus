@@ -4,10 +4,6 @@
 Test module for 2D Quadrilateral Meshes
 
 """
-from __future__ import division
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from proteus.iproteus import *
 from proteus.test_utils import TestTools
 TestTools.addSubFolders( inspect.currentframe() )
@@ -94,7 +90,7 @@ def test_calc_hmax(simple_mesh):
     quad_mesh = mlMesh.meshList[0]
     for i in range(9):
         hmax_i = quad_mesh._calc_hmax(i)
-        h = quad_mesh._calc_pt_distance((-1.0,old_div(-1.,3.)),(old_div(-1.,3.),old_div(1.,3.)))
+        h = quad_mesh._calc_pt_distance((-1.0,-1./3.),(-1./3.,1./3.))
         assert abs(h-hmax_i) < 1e-12
 
 @pytest.mark.MeshTools

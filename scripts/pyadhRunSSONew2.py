@@ -1,15 +1,4 @@
-from __future__ import print_function
-from __future__ import division
-## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
-
 #! /usr/bin/env python
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import input
-from builtins import zip
-from builtins import range
-from past.utils import old_div
 import os
 import sys
 import pickle
@@ -523,7 +512,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     timeValues = [tnList[opts.masterModel]]
     failedFlag=False
     mM = mList[opts.masterModel]
-    dt = old_div(pList[opts.masterModel].T,nList[opts.masterModel].nDTout)
+    dt = pList[opts.masterModel].T/nList[opts.masterModel].nDTout
     print("dt",dt)
     firstStep=True
     for n,ti,tn in zip(nList,timeIntegratorList,tnList):

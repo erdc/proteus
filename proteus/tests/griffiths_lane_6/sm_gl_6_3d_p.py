@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.elastoplastic import ElastoPlastic
@@ -23,7 +18,7 @@ he = 4.0
 #he*=0.5
 domain = gl_6_3d(width=he)
 boundaryFlags = domain.boundaryFlags
-#domain.regionConstraints = [old_div((he**3),6.0)]
+#domain.regionConstraints = [(he**3)/6.0]
 domain.regionConstraints = [128.0]
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"gl_6_3d"
 domain.MeshOptions.genMesh=False#True
@@ -35,15 +30,15 @@ triangleOptions="VApfeen"
 SRF = 1.0#65#15
 SRF_init=1.0
 g = [0.0,0.0,-9.8]
-rhos = old_div(18.2,9.8) #1000 kg/m^3 = tonnes/m^3
+rhos = 18.2/9.8 #1000 kg/m^3 = tonnes/m^3
 rhow = 1.0  #1000 kg/m^3 = tonnes/m^3
 E=1.0e5 #kN/m^2 Young's modulus
 nu=0.3  #- Poisson's ratio
-D = old_div(E,((1.0+nu)*(1-2.0*nu)))
+D = E/((1.0+nu)*(1-2.0*nu))
 D11 = D*(1.0 - nu)
 D12 = D*nu
 D44 = 0.5*D*(1.0-2*nu)
-pa= old_div(101325.0,1000.0) #kN/m^2 atmospheric pressure
+pa= 101325.0/1000.0 #kN/m^2 atmospheric pressure
 #soil models
 soilModelFlag=0
 #Lade soil model params
@@ -51,13 +46,13 @@ mu = 0.6
 ne = 0.6 
 Psi1 = 3.69 
 ah=0.001 
-bh=old_div(1.0,45.0) 
+bh=1.0/45.0 
 Fyc=15 
 Vr=0.1
 #
 #Mohr-Coulomb soil model params
 soilModelFlag=1
-phi_mc = atan(old_div(tan((old_div(37.0,360.0))*2.0*math.pi),SRF)) #friction angle
+phi_mc = atan(tan((37.0/360.0)*2.0*math.pi)/SRF) #friction angle
 c_mc = 13.8#0.05*rhos*fabs(g[2])*H
 psi_mc = 0.0 #dilation angle
 #
@@ -210,5 +205,5 @@ class PlasticWork(AuxiliaryVariables.AV_base):
                             plasticWork += sig[I]*eps_p[I]*m.q[('dV_u',0)][eN,k]
                             totalWork += sig[I]*eps[I]*m.q[('dV_u',0)][eN,k]
             if fabs(totalWork) < 1.0e-8: totalWork = 1.0e-8#make sure denom is nonzero
-            log("Plastic Work = %12.5e, Total Work = %12.5e, Ratio = %12.5e" % (plasticWork,totalWork,old_div(plasticWork,totalWork)))
+            log("Plastic Work = %12.5e, Total Work = %12.5e, Ratio = %12.5e" % (plasticWork,totalWork,plasticWork/totalWork))
             log("Max Displacement = %12.5e"  % (max_displacement,))

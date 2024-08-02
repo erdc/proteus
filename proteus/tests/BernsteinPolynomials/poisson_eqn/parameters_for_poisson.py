@@ -12,4 +12,3 @@ ct=Context.Options([
     ("unstructured",False,"Use unstructured triangular mesh"),
     ("genMesh", False, "Generate a new mesh?")
 ],mutable=True)
-

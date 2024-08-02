@@ -2,13 +2,10 @@
 """
 Test module for level set transport
 """
-from __future__ import print_function
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 import os
 import numpy as np
-import tables
+import h5py
 from . import (ls_vortex_3d_p,
                redist_vortex_3d_p,
                vof_vortex_3d_p,
@@ -80,21 +77,21 @@ class TestVortex3D(object):
             assert 0, "Calculate solution failed"
         self.aux_names.append(ls_vortex_3d_so.name)
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file(ls_vortex_3d_so.name+'.h5','r')
+        actual = h5py.File(ls_vortex_3d_so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_3D_u_t80.csv'
         #write comparison file
-        #np.array(actual.root.u_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t80),decimal=10)
+        #np.array(actual['u_t80']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t80']),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_3D_phid_t80.csv'
         #write comparison file
-        #np.array(actual.root.phid_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phid_t80),decimal=10)
+        #np.array(actual['phid_t80']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phid_t80']),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_3D_vof_t80.csv'
         #write comparison file
-        #np.array(actual.root.vof_t80).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.vof_t80),decimal=10)
+        #np.array(actual['vof_t80']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['vof_t80']),decimal=10)
 
         actual.close()
         del ns

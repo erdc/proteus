@@ -1,8 +1,6 @@
 """
 Split operator module for multiphase: CLSVOF with RANS2P
 """
-from __future__ import absolute_import
-from builtins import range
 import os
 from proteus.default_so import *
 from . import multiphase
@@ -31,5 +29,4 @@ needEBQ = False
 tnList = [0.0,multiphase.dt_init]+[i*multiphase.dt_fixed for i in range(1,multiphase.nDTout+1)]
 
 info = open("TimeList.txt","w")
-
 

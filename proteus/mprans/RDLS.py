@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 import proteus
 from proteus import TimeIntegration
 from proteus.mprans.cRDLS import *
@@ -109,7 +106,7 @@ class PsiTC(proteus.StepControl.SC_base):
                 m.timeIntegration.choose_dt()
             self.dt_model = self.start_ratio * self.model.levelModelList[0].timeIntegration.dt
         res = self.model.solver.solverList[-1].norm_r0
-        ssError = old_div(res, (self.res0 * self.rtol + self.atol))
+        ssError = res/(self.res0*self.rtol+self.atol)
         for m in self.model.levelModelList:
             m.updateTimeHistory(self.t_model)
             m.timeIntegration.updateTimeHistory()
@@ -125,7 +122,7 @@ class PsiTC(proteus.StepControl.SC_base):
             # physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
-            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " % (self.nSteps, self.dt_model, res, (old_div(res, self.res0)) * 100.0), level=1)
+            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " % (self.nSteps, self.dt_model, res, (res/self.res0) * 100.0), level=1)
         elif self.nSteps >= self.nStepsMax:
             logEvent("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" % (res,))
             logEvent("Osher-PsiTC tolerance                %12.5e " % (self.res0 * self.rtol + self.atol,))
@@ -814,16 +811,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, \
-                        (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default

@@ -39,4 +39,3 @@ if __name__=='__main__':
     domain.writePoly("tank2d")
     domain.writePLY("tank2d")
     os.system("asy -V tank2d")
-

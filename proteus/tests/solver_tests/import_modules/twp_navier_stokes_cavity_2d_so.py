@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus.default_so import *
 from proteus import defaults
 defaults.reset_default_so()

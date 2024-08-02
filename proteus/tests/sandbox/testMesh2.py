@@ -2,8 +2,6 @@
 """
 A test script for MeshTools and cmeshTools
 """
-from __future__ import print_function
-from builtins import range
 import Comm
 import MeshTools
 import cmeshTools

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import *
 from .twp_navier_stokes_p import *
 from .NS_convergence import *

@@ -244,4 +244,3 @@ m['flow'].auxiliaryVariables += [system]
 m['flow'].p.coefficients.use_ball_as_particle = opts.use_ball_as_particle
 m['flow'].p.coefficients.nParticles = 1
 m['flow'].n.conservativeFlux=None
-

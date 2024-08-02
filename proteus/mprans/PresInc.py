@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 import proteus
 import numpy as np
 from proteus.Transport import OneLevelTransport
@@ -203,12 +199,12 @@ class Coefficients(TC_base):
                 #            self.sedModel.ebqe[('velocity',0)][eN,k] = 0.0 
             else:
                 for i in range(self.fluidModel.q[('velocity', 0)].shape[-1]):
-                    self.fluidModel.q[('velocity', 0)][..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_f_min * alphaBDF))
+                    self.fluidModel.q[('velocity', 0)][..., i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
                     self.fluidModel.ebqe[('velocity', 0)][..., i] += (self.model.ebqe[('advectiveFlux', 0)] +
                                                                       self.model.ebqe[('diffusiveFlux', 0, 0)] -
                                                                       self.fluidModel.ebqe[('velocity', 0)][..., i]) * self.model.ebqe['n'][..., i]
-                    self.fluidModel.coefficients.q_velocity_solid[..., i] -= old_div(self.model.q[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
-                    self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= old_div(self.model.ebqe[('grad(u)', 0)][..., i], (self.rho_s_min * alphaBDF))
+                    self.fluidModel.coefficients.q_velocity_solid[..., i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
+                    self.fluidModel.coefficients.ebqe_velocity_solid[..., i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
                 self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity', 0)]
                 self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity', 0)]
                 
@@ -261,11 +257,11 @@ class Coefficients(TC_base):
         #then a may become a full  tensor
         if self.sedModelIndex is not None:
             a_penalty = (1.0-vos)*self.rho_f_min*alphaBDF + vos*self.rho_s_min*alphaBDF
-            c['a_f'] = old_div((1.0-vos),a_penalty)
-            c['a_s'] = old_div((vos),a_penalty)
+            c['a_f'] = (1.0-vos)/a_penalty
+            c['a_s'] = (vos)/a_penalty
             c[('a',0,0)][...,0] = c['a_f'] + c['a_s']
         else:
-            c['a_f'] = old_div(1.0, (self.rho_f_min * alphaBDF))
+            c['a_f'] = 1.0/(self.rho_f_min*alphaBDF)
             c[('a', 0, 0)][..., 0] =  c['a_f'] 
         for i in range(1,c[('a',0,0)].shape[-1]):
             c[('a',0,0)][...,i] = c[('a',0,0)][...,0]
@@ -736,8 +732,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, (
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
@@ -745,8 +740,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(
                         self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default

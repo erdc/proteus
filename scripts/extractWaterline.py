@@ -1,9 +1,4 @@
 #!/usr/bin/env python
-
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 from numpy import *
 
 
@@ -13,7 +8,7 @@ def  interpolate(master,slave1,slave2):
 
     x = master[0]
 
-    alpha = old_div((x-slave1[0]),(slave2[0]-slave1[0]))
+    alpha = (x-slave1[0])/(slave2[0]-slave1[0])
 
     y = 0.5*(abs(master[1]) + abs((1.0-alpha)*slave1[1]  + alpha*slave2[1]) )
     z = 0.5*(master[2] + (1.0-alpha)*slave1[2] + alpha*slave2[2] )

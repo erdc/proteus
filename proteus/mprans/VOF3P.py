@@ -2,10 +2,6 @@
 """
 An optimized volume-of-fluid  transport module
 """
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 import numpy as np
 from math import fabs
 import proteus
@@ -129,7 +125,7 @@ class RKEV(proteus.TimeIntegration.SSP):
     def choose_dt(self):
         maxCFL = 1.0e-6
         maxCFL = max(maxCFL, globalMax(self.cfl.max()))
-        self.dt = old_div(self.runCFL, maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
@@ -741,7 +737,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q['x'] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global, self.nElementBoundaryQuadraturePoints_elementBoundary, 3), 'd')
         self.q[('u', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 0)] = (1.0/self.mesh.nElements_global) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('grad(u)', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('m', 0)] = self.q[('u', 0)]
         self.q[('m_last', 0)] = np.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -830,16 +826,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, \
-                        (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         # use post processing tools to get conservative fluxes, None by default

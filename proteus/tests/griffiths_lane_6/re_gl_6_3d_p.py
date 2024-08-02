@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.richards import Richards
@@ -21,7 +16,7 @@ he = 4.0
 #he*=0.5
 domain = gl_6_3d(width=he)
 boundaryFlags = domain.boundaryFlags
-#domain.regionConstraints = [old_div((he**3),6.0)]
+#domain.regionConstraints = [(he**3)/6.0]
 domain.regionConstraints = [128.0]
 domain.polyfile=os.path.dirname(os.path.abspath(__file__))+"/"+"gl_6_3d"
 #domain.writePoly("gl_6_3d")
@@ -146,4 +141,6 @@ else:
                                          density=dimensionless_density,
                                          beta=0.0001,
                                          diagonal_conductivity=True,
+                                         STABILIZATION_TYPE=0,
+                                         FCT=False,
                                          getSeepageFace=getSeepageFace)

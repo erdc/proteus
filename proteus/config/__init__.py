@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import os
 
 if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('mike'):

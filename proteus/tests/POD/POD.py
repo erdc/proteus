@@ -2,10 +2,6 @@
 """
 Proper orthogonal decomposition for the heat equation solver
 """
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from heat_init import *
 from read_hdf5 import *
 
@@ -117,7 +113,7 @@ for i in range(1,nDTout+1):
 
     err = u-u_approx
     err *= err
-    err *= old_div(1.0,9261.0)
+    err *= 1.0/9261.0
     L2approx = np.sqrt(err.sum())
     print('error is %s ' % L2approx)
 

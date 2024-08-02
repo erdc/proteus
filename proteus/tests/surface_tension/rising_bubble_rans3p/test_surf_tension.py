@@ -2,8 +2,6 @@
 """
 Test module for surface tension
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -11,7 +9,7 @@ Profiling.logLevel=1
 Profiling.verbose=True
 import os
 import numpy as np
-import tables
+import h5py
 import pytest
 from proteus import default_so
 from . import (parameters,
@@ -72,19 +70,19 @@ class TestSurfaceTension(object):
         pass
     
     def compare_files(self,path,name):
-        actual = tables.open_file(name+'.h5','r')
+        actual = h5py.File(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_phi_t2.csv'
         #write comparison file
         #np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phi_t2']).flatten(),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_p_t2.csv'
         #np.array(actual.root.p_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.p_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['p_t2']).flatten(),decimal=10)
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_velocity_t2.csv'
         #np.array(actual.root.velocity_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.velocity_t2).flatten(),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['velocity_t2']).flatten(),decimal=10)
 
         actual.close()
 
@@ -124,14 +122,6 @@ class TestSurfaceTension(object):
                                                opts)
         ns.calculateSolution('2D_supg')
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/risingBubble_2D_supg.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('risingBubble_2D_supg.h5','r')
-        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
-        #assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
-        #assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
-        #expected.close()
-        #actual.close()
         self.compare_files('comparison_files',self.so.name)        
 
     def test_2D_with_EV(self):
@@ -169,14 +159,6 @@ class TestSurfaceTension(object):
                                                opts)
         ns.calculateSolution('2D_ev')
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/risingBubble_2D_ev.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('risingBubble_2D_ev.h5','r')
-        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
-        #assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
-        #assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
-        #expected.close()
-        #actual.close()
         self.compare_files('comparison_files',self.so.name)        
 
     def test_3D_with_SUPG(self):
@@ -214,14 +196,6 @@ class TestSurfaceTension(object):
                                                opts)
         ns.calculateSolution('3D_supg')
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/risingBubble_3D_supg.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('risingBubble_3D_supg.h5','r')
-        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
-        #assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
-        #assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
-        #expected.close()
-        #actual.close()
         self.compare_files('comparison_files',self.so.name)        
 
     def test_3D_with_EV(self):
@@ -260,13 +234,4 @@ class TestSurfaceTension(object):
         failed = ns.calculateSolution('3D_ev')
         assert(not failed)
         # COMPARE VS SAVED FILES #
-        #expected_path = 'comparison_files/risingBubble_3D_ev.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file('risingBubble_3D_ev.h5','r')
-        #assert np.allclose(expected.root.phi_t2,actual.root.phi_t2,atol=1e-5)
-        #assert np.allclose(expected.root.p_t2,actual.root.p_t2,atol=1e-5)
-        #assert np.allclose(expected.root.velocity_t2,actual.root.velocity_t2,atol=1e-5)        
-        #expected.close()
-        #actual.close()                        
         self.compare_files('comparison_files',self.so.name)        
-

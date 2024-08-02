@@ -4,12 +4,6 @@ A class hierarchy for subgrid error estimation methods (multiscale methods)
 .. inheritance-diagram:: proteus.SubgridError
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from past.utils import old_div
-from builtins import object
 import numpy
 from . import csubgridError
 from . import FemTools
@@ -1795,7 +1789,7 @@ class AdvectionDiffusionReactionTransientSubscales_ASGS(AdvectionDiffusionReacti
 
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
 
                 self.subgridTmp[ci] *= dtInv
                 self.subgridTmp[ci] *= self.subgridErrorMassCoef_last[ci]#decide what time level to use
@@ -1825,7 +1819,7 @@ class AdvectionDiffusionReactionTransientSubscales_ASGS(AdvectionDiffusionReacti
                     assert tau.max() * dm_subgrid.max() /dt <= 1.0, "Subgrid scales, modified tau_t.max() = %s dt = %s dm_subgrid.max() = %s tau.m'/dt = %s must be less than 1 " % (tau.max(),
                                                                                                                                                                                      dt,
                                                                                                                                                                                      dm_subgrid.max(),
-                                                                                                                                                                                     old_div(tau.max(),dt))
+                                                                                                                                                                                     tau.max()/dt)
                 #
             for cj in range(self.nc):
                 if ('dpdeResidual',ci,cj) in q:
@@ -1848,7 +1842,7 @@ class AdvectionDiffusionReactionTransientSubscales_ASGS(AdvectionDiffusionReacti
                 self.subgridTmp[ci][:] = self.subgridError_last[ci]
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
                 self.subgridTmp[ci] *= dtInv
                 self.subgridTmp[ci] *= self.subgridErrorMassCoef_last[ci]#decide how to approximate
                 logEvent("ADR trackSubScales accumulating delta u^n.abs.max= %s dm.max=%s  " % (max(numpy.absolute(self.subgridTmp[ci].flat)),
@@ -2173,7 +2167,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                 #unless accumulate subgrid term has been callled this will miss old subgrid mass
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
                 self.subgridTmp2_ip[ci][:] = self.subgridError_ip_last[ci]
                 self.subgridTmp2_ip[ci] *= dtInv
                 self.subgridTmp2_ip[ci] *= self.subgridErrorMassCoef_ip_last[ci]#figure this out
@@ -2253,7 +2247,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                 #would be nice to have dt^{n+1} alone, try to get this from timeIntegration directly?
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
                 #calculate \tilde{R}_h = R_h - \delta m^{n}/dt^{n+1}
                 self.subgridTmp[ci][:] = self.subgridError_last[ci]
                 self.subgridTmp[ci] *= dtInv
@@ -2361,7 +2355,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                 #would be nice to have dt^{n+1} alone
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
                 self.subgridTmp[ci] *= dtInv
                 self.subgridTmp[ci] *= self.subgridErrorMassCoef_last[ci]#figure this out
                 #mwf debug
@@ -2451,7 +2445,7 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
                 self.subgridTmp[ci][:] = self.subgridError_last[ci]
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
                 self.subgridTmp[ci] *= dtInv
                 self.subgridTmp[ci] *= self.subgridErrorMassCoef_last[ci]#decide how to approximate
                 logEvent("NS_ASGS trackSubScales accumulating delta u^n ci=%s .abs.max= %s dm.max=%s  " % (ci,max(numpy.absolute(self.subgridTmp[ci].flat)),
@@ -2525,7 +2519,7 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
             if self.trackSubScales:
                 dt = self.timeIntegration.dt
                 assert dt > 0.0
-                dtInv = old_div(1.0,dt)
+                dtInv = 1.0/dt
                 #pressure,
                 #   \delta p = -tau_1*(1+tau_0/dt)*R^{n+1}_p + tau_1*tau_0/dt*R^n_p
                 #recall that code is expecting subgridError to be tau*R instead of -tau*R
@@ -2572,7 +2566,7 @@ class NavierStokesTransientSubScalesASGS_velocity_pressure(NavierStokesASGS_velo
                 assert tau0.max() * dm_subgrid.max() /dt <= 1.0, "Subgrid scales, modified tau_t.max() = %s dt = %s dm_subgrid.max() = %s tau.m'/dt = %s must be less than 1 " % (tau.max(),
                                                                                                                                                                                   dt,
                                                                                                                                                                                   dm_subgrid.max(),
-                                                                                                                                                                                  old_div(tau.max(),dt))
+                                                                                                                                                                                  tau.max()/dt)
                 #
                 #account for old subgrid error in momentum strong residual
                 for ci in range(1,self.nc):

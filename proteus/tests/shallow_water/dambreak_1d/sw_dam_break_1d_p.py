@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import object
-from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 
@@ -74,7 +71,7 @@ coefficients = ShallowWater(g=g,
 #for depth
 class DamBreakIC(object):
     def __init__(self,Lx,HL,HR):
-        self.xc = old_div(Lx,2.0)
+        self.xc = Lx/2.0
         self.HL=HL
         self.HR=HR
     def uOfXT(self,x,t):

@@ -1,9 +1,4 @@
-from __future__ import division
-## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
-
 #!/usr/bin/env  python
-from builtins import range
-from past.utils import old_div
 import numpy as numpy
 #path to input file
 #nx=300; ny=300;
@@ -61,7 +56,7 @@ dat.close()
 #set up funcs to build R,G,and B arrays from the gray scale 0,1,2 data then use merge('RGB') to build color image
 
 #experiment with writing to a file that triangle can mesh
-L=(1.0,1.0); dx=old_div(L[0],nx); dy=old_div(L[1],ny);
+L=(1.0,1.0); dx=L[0]/nx; dy=L[1]/ny;
 base=1
 
 # #generate segments that connect different colors and record these?

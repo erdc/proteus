@@ -2,9 +2,6 @@
 """
 Test module for TADR with EV
 """
-from __future__ import absolute_import
-
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()

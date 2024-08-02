@@ -5,7 +5,7 @@ from proteus import Context
 from proteus import MeshTools
 from proteus import Domain
 from proteus.MeshAdaptPUMI import MeshAdapt
-import tables
+import h5py
 import importlib
 import subprocess
 import pytest
@@ -73,7 +73,6 @@ class Test_Adapt_ibm():
         runCommand = "cd "+currentPath+"; parun -l5 cylinder_so.py -C 'T=0.01 onlySaveFinalSolution=True genMesh=True usePUMI=True';"
         subprocess.check_call(runCommand,shell=True )
 
-    @pytest.mark.skip
     def test_adaptIBM_adaptMesh(self):
         currentPath = os.path.dirname(os.path.abspath(__file__))
         runCommand = "cd "+currentPath+"; parun -l5 cylinder_so.py -C 'T=0.01 onlySaveFinalSolution=True genMesh=False usePUMI=True';"
@@ -102,4 +101,4 @@ class Test_Adapt_ibm():
         nElements_final = mesh2.nElements_global
 
         #adapted mesh should have less elements
-        assert(nElements_final<nElements_initial)
+        assert nElements_final < nElements_initial

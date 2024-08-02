@@ -6,7 +6,6 @@ The equation is
 
 .. math: \frac{\partial u}{\partial t} + \nabla \cdot (\frac{1}{2} u^2 - \epsilon \nabla u) = 0
 """
-from __future__ import print_function
 from burgers_init import *
 
 physics.name = "pod_burgers_{0}d".format(physics.nd)

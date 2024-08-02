@@ -2,8 +2,6 @@
 """
 Test module for testing disc ICs for CLSVOF
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -11,7 +9,7 @@ Profiling.logLevel=1
 Profiling.verbose=True
 import os
 import numpy as np
-import tables
+import h5py
 import pytest
 from proteus import default_so
 from . import (parameters,
@@ -67,18 +65,12 @@ class TestCLSVOF(object):
 
     def compare_files(self,path,name, write=False):
         # COMPARE VS SAVED FILES #
-        #expected_path = path+'/'+name+'.h5'
-        #expected = tables.open_file(os.path.join(self._scriptdir,expected_path))
-        #actual = tables.open_file(name+'.h5','r')
-        #assert np.allclose(expected.root.u_t1,actual.root.u_t1,atol=1e-10)
-        #expected.close()
-
-        actual = tables.open_file(name+'.h5','r')
+        actual = h5py.File(name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_' + name + '_u_t1.csv'
         #write comparison file
         if write:
-            np.array(actual.root.u_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t1).flatten(),decimal=10)
+            np.array(actual['u_t1']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t1']).flatten(),decimal=10)
         actual.close()
 
     def test_case_1(self):

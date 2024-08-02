@@ -5,8 +5,6 @@ Class and script for generating a report from simulation data.
 .. inheritance-diagram:: proteus.LatexReport
    :parts: 1
 """
-from builtins import range
-from builtins import object
 from .Profiling import logEvent
 
 def openLatexReport(filename,reportname):

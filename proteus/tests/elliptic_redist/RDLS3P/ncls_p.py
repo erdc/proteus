@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus import *
 from proteus.default_p import *
 from math import *
@@ -115,4 +113,3 @@ def zeroadv(x):
     return lambda x,t: 0.0
 advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {0:{}}
-

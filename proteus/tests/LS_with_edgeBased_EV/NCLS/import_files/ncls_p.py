@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from builtins import object
-from past.utils import old_div
 from proteus import *
 from proteus.default_p import *
 from proteus.ctransportCoefficients import smoothedHeaviside
@@ -72,7 +68,7 @@ class init_cond(object):
                 else:
                     return -self.scaling*(x[0]-0.7) 
             else: # Saturated distance function
-                return -beta*self.scaling*np.tanh(old_div((x[0]-0.7),beta))*np.tanh(old_div((x[0]-0.3),beta))
+                return -beta*self.scaling*np.tanh((x[0]-0.7)/beta)*np.tanh((x[0]-0.3)/beta)
         else: #2D problem
             if ct.level_set_function == 0: #distance function 
                 return self.scaling*(self.radius - math.sqrt((x[0]-self.xc)**2 + (x[1]-self.yc)**2))

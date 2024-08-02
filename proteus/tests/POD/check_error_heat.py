@@ -1,14 +1,9 @@
 #!/usr/bin/env python
-
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from read_hdf5 import *
 
 T = 1.0
 nDTout = 100
-DT = old_div(T,float(nDTout))
+DT = T/float(nDTout)
 
 def uex0(x,t):
     """
@@ -34,7 +29,7 @@ for i in range(0,nDTout+1):
     uex_vals = uex0(coord,i*DT)
     err = u-uex_vals
     err *= err
-    err *= old_div(1.0,9261.0) #9261 = 21^3
+    err *= 1.0/9261.0 #9261 = 21^3
     L2approx = np.sqrt(err.sum())
     print("Trapezoidal approximation for error at dofs for nx=21 ny=21 nz=21 is %s " % L2approx)
 

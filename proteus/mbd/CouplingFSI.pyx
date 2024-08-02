@@ -134,7 +134,7 @@ cdef class ProtChBody:
             if take_shape_name is True:
                 self.setName(bytes(shape.name,'utf-8'))
         self.nd = shape.Domain.nd
-        new_vec = chrono.ChVector3D(shape.barycenter[0],
+        new_vec = chrono.ChVector3d(shape.barycenter[0],
                                    shape.barycenter[1],
                                    shape.barycenter[2])
         self.ChBody.SetPos(new_vec)
@@ -591,11 +591,11 @@ cdef class ProtChBody:
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
         #set it to chrono variable
-        chFM = chrono.ChMatrixDynamicD(6, 6)
-        inv_chFM = chrono.ChMatrixDynamicD(6, 6)
+        chFM = chrono.ChMatrixDynamicd(6, 6)
+        inv_chFM = chrono.ChMatrixDynamicd(6, 6)
         for i in range(6):
             for j in range(6):
-                chFM.setitem(i, j, FM[i, j])
+                chFM.SetItem(i, j, FM[i, j])
 
         # hack for swig
         cdef SwigPyObject *swig_obj = <SwigPyObject*> chFM.this
@@ -608,7 +608,7 @@ cdef class ProtChBody:
         aa = np.zeros(6)
 
         aa[:3] = pyvec2array(self.ChBody.GetPosDt2())
-        aa[3:] = pyvec2array(self.ChBody.GetWacc_par())
+        aa[3:] = pyvec2array(self.ChBody.GetAngAccParent())
         Aija = np.dot(Aij_global, aa)
         self.F_Aij = Aija[:3]
         self.M_Aij = Aija[3:]
@@ -788,7 +788,7 @@ cdef class ProtChBody:
         """
         if self.prescribed_motion_function is not None:
             new_x = self.callPrescribedMotion(self.ProtChSystem.model.stepController.t_model_last)
-            new_vec = chrono.ChVector3D(new_x[0], new_x[1], new_x[2])
+            new_vec = chrono.ChVector3d(new_x[0], new_x[1], new_x[2])
             self.ChBody.SetPos(new_vec)
         self.thisptr.poststep()
         self.getValues()
@@ -853,7 +853,7 @@ cdef class ProtChBody:
         return self.sdfIBM(t, relative_x)
 
     def setPosition(self, np.ndarray pos):
-        chvec = chrono.ChVector3D(pos[0], pos[1], pos[2])
+        chvec = chrono.ChVector3d(pos[0], pos[1], pos[2])
         self.ChBody.SetPos(chvec)
 
     def getPosition(self):
@@ -867,11 +867,11 @@ cdef class ProtChBody:
         return self.ChBody.GetMass()
 
     def setInertiaXX(self, np.ndarray inertia):
-        chvec = chrono.ChVector3D(inertia[0], inertia[1], inertia[2])
+        chvec = chrono.ChVector3d(inertia[0], inertia[1], inertia[2])
         self.ChBody.SetInertiaXX(chvec)
 
     def setInertiaXY(self, np.ndarray inertia):
-        chvec = chrono.ChVector3D(inertia[0], inertia[1], inertia[2])
+        chvec = chrono.ChVector3d(inertia[0], inertia[1], inertia[2])
         self.ChBody.SetInertiaXY(chvec)
 
     def getInertia(self):
@@ -883,7 +883,7 @@ cdef class ProtChBody:
         return pyvec2array(chvel)
 
     def setVelocity(self, np.ndarray vel):
-        chvec = chrono.ChVector3D(vel[0], vel[1], vel[2])
+        chvec = chrono.ChVector3d(vel[0], vel[1], vel[2])
         self.ChBody.SetPosDt(chvec)
 
     def prediction(self):
@@ -1115,7 +1115,7 @@ cdef class ProtChBody:
         #velocity
         self.velocity = pyvec2array(self.ChBody.GetPosDt())
         # angular acceleration
-        self.ang_acceleration = pyvec2array(self.ChBody.GetWacc_loc())
+        self.ang_acceleration = pyvec2array(self.ChBody.GetAngAccLocal())
         # angular velocity
         self.ang_velocity = pyvec2array(self.ChBody.GetAngVelLocal())
         # norm of angular velocity
@@ -1375,7 +1375,7 @@ cdef class ProtChBody:
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_'+str(tCount),
                                 (1,),
-                                dtype=h5py.specialDtype(vlen=str))
+                                dtype=h5py.special_dtype(vlen=str))
         dset[0] = datav
         # close file
         f.close()
@@ -1488,11 +1488,11 @@ cdef class ProtChSystem:
         mesh.ProtChSystem = self
 
     def setGravitationalAcceleration(self, g):
-        chvec = chrono.ChVector3D(g[0], g[1], g[2])
-        self.ChSystem.Set_G_acc(chvec)
+        chvec = chrono.ChVector3d(g[0], g[1], g[2])
+        self.ChSystem.SetGravitationalAcceleration(chvec)
 
     def getGravitationalAcceleration(self):
-        return pyvec2array(self.ChSystem.Get_G_acc())
+        return pyvec2array(self.ChSystem.GetGravitationalAcceleration())
 
     def setCouplingScheme(self, string scheme, string prediction=b'backwardEuler'):
         assert scheme == b"CSS" or scheme == b"ISS", "Coupling scheme requested unknown"
@@ -2716,7 +2716,7 @@ cdef class ProtChMoorings:
         datav = ET.tostring(arGrid)
         dset = f.create_dataset('Mesh_Spatial_Domain_{0:d}'.format(tCount),
                                 (1,),
-                                dtype=h5py.specialDtype(vlen=str))
+                                dtype=h5py.special_dtype(vlen=str))
         dset[...] = datav
         # close file
         f.close()

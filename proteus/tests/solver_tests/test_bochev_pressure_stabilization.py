@@ -12,7 +12,7 @@ import os
 import sys
 import inspect
 import numpy as np
-import tables
+import h5py
 import pickle
 import pytest
 
@@ -92,11 +92,11 @@ def test_bochev_pressure_cavity(load_cavity_problem,
 #    actual = tables.open_file('twp_navier_stokes_cavity_2d.h5','r')
 ##    assert numpy.allclose(expected.root.p_t1,actual.root.p_t1)
 #    expected.close()
-    actual = tables.open_file('twp_navier_stokes_cavity_2d.h5','r')
+    actual = h5py.File('twp_navier_stokes_cavity_2d.h5','r')
 
     expected_path = 'comparison_files/' + 'comparison_' + 'twp_navier_stokes_cavity_2d' + '_p_t1.csv'
     #write comparison file
     #np.array(actual.root.p_t1).tofile(os.path.join(script_dir, expected_path),sep=",")
-    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual.root.p_t1).flatten(),decimal=8)
+    np.testing.assert_almost_equal(np.fromfile(os.path.join(script_dir, expected_path),sep=","),np.array(actual['p_t1']).flatten(),decimal=8)
     actual.close()
     clean_up_directory()

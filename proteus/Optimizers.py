@@ -4,14 +4,7 @@ Class hierarchies for working with minimization problems
 .. inheritance-diagram:: proteus.Optimizers
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
 #John Chrispell, Summer 07
-from builtins import input
-from builtins import range
-from past.utils import old_div
-from builtins import object
 class ObjectiveFunction_base(object):
     def __init__(self,LHS_x,RHS_x):
         self.LHS_x=LHS_x
@@ -152,7 +145,7 @@ if __name__ == '__main__':
     # Test parameters
     LHS_x   = -1.0
     RHS_x   = 2.0
-    Guess_x = old_div((RHS_x + LHS_x),2.0)
+    Guess_x = (RHS_x+LHS_x)/2.0
     Tol     = 1e-6
     RefnVal = 100
 
@@ -167,7 +160,7 @@ if __name__ == '__main__':
 
     # ------ Plotting ------- #
     xLeft=LHS_x
-    dx = old_div((abs(RHS_x-LHS_x)),RefnVal)
+    dx = (abs(RHS_x-LHS_x))/RefnVal
     xVec=[]
     fVec=[]
     for i in range(RefnVal+1):

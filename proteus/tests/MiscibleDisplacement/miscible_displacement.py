@@ -20,11 +20,6 @@ common definitions for simple miscible displacement problem
      We'll assume \hat{\mu}(c) = a*(c-c_0) + b
      
 """
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from proteus import *
 from proteus import SubsurfaceTransportCoefficients as STC
 
@@ -165,9 +160,9 @@ domain.boundaryTags = regular_domain.boundaryLegend
 
 genMesh = True
 refinement_level = 32 #define characteristic length
-he = old_div(L[0],float(refinement_level))
+he = L[0]/float(refinement_level)
 
-triangleOptions = "VApq30Dena{area:8.8f}".format(area=old_div((he**2),2.0))
+triangleOptions = "VApq30Dena{area:8.8f}".format(area=(he**2)/2.0)
 
 
 ### Material Properties ###
@@ -264,7 +259,7 @@ initialConditions_trans = {0:ConstantIC(concentration_background)}
 # numerics
 parallel = False
 
-nnx = nny = int(old_div(L[0],he))
+nnx = nny = int(L[0]/he)
 nLevels = 1
 if parallel:
     nLevels = 1

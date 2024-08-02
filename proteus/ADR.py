@@ -1,7 +1,6 @@
 """
 An optimized Advection-Diffusion-Reaction module
 """
-
 import numpy as np
 from math import fabs
 import proteus

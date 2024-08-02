@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from past.utils import old_div
 from proteus import *
 from proteus.default_n import *
 from .sp_gw_p import *
@@ -8,7 +5,7 @@ reload(proteus.default_n)
 
 #fixed time step
 timeIntegration = BackwardEuler
-DT = float(old_div(T,nDTout))
+DT = float(T/nDTout)
 stepController = FixedStep
 
 #Raviart-Thomas 0 space on simpleces 

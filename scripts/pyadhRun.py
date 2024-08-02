@@ -12,14 +12,6 @@
 #   \brief driver for single model simulations
 #
 #
-from __future__ import print_function
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import input
-from builtins import range
-from past.utils import old_div
 import os
 import sys
 import socket
@@ -700,7 +692,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             ctemp=mlTransport.modelList[-1].coefficients.allocateDummyCoefficients(c=mlTransport.modelList[-1].q)
             mlTransport.modelList[-1].coefficients.plotCoefficientFunctions(mlTransport.modelList[-1].T,ctemp)
         timeValues = [tn]
-        dt = old_div(p.T,n.nDTout)
+        dt = p.T/n.nDTout
         #mwf debug
         print("""proteusRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt))
         failedFlag=False

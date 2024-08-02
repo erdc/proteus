@@ -38,7 +38,8 @@ def test_gmshLoadAndAdapt(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter,
+                         domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"coordinates",mesh.nodeArray)
 
@@ -55,7 +56,7 @@ def test_gmshLoadAndAdapt(verbose=0):
     Uinf = 2e-3
     #hard code solution
     vector=numpy.zeros((mesh.nNodes_global,3),'d')
-    dummy = numpy.zeros(mesh.nNodes_global); 
+    dummy = numpy.zeros((mesh.nNodes_global,),'d') 
     vector[:,0] = dummy
     vector[:,1] = Uinf*mesh.nodeArray[:,2]/Lz #v-velocity
     vector[:,2] = dummy
@@ -65,18 +66,20 @@ def test_gmshLoadAndAdapt(verbose=0):
 
     scalar=numpy.zeros((mesh.nNodes_global,1),'d')
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"p", scalar)
-
+    
     scalar[:,0] = mesh.nodeArray[:,2]
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"phi", scalar)
     del scalar
 
-    scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
+    scalar = numpy.ones((mesh.nNodes_global,1),'d')
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
-
+    del scalar
+    
     errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
-    assert (errorTotal<1e-14)
+    assert errorTotal<1e-14
 
-    #assert (domain.AdaptManager.willAdapt(),1)
+    #assert domain.AdaptManager.PUMIAdapter.willAdapt()
+    
     domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TetrahedralMesh()
@@ -86,9 +89,9 @@ def test_gmshLoadAndAdapt(verbose=0):
                      parallel = comm.size() > 1,
                      dim = domain.nd)
     nElements_final = mesh.nElements_global
-    assert (nElements_final>nElements_initial)
+    assert nElements_final>nElements_initial
 
-def test_2DgmshLoadAndAdapt(verbose=0):
+def test2DgmshLoadAndAdapt(verbose=0):
     """Test for loading gmsh mesh through PUMI, estimating error and adapting for 
     a 2D Couette flow case"""
     testDir=os.path.dirname(os.path.abspath(__file__))
@@ -152,10 +155,10 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     domain.AdaptManager.PUMIAdapter.transferFieldToPUMI(b"vof", scalar)
 
     errorTotal=domain.AdaptManager.PUMIAdapter.get_local_error()
-    assert (errorTotal<1e-14)
+    assert errorTotal<1e-14
 
-    #assert (domain.AdaptManager.willAdapt(),1)
-
+    #assert domain.AdaptManager.PUMIAdapter.willAdapt()
+    
     domain.AdaptManager.PUMIAdapter.adaptPUMIMesh(b"")
     
     mesh = MeshTools.TriangularMesh()
@@ -167,7 +170,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     nElements_final = mesh.nElements_global
     assert (nElements_final>nElements_initial)
 
-def test_2DmultiRegion(verbose=0):
+def t2DmultiRegion(verbose=0):
     """Test for loading gmsh mesh through PUMI with multiple-regions"""
     testDir=os.path.dirname(os.path.abspath(__file__))
     Model=testDir + '/TwoQuads.dmg'
@@ -186,4 +189,3 @@ def test_2DmultiRegion(verbose=0):
     mesh.convertFromPUMI(domain,domain.AdaptManager.PUMIAdapter, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
     assert mesh.elementMaterialTypes[0]==1
     assert mesh.elementMaterialTypes[-1]==2
-

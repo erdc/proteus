@@ -44,4 +44,3 @@ useEisenstatWalker = False
 
 maxNonlinearIts = 100 # 50 Farhad
 maxLineSearches = 0
-

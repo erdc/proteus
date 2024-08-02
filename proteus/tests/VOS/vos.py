@@ -1,5 +1,3 @@
-from __future__ import division
-from past.utils import old_div
 from proteus import Domain
 from proteus import Norms
 from proteus import Profiling 
@@ -62,7 +60,7 @@ nny=nnx
 if ct.problem==0:
     nny=int((nnx-1)/10+1)
 nnz=1
-he=old_div(1.0,(nnx-1.0))
+he=1.0/(nnx-1.0)
 
 unstructured=False
 box=Domain.RectangularDomain(L=(1.0,0.1 if ct.problem==0 else 1.0),

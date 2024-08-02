@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import object
 from proteus.default_p import *
 from proteus.mprans import NCLS
 from .multiphase import *

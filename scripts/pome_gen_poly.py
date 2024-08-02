@@ -1,6 +1,3 @@
-from __future__ import print_function
-from builtins import zip
-from builtins import range
 import math
 n_domain_vertices = 100
 domain_vertices =[(0.75*math.sin(2.0*math.pi*float(n)/float(n_domain_vertices))+0.5,0.75*math.cos(2.0*math.pi*float(n)/float(n_domain_vertices))+0.5) for  n in range(n_domain_vertices)]

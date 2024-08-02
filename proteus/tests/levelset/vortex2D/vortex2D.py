@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-from __future__ import division
 #if True uses PETSc solvers
-from past.utils import old_div
 parallel = False
 linearSmoother = None
 #compute mass balance statistics or not

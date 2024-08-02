@@ -1,17 +1,15 @@
 """Tests for 2d flow around a cylinder with shifted boundary method on a 3D mesh"""
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm, defaults
 from proteus import Context
-import tables
+import h5py
 import importlib
-
+import os
+import numpy as np
 
 comm = Comm.get()
 Profiling.logLevel = 7
 Profiling.verbose = False
-import numpy as np
 
 modulepath = os.path.dirname(os.path.abspath(__file__))
 
@@ -51,6 +49,11 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
 
 
     def example_setting(self, pre_setting):
+        from petsc4py import PETSc
+        import sys
+        OptDB = PETSc.Options()
+        OptDB.clear()
+
         Context.contextOptionsString = pre_setting
 
         my_so = defaults.load_system("cylinder_so",modulepath)
@@ -63,7 +66,9 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
         sList=[]
         for (pModule,nModule) in my_so.pnList:
             pList.append(defaults.load_physics(pModule,modulepath))
+            sys.modules[pModule]=pList[-1]
             nList.append(defaults.load_numerics(nModule,modulepath))
+            sys.modules[nModule]=nList[-1]
             if pList[-1].name == None:
                 pList[-1].name = pModule
 
@@ -88,10 +93,10 @@ class Test_sbm_cylinder2D_on_mesh3D(object):
         except:
             assert 0, "NS calculation failed"
 
-        actual = tables.open_file('cylinder_sbm_mesh3D_T001_P1_sbm_3Dmesh'+'.h5','r')
+        actual = h5py.File('cylinder_sbm_mesh3D_T001_P1_sbm_3Dmesh'+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_u_t2.csv'
         #write comparison file
         #np.array(actual.root.u_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.u_t2),decimal=10)
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['u_t2']),decimal=10)
 
         actual.close()

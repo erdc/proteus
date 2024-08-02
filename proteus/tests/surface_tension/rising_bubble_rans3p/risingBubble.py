@@ -1,7 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -50,10 +46,10 @@ else:
         T=3.0
         # Water
         rho_0 = 1000.0
-        nu_0 = old_div(10.0,rho_0)
+        nu_0 = 10.0/rho_0
         # Air
         rho_1 = 100.0
-        nu_1 = old_div(1.0,rho_1)
+        nu_1 = 1.0/rho_1
         # Surface tension
         sigma_01 = 24.5
         # Gravity
@@ -62,10 +58,10 @@ else:
         T=3.0
         # Water
         rho_0 = 1000.0
-        nu_0 = old_div(10.0,rho_0)
+        nu_0 = 10.0/rho_0
         # Air
         rho_1 = 1.0
-        nu_1 = old_div(0.1,rho_1)
+        nu_1 = 0.1/rho_1
         # Surface tension
         sigma_01 = 1.96 
         # Gravity
@@ -152,12 +148,12 @@ if AUTOMATED_TEST==True:
 # Domain and mesh
 if nd==2:
     L = (1.0 , 2.0)
-    he = old_div(L[0],float(4*Refinement-1))
+    he = L[0]/float(4*Refinement-1)
     he*=0.5
     he*=0.5
 else:
     L = (1.0 , 1.0, 2.0)
-    he = old_div(L[0],float(4*Refinement-1))
+    he = L[0]/float(4*Refinement-1)
     if AUTOMATED_TEST==False:
         he*=0.65
             
@@ -191,7 +187,7 @@ else:
         triangleFlag=1
         domain = Domain.RectangularDomain(L)
         domain.polyfile = os.path.dirname(os.path.abspath(__file__))+"/"+"mesh3D"
-        he = old_div(L[0],(nnx - 1))
+        he = L[0]/(nnx-1)
     else:
         if nd==2:
             vertices = [[0.0, 0.0],  #0
@@ -261,9 +257,9 @@ else:
         domain.writePLY("mesh")
         domain.writeAsymptote("mesh")
         if nd==2:
-            triangleOptions = "VApq30Dena%8.8f" % (old_div((he ** 2), 2.0),)
+            triangleOptions = "VApq30Dena%8.8f" % ((he**2)/2.0,)
         else:
-            triangleOptions="VApq1.4q12feena%21.16e" % (old_div((he**3),6.0),)
+            triangleOptions="VApq1.4q12feena%21.16e" % ((he**3)/6.0,)
             
         logEvent("""Mesh generated using: tetgen -%s %s""" % (triangleOptions, domain.polyfile + ".poly"))
 
@@ -362,7 +358,7 @@ dt_fixed = 0.01#0.03
 #dt_init = dt_fixed
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
-nDTout = int(round(old_div(T,dt_fixed)))
+nDTout = int(round(T/dt_fixed))
 
 ##########################################
 #            Signed Distance             #

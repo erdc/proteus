@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from .default import *
 
 PROTEUS_BLAS_LIB   = 'mkl_sequential'

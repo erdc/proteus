@@ -1,7 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
@@ -140,7 +136,7 @@ structured = False
 # Domain and mesh
 #===============================================================================
 L = [1.5, 0.41, 0.01]
-he = old_div(L[0],(2**Refinement))
+he = L[0]/(2**Refinement)
 he*=0.5
 he*=0.5
 
@@ -179,7 +175,7 @@ dt_init = 0.5*dt_fixed
 runCFL=0.33
 nDTout = ct.nDTout
 # nDTout = int(T/dt_fixed)
-dt_output = old_div(T,nDTout)
+dt_output = T/nDTout
 tnList = [0.0,dt_init]+[i*dt_output for i in range(1,nDTout+1)]
 
 if ct.onlySaveFinalSolution == True:
@@ -316,7 +312,7 @@ def particle_sdf(t, x):
     cx = 0.2
     cy = 0.2
     r = math.sqrt( (x[0]-cx)**2 + (x[1]-cy)**2)
-    n = (old_div((x[0]-cx),(r+1e-10)),old_div((x[1]-cy),(r+1e-10)), 0.0)
+    n = ((x[0]-cx)/(r+1e-10),(x[1]-cy)/(r+1e-10), 0.0)
     return  r - 0.05,n
 
 def particle_vel(t, x):

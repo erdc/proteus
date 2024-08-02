@@ -4,10 +4,6 @@ A class hierarchy for shock capturing diffusion methods
 .. inheritance-diagram:: proteus.ShockCapturing
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
-from builtins import object
 import numpy
 from . import cshockCapturing
 class ShockCapturing_base(object):

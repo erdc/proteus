@@ -9,15 +9,7 @@ the nonlinear coefficients are :math:`m^i,f^i,a^{ik},\phi^k, H^i` and :math:`r^i
 .. inheritance-diagram:: proteus.Transport
    :parts: 1
 """
-from __future__ import absolute_import
-from __future__ import division
-from builtins import str
-from builtins import zip
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from math import *
-
 from .EGeometry import *
 from .LinearAlgebraTools import *
 from .LinearSolvers import *
@@ -1586,14 +1578,14 @@ class OneLevelTransport(NonlinearEquation):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN,k] = old_div(self.numericalFlux.penalty_constant,(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN,k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         #penalty term
         #cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE,k] = old_div(self.numericalFlux.penalty_constant,self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
@@ -3655,7 +3647,7 @@ class OneLevelTransport(NonlinearEquation):
             if self.tLast_mesh is not None:
                 self.q['xt'][:]=self.q['x']
                 self.q['xt']-=self.q['x_last']
-                alpha = old_div(1.0,(self.t_mesh - self.tLast_mesh))
+                alpha = 1.0/(self.t_mesh-self.tLast_mesh)
                 self.q['xt']*=alpha
             else:
                 self.q['xt'][:]=0.0
@@ -3831,7 +3823,7 @@ class OneLevelTransport(NonlinearEquation):
             if self.tLast_mesh is not None:
                 self.ebq['xt'][:]=self.ebq['x']
                 self.ebq['xt']-=self.ebq['x_last']
-                alpha = old_div(1.0,(self.t_mesh - self.tLast_mesh))
+                alpha = 1.0/(self.t_mesh-self.tLast_mesh)
                 self.ebq['xt']*=alpha
             else:
                 self.ebq['xt'][:]=0.0
@@ -4060,7 +4052,7 @@ class OneLevelTransport(NonlinearEquation):
             if self.tLast_mesh is not None:
                 self.ebqe['xt'][:]=self.ebqe['x']
                 self.ebqe['xt']-=self.ebqe['x_last']
-                alpha = old_div(1.0,(self.t_mesh - self.tLast_mesh))
+                alpha = 1.0/(self.t_mesh-self.tLast_mesh)
                 self.ebqe['xt']*=alpha
             else:
                 self.ebqe['xt'][:]=0.0
@@ -4817,7 +4809,7 @@ class OneLevelTransport(NonlinearEquation):
                     L = min((max(self.mesh.nodeArray[:,0]),max(self.mesh.nodeArray[:,1])))
                     scale=10.0*max((scale_x,scale_y,1.0e-16))/L
                     for x,y,u,v in zip(self.mesh.nodeArray[:,0],self.mesh.nodeArray[:,1],self.u[self.coefficients.vectorComponents[0]].dof,self.u[self.coefficients.vectorComponents[1]].dof):
-                        Viewers.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x,y,old_div(u,scale),old_div(v,scale)))
+                        Viewers.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x,y,u/scale,v/scale))
                     Viewers.datFile.write("\n \n")
                     cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (Viewers.windowNumber,
                                                                                                   Viewers.datFilename,
@@ -4828,7 +4820,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newPlot()
                     Viewers.newWindow()
             elif self.nSpace_global == 3:
-                (slice_x,slice_y,slice_z) = self.mesh.nodeArray[old_div(self.mesh.nodeArray.shape[0],2),:]
+                (slice_x,slice_y,slice_z) = self.mesh.nodeArray[self.mesh.nodeArray.shape[0]//2,:]
                 for ci in range(self.coefficients.nc):
                     if (isinstance(self.u[ci].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) or
                         isinstance(self.u[ci].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis)):
@@ -5244,7 +5236,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newPlot()
                     Viewers.newWindow()
         elif self.nSpace_global == 3:
-            (slice_x,slice_y,slice_z) = self.mesh.nodeArray[old_div(self.mesh.nodeArray.shape[0],2),:]
+            (slice_x,slice_y,slice_z) = self.mesh.nodeArray[self.mesh.nodeArray.shape[0]//2,:]
             for ci in range(self.coefficients.nc):
                 title = self.coefficients.variableNames[ci]+titleModifier
                 if isinstance(self.u[ci].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
@@ -5382,8 +5374,8 @@ class OneLevelTransport(NonlinearEquation):
         vmax =max(self.q[('velocity',0)].flat)+1.0e-8
         for eN in range(self.mesh.nElements_global):
             for k in range(self.nQuadraturePoints_element):
-                uOut.write('%12.5e%12.5e%12.5e' % (old_div(self.q[('velocity',0)][eN,k,0],vmax),
-                                                   old_div(self.q[('velocity',0)][eN,k,1],vmax),
+                uOut.write('%12.5e%12.5e%12.5e' % (self.q[('velocity',0)][eN,k,0]/vmax,
+                                                   self.q[('velocity',0)][eN,k,1]/vmax,
                                                    0.0))
                 if n%2==1:
                     uOut.write('\n')

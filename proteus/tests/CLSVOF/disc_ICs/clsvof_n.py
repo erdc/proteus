@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import range
 from proteus import *
 from proteus.default_n import *
 try:
@@ -69,5 +66,4 @@ else:
     levelLinearSolver = LU
    
 tnList=[0.,1E-6]
-
 

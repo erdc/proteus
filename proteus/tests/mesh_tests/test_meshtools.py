@@ -1,10 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from proteus import Comm, Profiling
 from collections import namedtuple
 import numpy.testing as npt
@@ -182,7 +175,7 @@ class TestMeshTools(object):
         assert (not t0.hasGeometricInfo)
         assert (t0.nodes < t1.nodes)
         t0.computeGeometricInfo()
-        assert ((t0.barycenter == EVec(old_div(1.0,3.0),old_div(1.0,3.0),0.0)).all())
+        assert ((t0.barycenter == EVec(1.0/3.0,1.0/3.0,0.0)).all())
         #needs more
 
     def test_Quadrilateral(self):
@@ -222,7 +215,7 @@ class TestMeshTools(object):
         assert (not T0.nodes > T1.nodes)
         assert (not T0.hasGeometricInfo)
         T0.computeGeometricInfo()
-        assert (T0.volume == old_div(1.0,6.0))
+        assert (T0.volume == 1.0/6.0)
         triangleDict={}
         for t in T0.triangles:
             triangleDict[t.nodes] = t

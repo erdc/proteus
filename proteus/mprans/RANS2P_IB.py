@@ -1,9 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import proteus
 import proteus.mprans.RANS2P as RANS2P
 from proteus.mprans.cRANS2P_IB import *
@@ -230,7 +224,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                     self.Beam_Solver[I].updateLoads(self.q3[I, :], self.q2[I, :], self.q1[I, :])
                 for j in range(loadSteps):
                     self.Beam_Solver[I].Phi.flat[:] = 0.0
-                    self.Beam_Solver[I].updateQs(endLoad=[0.0, 0.0, 0.0], scale=old_div(float(j), float(loadSteps)))
+                    self.Beam_Solver[I].updateQs(endLoad=[0.0, 0.0, 0.0], scale=float(j)/float(loadSteps))
                     counter = 0
                     go = True
                     Phi = np.copy(self.Beam_Solver[I].Phi)
@@ -302,9 +296,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             #        self.avgHeight+=self.zv[I,-1]
             #        self.avgDeflection += abs(self.xv[I,-1]-self.xv[I,0])
             #        self.avgAngle+= math.degrees(math.atan((self.zv[I,-1]-self.zv[I,-2])/(self.xv[I,-1]-self.xv[I,-2])))#self.Beam_Solver[I].Phi[-3]
-            self.avgHeight = old_div(np.sum(self.zv[:, -1]), float(self.nBeams))
-            self.avgDeflection = old_div(np.sum(np.abs(self.xv[:, -1] - self.xv[:, 0])), float(self.nBeams))
-            self.avgAngle = old_div(np.sum(np.rad2deg(np.arctan(old_div((self.zv[:, -1] - self.zv[:, -2]), (self.xv[:, -1] - self.xv[:, -2]))))), float(self.nBeams))
+            self.avgHeight = np.sum(self.zv[:,-1])/float(self.nBeams)
+            self.avgDeflection = np.sum(np.abs(self.xv[:,-1]-self.xv[:,0]))/float(self.nBeams)
+            self.avgAngle = np.sum(np.rad2deg(np.arctan((self.zv[:, -1] - self.zv[:, -2])/(self.xv[:, -1] - self.xv[:, -2]))))/float(self.nBeams)
 
     def initializeBeams(self):
         comm = Comm.get()
@@ -676,9 +670,9 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.q[('mt', 1)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 2)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 3)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 1)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 2)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('dV_u', 3)] = (old_div(1.0, self.mesh.nElements_global)) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 1)] = (1.0/self.mesh.nElements_global) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 2)] = (1.0/self.mesh.nElements_global) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 3)] = (1.0/self.mesh.nElements_global) * numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['dV'] = self.q[('dV_u', 1)]
         self.q[('f', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
         self.q[('velocity', 0)] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element, self.nSpace_global), 'd')
@@ -959,16 +953,14 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, \
-                        (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         logEvent("setting up post-processing")
@@ -1745,5 +1737,5 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         for i in range(3):
             self.coefficients.vel_avg[i] = globalSum(self.coefficients.vel_avg[i])
 
-        self.coefficients.vel_avg = old_div(self.coefficients.vel_avg, 0.1472)
+        self.coefficients.vel_avg = self.coefficients.vel_avg/0.1472
         self.coefficients.netBeamDrag[0] = globalSum(self.coefficients.netBeamDrag[0])

@@ -9,13 +9,10 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-from __future__ import print_function
-from builtins import object
 from proteus.iproteus import *
 import os
-from past.utils import old_div
 import numpy as np
-import tables
+import h5py
 from . import re_gl_6_3d_p
 from . import re_gl_6_3d_n
 from . import sm_gl_6_3d_p
@@ -70,11 +67,11 @@ class TestRichards(object):
         ns.calculateSolution(so.name)
         self.aux_names.append(so.name)
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file(so.name+'.h5','r')
+        actual = h5py.File(so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_3D_pressure_t1.csv'
         #write comparison file
-        #np.array(actual.root.pressure_head_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.pressure_head_t1),decimal=10)
+        #np.array(actual['pressure_head_t1]).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['pressure_head_t1']),decimal=10)
 
         actual.close()
 
@@ -100,11 +97,11 @@ class TestRichards(object):
         ns.calculateSolution(so.name)
         self.aux_names.append(so.name)
         # COMPARE VS SAVED FILES #
-        actual = tables.open_file(so.name+'.h5','r')
+        actual = h5py.File(so.name+'.h5','r')
         expected_path = 'comparison_files/' + 'comparison_3D_displacement_t1.csv'
         #write comparison file
-        #np.array(actual.root.displacement_t1).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.displacement_t1).flatten(),decimal=10)
+        #np.array(actual['displacement_t1']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['displacement_t1']).flatten(),decimal=10)
 
         actual.close()
         del ns

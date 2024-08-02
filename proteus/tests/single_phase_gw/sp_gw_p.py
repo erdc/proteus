@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import proteus
 from proteus import *
 from proteus.default_p import *

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from builtins import range
 from proteus.default_so import *
 try:
     from .vortex2D import *
@@ -24,4 +22,3 @@ useOneArchive = True
 
 #tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
 tnList=[0.,1E-6]
-

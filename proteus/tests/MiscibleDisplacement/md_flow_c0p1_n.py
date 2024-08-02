@@ -57,4 +57,3 @@ conservativeFlux =  {0:cfluxtag}
 #need this for sun-wheeler-gs
 if cfluxtag == 'sun-gs-rt0':
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-

@@ -1,8 +1,5 @@
-from __future__ import print_function
 #import sys
 #from proteus import Comm
-from future import standard_library
-standard_library.install_aliases()
 import os
 import sys
 import socket

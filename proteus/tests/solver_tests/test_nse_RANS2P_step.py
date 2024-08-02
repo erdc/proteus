@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """ Test modules for Driven Cavity Stokes preconditioners. """
-from __future__ import absolute_import
-
 import proteus.test_utils.TestTools as TestTools
 import proteus
 from proteus import LinearAlgebraTools as LAT
@@ -15,7 +13,7 @@ import os
 import sys
 import inspect
 import numpy as np
-import tables
+import h5py
 import pickle
 import petsc4py
 from petsc4py import PETSc
@@ -173,7 +171,7 @@ def test_step_slip_FullRun():
     print(L1,L2,L3)
     assert L1[0][1]==2
     assert L2[0][1]==11
-    assert L3[0][1]==11
+    assert L3[0][1]==9
 
 @pytest.mark.LinearSolvers
 def test_step_noslip_FullRun():

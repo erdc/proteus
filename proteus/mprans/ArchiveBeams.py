@@ -1,5 +1,3 @@
-from __future__ import print_function
-from builtins import range
 import numpy as np
 
 
@@ -147,4 +145,4 @@ def Archive_time_step(Beam_x,
             + '\t\t</Grid>\n'
             + '\t</Domain>\n'
             + '</Xdmf>\n')
-    f.close()
+    f.close(

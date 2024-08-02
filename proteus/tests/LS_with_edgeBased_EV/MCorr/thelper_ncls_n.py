@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import absolute_import
 from proteus import *
 from proteus.default_n import *
 from .thelper_ncls_p import *

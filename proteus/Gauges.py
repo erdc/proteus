@@ -5,12 +5,6 @@ along lines to mimic gauges in lab and field experiments.
    :parts: 1
 
 """
-from __future__ import print_function
-from __future__ import division
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import os
 from collections import defaultdict, OrderedDict
 from itertools import product
@@ -603,7 +597,7 @@ class Gauges(AV_base):
         endpoints = np.asarray(endpoints, np.double)
         length = norm(endpoints[1] - endpoints[0])
 
-        length_segments = [(old_div(norm(i[0]-endpoints[0]),length), old_div(norm(i[1]-endpoints[0]),length), i) for i in intersections]
+        length_segments = [(norm(i[0]-endpoints[0])/length, norm(i[1]-endpoints[0])/length, i) for i in intersections]
 
         segments = self.pruneDuplicateSegments(endpoints, length_segments)
         return segments
@@ -649,7 +643,7 @@ class Gauges(AV_base):
                     # only assign coefficients for locally owned points
                     if field in point_data:
                         pointID = point_data[field]
-                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, old_div(segmentLength,2), addv=True)
+                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, segmentLength/2, addv=True)
 
         for m in self.lineIntegralGaugeMats:
             m.assemble()

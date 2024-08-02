@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import object
-from past.utils import old_div
 from proteus.mprans import (SW2DCV, GN_SW2DCV)
 from proteus.Domain import RectangularDomain
 import numpy as np
@@ -41,8 +38,8 @@ domain = RectangularDomain(L=L, x=[-10.0, 0, 0])
 # CREATE REFINEMENT #
 nnx0 = 6
 nnx = (nnx0 - 1) * (2**refinement) + 1
-nny = old_div((nnx - 1), 10) + 1
-he = old_div(L[0], float(nnx - 1))
+nny = (nnx - 1)//10 + 1
+he = L[0]/float(nnx-1)
 triangleOptions = "pAq30Dena%f" % (0.5 * he**2,)
 
 ###############################
@@ -59,13 +56,13 @@ x0 = 0  # wave is centered at x = 0
 #   Functions defined here    #
 ###############################
 def solitary_wave(x, t):
-    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+    sechSqd = 1.0/np.cosh(r*(x-x0))**2
     return h0 + a * h0 * sechSqd
 
 
 def bathymetry_function(X):
     x = X[0]
-    sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+    sechSqd = 1.0/np.cosh(r*(x-x0))**2
     waterh = h0 * (1.0 + a * sechSqd)
     z = -1.0/2.0 * (waterh - h0)
     return z
@@ -107,7 +104,7 @@ class heta_at_t0(object):
 class hw_at_t0(object):
     def uOfXT(self, X, t):
         x = X[0]
-        sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+        sechSqd = 1.0/np.cosh(r*(x-x0))**2
         hw = -a * h0 * q * r * (2.0 + 3.0*(-0.50)) * sechSqd * np.tanh(r * x)
         return hw
 
@@ -115,7 +112,7 @@ class hw_at_t0(object):
 class hbeta_at_t0(object):
     def uOfXT(self, X, t):
         x = X[0]
-        sechSqd = old_div(1.0, np.cosh(r*(x-x0))**2)
+        sechSqd = 1.0/np.cosh(r*(x-x0))**2
         hbeta = -2.0 * a * h0 * r * q * (-1.0/2.0) * sechSqd * np.tanh(r * x)
         return hbeta
 

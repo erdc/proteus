@@ -1,6 +1,3 @@
-from __future__ import division
-from builtins import range
-from past.utils import old_div
 import proteus
 from .cRichards import *
 import numpy as np
@@ -62,7 +59,7 @@ class RKEV(TimeIntegration.SSP):
         comm = Comm.get()
         maxCFL = 1.0e-6
         maxCFL = max(maxCFL, comm.globalMax(self.cfl.max()))
-        self.dt = old_div(self.runCFL, maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
@@ -104,7 +101,7 @@ class RKEV(TimeIntegration.SSP):
                 logEvent("Second stage of SSP33 method", level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage] *= old_div(1., 4.)
+                    self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3. / 4. * self.u_dof_last[ci]
                     # Update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
@@ -112,7 +109,7 @@ class RKEV(TimeIntegration.SSP):
                 logEvent("Third stage of SSP33 method", level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage] *= old_div(2.0, 3.0)
+                    self.u_dof_stage[ci][self.lstage] *= 2.0/3.0
                     self.u_dof_stage[ci][self.lstage] += 1.0 / 3.0 * self.u_dof_last[ci]
                     # update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_last[ci]
@@ -129,7 +126,7 @@ class RKEV(TimeIntegration.SSP):
                 logEvent("Second stage of SSP22 method", level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof
-                    self.u_dof_stage[ci][self.lstage][:] *= old_div(1., 2.)
+                    self.u_dof_stage[ci][self.lstage][:] *= 1./2.
                     self.u_dof_stage[ci][self.lstage][:] += 1. / 2. * self.u_dof_last[ci]
                     # update u_dof_old
                     self.transport.u_dof_old[:] = self.u_dof_last[ci]
@@ -650,7 +647,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.edge_based_cfl = np.zeros(self.u[0].dof.shape)+100
         #mesh
         #self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.q[('dV_u', 0)] = (old_div(1.0, self.mesh.nElements_global)) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('dV_u', 0)] = (1.0/self.mesh.nElements_global) * np.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.q[('u',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('grad(u)',0)] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -801,14 +798,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN,k] = old_div(self.numericalFlux.penalty_constant,(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN,k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         #penalty term
         #cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE,k] = old_div(self.numericalFlux.penalty_constant,self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
@@ -854,7 +851,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')        
-        self.forceStrongConditions=True
+        self.forceStrongConditions=False
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -1197,8 +1194,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #     self.ebqe[('diffusiveFlux_bc',0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         #     self.ebqe[('diffusiveFlux_bc_flag',0)][t[0],t[1]] = 1
         #self.shockCapturing.lag=True
+        self.bc_mask = np.ones_like(self.u[0].dof)
         if self.forceStrongConditions:
-            self.bc_mask = np.ones_like(self.u[0].dof)
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in list(self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.items()):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)

@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import division
-from past.utils import old_div
 from proteus import Domain
 from proteus import Norms
 from proteus import Profiling
@@ -89,13 +86,13 @@ if nd==2:
 else:
     if ct.test_case==3:
         nn=nnx=nny=int((2**refinement)*refinementMultiplier+1)
-        nnz=int(old_div((nnx-1),2)+1)
+        nnz=int((nnx-1)//2+1)
         L=[1.0,1.0,0.5]
     else:
         nn=nnx=nny=nnz=int((2**refinement)*refinementMultiplier+1)
         L=[1.0,1.0,1.0]
 # definition of he
-he=old_div(1.0,(nnx-1.0))
+he=1.0/(nnx-1.0)
 clsvof_nl_atol_res = max(1.0e-10, 0.01 * he ** 2)
 
 unstructured=unstructured #True for tetgen, false for tet or hex from rectangular grid

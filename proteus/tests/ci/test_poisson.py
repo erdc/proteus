@@ -9,7 +9,6 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-from builtins import object
 from proteus.iproteus import *
 from proteus.defaults import load_physics, load_numerics, System_base
 from petsc4py import PETSc

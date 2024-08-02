@@ -2,8 +2,6 @@
 """
 Test module for Elliptic Re-distancing
 """
-from builtins import range
-from builtins import object
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -11,7 +9,7 @@ Profiling.logLevel=7
 Profiling.verbose=True
 import os
 import numpy as np
-import tables
+import h5py
 import pytest
 from petsc4py import PETSc
 from . import (vortex2D, vortex2D_so,
@@ -68,8 +66,8 @@ class TestEllipticRedistancing(object):
                                                sList,
                                                opts)
         ns.calculateSolution('rdls')
-        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_0.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t1),0.13600213609175285,atol=1e-10)
+        actual = h5py.File('vortex_c0p1_level_1_ELLIPTIC_REDIST_0.h5','r')
+        assert np.isclose(np.amax(actual['u_t1']),0.13600213609175285,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_1(self):
@@ -106,8 +104,8 @@ class TestEllipticRedistancing(object):
                                                sList,
                                                opts)
         ns.calculateSolution('rdls')
-        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_1.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t1),0.13084321505201912,atol=1e-10)
+        actual = h5py.File('vortex_c0p1_level_1_ELLIPTIC_REDIST_1.h5','r')
+        assert np.isclose(np.amax(actual['u_t1']),0.13084321505201912,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_2(self):
@@ -146,9 +144,9 @@ class TestEllipticRedistancing(object):
                                                sList,
                                                opts)
         ns.calculateSolution('rdls')
-        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
-        print(np.amax(actual.root.u_t1))
-        assert np.isclose(np.amax(actual.root.u_t1),0.1060107277952287,atol=1e-10)
+        actual = h5py.File('vortex_c0p1_level_1_ELLIPTIC_REDIST_2.h5','r')
+        print(np.amax(actual['u_t1']))
+        assert np.isclose(np.amax(actual['u_t1']),0.1060107277952287,atol=1e-10)
         actual.close()
 
     def test_ELLIPTIC_REDISTANCING_3(self):
@@ -185,6 +183,6 @@ class TestEllipticRedistancing(object):
                                                sList,
                                                opts)
         ns.calculateSolution('rdls')
-        actual = tables.open_file('vortex_c0p1_level_1_ELLIPTIC_REDIST_3.h5','r')
-        assert np.isclose(np.amax(actual.root.u_t1),0.10593090830115062,atol=1e-10)
+        actual = h5py.File('vortex_c0p1_level_1_ELLIPTIC_REDIST_3.h5','r')
+        assert np.isclose(np.amax(actual['u_t1']),0.10593090830115062,atol=1e-10)
         actual.close()

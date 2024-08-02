@@ -7,7 +7,11 @@ from proteus import (FemTools,
                      LinearSolvers,
                      StepControl,
                      LinearAlgebraTools)
-from . import moveMesh_p as physics
+try:
+    from . import moveMesh_p as physics
+except:
+    import moveMesh_p as physics
+
 from proteus import Context
 from proteus.mprans import AddedMass
 
@@ -77,4 +81,3 @@ maxNonLinearIts = 1
 maxLineSearches = 0
 periodicDirichletCOnditions = None
 conservativeFlux = None
-

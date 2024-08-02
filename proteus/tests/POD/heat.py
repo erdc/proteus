@@ -3,7 +3,6 @@
 Fine-scale heat equation solver
 The equation is du/du - Laplace u + u + f(x,y,z,t) = 0
 """
-from __future__ import print_function
 from heat_init import *
 
 physics.name = "heat_3d"

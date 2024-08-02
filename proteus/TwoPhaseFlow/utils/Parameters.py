@@ -1,6 +1,3 @@
-from __future__ import division
-from past.utils import old_div
-from builtins import object
 import numpy as np
 from petsc4py import PETSc
 from proteus.Profiling import logEvent

@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import *
 from .redist_p import *
 from .multiphase import *

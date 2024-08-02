@@ -2,8 +2,8 @@
 """
 Test module for TwoPhaseFlow
 """
+import h5py
 import pytest
-import tables
 import numpy as np
 import proteus.defaults
 from proteus import Context
@@ -35,19 +35,19 @@ class TestTwoPhaseFlow(object):
                 pass
 
     def compare_vs_saved_files(self,name,write=False):
-        actual = tables.open_file(name+'.h5','r')
+        actual = h5py.File(name+'.h5','r')
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_phi_t2.csv'
         #write comparison file
         if(write):
-            np.array(actual.root.phi_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.phi_t2).flatten(),decimal=6)
+            np.array(actual['phi_t2']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['phi_t2'][:]).flatten(),decimal=6)
 
         expected_path = 'comparison_files/' + 'comparison_' + name + '_velocity_t2.csv'
         #write comparison file
         if(write):
-            np.array(actual.root.velocity_t2).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
-        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual.root.velocity_t2).flatten(),decimal=6)
+            np.array(actual['velocity_t2']).tofile(os.path.join(self._scriptdir, expected_path),sep=",")
+        np.testing.assert_almost_equal(np.fromfile(os.path.join(self._scriptdir, expected_path),sep=","),np.array(actual['velocity_t2']).flatten(),decimal=6)
 
         actual.close()
 

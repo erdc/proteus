@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus import *
 try:
     from .twp_navier_stokes_p import *

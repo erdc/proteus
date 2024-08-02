@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import proteus
 from proteus import FemTools, Archiver
 from .cElastoPlastic import *
@@ -144,8 +139,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for it in range(self.materialProperties.shape[0]):
                 #cek hack for veg on levees
                 if it != 7:
-                    self.materialProperties[it,5] = atan(old_div(tan(self.materialProperties_default[it,5]),self.SRF))#phi_mc
-                    self.materialProperties[it,6] = old_div(self.materialProperties_default[it,6],self.SRF)#c_mc
+                    self.materialProperties[it,5] = atan(tan(self.materialProperties_default[it,5])/self.SRF)#phi_mc
+                    self.materialProperties[it,6] = self.materialProperties_default[it,6]/self.SRF#c_mc
             self.copyInstructions = {'reset_uList':True}
         else:
             print("Completed========================SRF = "+repr(self.SRF)+"===============================")
@@ -153,8 +148,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.SRF += 0.05
             for it in range(self.materialProperties.shape[0]):
                 if it != 7:
-                    self.materialProperties[it,5] = atan(old_div(tan(self.materialProperties_default[it,5]),self.SRF))#phi_mc
-                    self.materialProperties[it,6] = old_div(self.materialProperties_default[it,6],self.SRF)#c_mc
+                    self.materialProperties[it,5] = atan(tan(self.materialProperties_default[it,5])/self.SRF)#phi_mc
+                    self.materialProperties[it,6] = self.materialProperties_default[it,6]/self.SRF#c_mc
             self.copyInstructions = None
         print("=========Not Updating Mesh=================")
         #self.mesh.nodeArray[:,0]+=self.model.u[0].dof
@@ -611,14 +606,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN,k] = old_div(self.numericalFlux.penalty_constant,(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN,k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         #penalty term
         #cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE,k] = old_div(self.numericalFlux.penalty_constant,self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default

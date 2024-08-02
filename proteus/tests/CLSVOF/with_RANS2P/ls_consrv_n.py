@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from proteus.default_n import *
 from proteus import (StepControl,
                      TimeIntegration,

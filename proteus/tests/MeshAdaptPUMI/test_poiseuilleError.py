@@ -1,4 +1,3 @@
-from builtins import range
 import numpy
 from proteus import MeshTools
 from proteus import cmeshTools

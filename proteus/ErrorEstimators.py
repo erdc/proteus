@@ -4,9 +4,6 @@ Classes for a posteriori error estimation
 .. inheritance-diagram:: proteus.ErrorEstimators
    :parts: 1
 """
-from __future__ import absolute_import
-from builtins import range
-from builtins import object
 from .Profiling import logEvent
 
 class HierarchicalMeshEstimator(object):

@@ -1,13 +1,10 @@
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
 from math import *
 import proteus.MeshTools
 from proteus import Domain
 from proteus.default_n import *
 from proteus import Profiling
 from proteus.MeshAdaptPUMI import MeshAdapt
-from tables import *
+from h5py import *
 from proteus import Comm
 import os
 comm = Comm.init()
@@ -73,7 +70,7 @@ elif spaceOrder == 2:
 
 # Domain and mesh
 L = (0.1,0.2,0.05)
-he = old_div(L[0],float(4*Refinement-1))
+he = L[0]/float(4*Refinement-1)
 #he*=0.5
 #he = L[0]/40.0
 #he*=0.5#128
@@ -143,7 +140,7 @@ T=1.0
 dt_fixed = 0.2
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
-nDTout = int(round(old_div(T,dt_fixed)))
+nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
 ns_forceStrongDirichlet = True#False
@@ -224,7 +221,7 @@ g = [0.0,0.0,0]
 # Initial condition
 waterLine_x = 2*L[0]
 waterLine_y = 2*L[1]
-waterLine_z = old_div(L[2],2.0)
+waterLine_z = L[2]/2.0
 
 def signedDistance(x):
     phi_x = x[0]-waterLine_x

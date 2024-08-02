@@ -4,10 +4,6 @@ A class hierarchy for numerical flux (numerical trace) computations
 .. inheritance-diagram:: proteus.NumericalFlux
    :parts: 1
 """
-from __future__ import absolute_import
-from builtins import zip
-from builtins import range
-from builtins import object
 from . import cfemIntegrals,cnumericalFlux
 import numpy
 from .Profiling import logEvent,memory
