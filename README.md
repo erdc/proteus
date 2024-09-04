@@ -29,6 +29,47 @@ make test
 
 See https://github.com/erdc/proteus/wiki/How-to-Build-Proteus for more information on building the entire stack.
 
+# HPC Installation
+
+For installation on high performance environments you may want to install Proteus's dependencies from source as well. We recommend using the PETSc build system to install most of the dependencies. The following is general outline:
+
+Create a basic python modifiable python environment:
+
+```
+conda env create -f petsc-dev.yml
+conda activate petsc-dev
+```
+
+or
+
+```
+python -m venv petsc-dev
+pip install setuptools make cmake cython swig pybind11 numpy
+```
+
+Next, build petsc from source
+
+```
+bash scripts/petsc_config_linux_conda_seq.sh #follow instructions to build and install 
+```
+
+Next, build additional C++ dependencies and install into environment prefix
+
+https://github.com/projectchrono/chrono
+https://github.com/scorec/core
+https://github.com/xtensor-stack/xtl
+https://github.com/xtensor-stack/xtensor
+https://github.com/xtensor-stack/xtensor-python
+
+Finally, locally build and install remaining python dependencies into environment
+
+```
+HDF5_MPI=ON HDF5_DIR=${CONDA_PREFIX} CC=mpicc CXX=mpicxx pip install -v h5py --no-build-isolation --no-binary=h5py
+CC=mpicc CXX=mpicxx MPI_DIR=$MPI_ROOT pip install -v mpi4py==3.1.6 --no-build-isolation --no-binary=mpi4py 
+PETSC_DIR=$CONDA_PREFIX PETSC_ARCH="" pip install -v petsc/src/bindings/petsc4py --no-build-isolation --no-binary=petsc4py
+CC=mpicc CXX=mpicxx pip install -v . --no-build-isolation --no-binary=proteus
+```
+
 # Developer Information
 
 The source code, wiki, and issue tracker are on GitHub at

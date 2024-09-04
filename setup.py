@@ -114,7 +114,7 @@ EXTENSIONS_TO_BUILD = [
               PROTEUS_SCOREC_INCLUDE_DIRS,
               library_dirs=PROTEUS_SCOREC_LIB_DIRS,
               libraries=PROTEUS_SCOREC_LIBS,
-              extra_compile_args=['-std=c++20']+PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
+              extra_compile_args=['-std=c++17']+PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
               extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
     Extension(
         'mprans.cArgumentsDict',
@@ -603,7 +603,7 @@ EXTENSIONS_TO_BUILD = [
               language="c++",
               library_dirs=PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
               libraries=['hdf5','stdc++','m']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
-              extra_compile_args=['-std=c++20']+PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
+              extra_compile_args=['-std=c++17']+PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS+PROTEUS_OPT,
               extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
     ),
     # Extension("flcbdfWrappers",["proteus/flcbdfWrappers.pyx"],

@@ -1,0 +1,13 @@
+name: petsc-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pip
+  - setuptools
+  - make
+  - cmake
+  - cython
+  - swig
+  - numpy
+  - pybind11
