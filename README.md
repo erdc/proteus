@@ -33,7 +33,7 @@ See https://github.com/erdc/proteus/wiki/How-to-Build-Proteus for more informati
 
 For installation on high performance environments you may want to install Proteus's dependencies from source as well. We recommend using the PETSc build system to install most of the dependencies. The following is general outline:
 
-Create a basic python modifiable python environment:
+Create a basic python environment you can install into:
 
 ```
 conda env create -f petsc-dev.yml
@@ -50,7 +50,7 @@ pip install setuptools make cmake cython swig pybind11 numpy
 Next, build petsc from source
 
 ```
-bash scripts/petsc_config_linux_conda_seq.sh #follow instructions to build and install 
+bash scripts/petsc_config_linux_conda_seq.sh #see https://petsc.org/release/install/
 ```
 
 Next, build additional C++ dependencies and install into environment prefix
@@ -64,10 +64,10 @@ https://github.com/xtensor-stack/xtensor-python
 Finally, locally build and install remaining python dependencies into environment
 
 ```
-CC=mpicc CXX=mpicxx MPI_DIR=$MPI_ROOT pip install -v mpi4py==3.1.6 --no-build-isolation --no-binary=mpi4py
-PETSC_DIR=$CONDA_PREFIX PETSC_ARCH="" pip install -v ../petsc/src/binding/petsc4py --no-build-isolation --no-binary=petsc4py
-HDF5_MPI=ON HDF5_DIR=${CONDA_PREFIX} CC=mpicc CXX=mpicxx pip install -v h5py --no-build-isolation --no-binary=h5py
-CC=mpicc CXX=mpicxx pip install -v . --no-build-isolation --no-binary=proteus
+CC=mpicc CXX=mpicxx MPI_DIR=$MPI_ROOT pip install -v mpi4py==3.1.6 --no-build-isolation --no-binary=:all:
+PETSC_DIR=$CONDA_PREFIX PETSC_ARCH="" pip install -v ../petsc/src/binding/petsc4py --no-build-isolation --no-binary=:all:
+HDF5_MPI=ON HDF5_DIR=${CONDA_PREFIX} CC=mpicc CXX=mpicxx pip install -v h5py --no-build-isolation --no-binary=:all: #note h5py depends on mpi4py for this config
+CC=mpicc CXX=mpicxx pip install -v . --no-build-isolation --no-binary=:all:
 ```
 
 # Developer Information
