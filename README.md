@@ -64,9 +64,9 @@ https://github.com/xtensor-stack/xtensor-python
 Finally, locally build and install remaining python dependencies into environment
 
 ```
+CC=mpicc CXX=mpicxx MPI_DIR=$MPI_ROOT pip install -v mpi4py==3.1.6 --no-build-isolation --no-binary=mpi4py
+PETSC_DIR=$CONDA_PREFIX PETSC_ARCH="" pip install -v ../petsc/src/binding/petsc4py --no-build-isolation --no-binary=petsc4py
 HDF5_MPI=ON HDF5_DIR=${CONDA_PREFIX} CC=mpicc CXX=mpicxx pip install -v h5py --no-build-isolation --no-binary=h5py
-CC=mpicc CXX=mpicxx MPI_DIR=$MPI_ROOT pip install -v mpi4py==3.1.6 --no-build-isolation --no-binary=mpi4py 
-PETSC_DIR=$CONDA_PREFIX PETSC_ARCH="" pip install -v petsc/src/bindings/petsc4py --no-build-isolation --no-binary=petsc4py
 CC=mpicc CXX=mpicxx pip install -v . --no-build-isolation --no-binary=proteus
 ```
 

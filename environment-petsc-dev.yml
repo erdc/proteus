@@ -11,3 +11,5 @@ dependencies:
   - swig
   - numpy
   - pybind11
+  - openblas
+  - tetgen
