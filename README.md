@@ -70,6 +70,8 @@ HDF5_MPI=ON HDF5_DIR=${CONDA_PREFIX} CC=mpicc CXX=mpicxx pip install -v h5py --n
 CC=mpicc CXX=mpicxx pip install -v . --no-build-isolation --no-binary=:all:
 ```
 
+Some optional packages can be installed with pip: py2gmsh, memory_profiler, scipy, pytest.
+
 # Developer Information
 
 The source code, wiki, and issue tracker are on GitHub at
