@@ -24,11 +24,14 @@ jobs:
       - hash -r
       - conda config --set always_yes yes --set changeps1 no
       - mamba init
-      - mamba update -q conda mamba
+      - mamba update -q conda
+      - mamba update -q mamba
       - mamba info -a
       - mamba env create -f environment-dev.yml
       - mamba activate proteus-dev
-      - PROTEUS_OPT="-g0 -O1" pip install -v . --no-build-isolation --no-binary=:all:
+      - mamba install pip
+      - which pip
+      - CC=mpicc CXX=mpicxx PROTEUS_OPT="-g0 -O1" pip install -v . --no-build-isolation --no-binary=:all:
     script:
       - export MPLBACKEND="AGG"
       - py.test -v --forked --import-mode=importlib test --ignore test/MeshAdaptPUMI --ignore test/test_mbd_chrono.py --ignore test/AddedMass
