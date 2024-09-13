@@ -31,7 +31,7 @@ jobs:
       - mamba activate proteus-dev
       - mamba install pip
       - which pip
-      - CC=mpicc CXX=mpicxx PROTEUS_OPT="-g0 -O1" pip install -v . --no-build-isolation --no-binary=:all:
+      - pip install . --no-build-isolation
     script:
       - export MPLBACKEND="AGG"
       - py.test -v --forked --import-mode=importlib test --ignore test/MeshAdaptPUMI --ignore test/test_mbd_chrono.py --ignore test/AddedMass
