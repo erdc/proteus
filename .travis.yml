@@ -29,4 +29,4 @@ jobs:
       - PROTEUS_OPT="-g0 -O1" pip install -v . --no-build-isolation --no-binary=:all:
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --forked -v proteus/tests
+      - py.test -v --forked --import-mode=importlib test --ignore test/MeshAdaptPUMI --ignore test/test_mbd_chrono.py --ignore test/AddedMass

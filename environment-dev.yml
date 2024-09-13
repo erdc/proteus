@@ -30,6 +30,7 @@ dependencies:
   - pytest =8.3.3
   - pytest-cov =5.0.0
   - pytest-xdist =3.6.1
+  - pytest-forked
   - scipy =1.14.1
   - tetgen =1.6.0
   - ncurses =6.5
