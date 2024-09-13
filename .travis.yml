@@ -21,8 +21,8 @@ jobs:
       - bash miniforge3.sh -b -p $HOME/miniforge3
       - source "$HOME/miniforge3/etc/profile.d/conda.sh"
       - hash -r
-      - mamba config --set always_yes yes --set changeps1 no
-      - mamba update -q mamba
+      - conda config --set always_yes yes --set changeps1 no
+      - mamba update -q conda mamba
       - mamba info -a
       - mamba env create -f environment-dev.yml
       - mamba activate proteus-dev
