@@ -34,4 +34,6 @@ jobs:
       - pip install . --no-build-isolation
     script:
       - export MPLBACKEND="AGG"
-      - py.test -v --forked --import-mode=importlib test --ignore test/MeshAdaptPUMI --ignore test/test_mbd_chrono.py --ignore test/AddedMass
+      - mkdir test_output
+      - cd test_output
+      - py.test -v --forked --import-mode=importlib test --ignore ../test/MeshAdaptPUMI --ignore ../test/test_mbd_chrono.py --ignore ../test/AddedMass
