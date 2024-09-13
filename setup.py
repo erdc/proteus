@@ -296,7 +296,6 @@ EXTENSIONS_TO_BUILD = [
                             PROTEUS_CHRONO_INCLUDE_DIR+'/chrono/collision/bullet',],
               library_dirs=[PROTEUS_CHRONO_LIB_DIR],
               libraries=['ChronoEngine',
-                         'omp',
                          'stdc++',
                          'm'],
               extra_compile_args=["-std=c++17"]+PROTEUS_CHRONO_CXX_FLAGS+PROTEUS_OPT,
