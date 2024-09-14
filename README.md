@@ -9,25 +9,16 @@ rapidly developing computer models and numerical methods.
 
 
 ```bash
-conda install proteus -c conda-forge
+mamba install proteus -c conda-forge
 ```
 
 For a development installation, you want to install Proteus's dependencies and compile Proteus from source:
 
 ```bash
-conda env create -f environment-dev.yml
-conda activate proteus-dev
-make develop-conda # or pip install -v -e .
+mamba env create -f environment-dev.yml #environment-dev-up.yml to try unpinned dependencies
+mamba activate proteus-dev
+pip install -v -e .
 ```
-
-You can also build proteus and dependencies from source (without conda) with 
-
-```bash
-make develop
-make test
-```
-
-See https://github.com/erdc/proteus/wiki/How-to-Build-Proteus for more information on building the entire stack.
 
 # HPC Installation
 
@@ -36,8 +27,8 @@ For installation on high performance environments you may want to install Proteu
 Create a basic python environment you can install into:
 
 ```
-conda env create -f petsc-dev.yml
-conda activate petsc-dev
+mamba env create -f petsc-dev.yml
+mamba activate petsc-dev
 ```
 
 or
@@ -53,10 +44,10 @@ Next, build petsc from source
 bash scripts/petsc_config_linux_conda_seq.sh #see https://petsc.org/release/install/
 ```
 
-Next, build additional C++ dependencies and install into environment prefix
+Next, build additional C++ dependencies and install into environment prefix (e.g $CONDA_PREFIX or $VIRTUAL_ENV)
 
-https://github.com/projectchrono/chrono
-https://github.com/scorec/core
+https://github.com/projectchrono/chrono #>=9.0.1, with python bindings
+https://github.com/scorec/core #>=2.2.8, shared, python bindinds not needed
 https://github.com/xtensor-stack/xtl
 https://github.com/xtensor-stack/xtensor
 https://github.com/xtensor-stack/xtensor-python
@@ -70,9 +61,12 @@ HDF5_MPI=ON HDF5_DIR=${CONDA_PREFIX} CC=mpicc CXX=mpicxx pip install -v h5py --n
 CC=mpicc CXX=mpicxx pip install -v . --no-build-isolation --no-binary=:all:
 ```
 
-Some optional packages can be installed with pip: py2gmsh, memory_profiler, scipy, pytest.
+Some optional packages can be installed with pip/mamba: py2gmsh, memory_profiler, scipy, pytest.
+
+See https://github.com/erdc/proteus/wiki/How-to-Build-Proteus for old information on building the entire stack.
 
 # Developer Information
 
 The source code, wiki, and issue tracker are on GitHub at
+
 https://github.com/erdc/proteus.

@@ -434,8 +434,8 @@ class KSP_petsc4py(LinearSolver):
     def prepare(self,
                 b=None,
                 newton_its=None):
-        #pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
-        #pc_setup_stage.push()
+        pc_setup_stage = p4pyPETSc.Log.Stage('pc_setup_stage')
+        pc_setup_stage.push()
         memory()
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
@@ -467,11 +467,11 @@ class KSP_petsc4py(LinearSolver):
         logEvent(memory("ksp.setUp ","KSP_petsc4py"))
         self.ksp.pc.setUp()
         logEvent(memory("pc.setUp ","KSP_petsc4py"))
-        #pc_setup_stage.pop()
+        pc_setup_stage.pop()
 
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
-        #solve_stage = p4pyPETSc.Log.Stage('lin_solve')
-        #solve_stage.push()
+        solve_stage = p4pyPETSc.Log.Stage('lin_solve')
+        solve_stage.push()
         memory()
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
@@ -492,7 +492,7 @@ class KSP_petsc4py(LinearSolver):
         if self.matcontext is not None:
             self.matcontext.par_b = par_b
 
-        #self.null_space.apply_ns(par_b)
+        self.null_space.apply_ns(par_b)
         logEvent(memory("ksp.solve init ","KSP_petsc4py"))
         self.ksp.solve(par_b,par_u)
         logEvent(memory("ksp.solve ","KSP_petsc4py"))
@@ -508,7 +508,7 @@ class KSP_petsc4py(LinearSolver):
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
-        #solve_stage.pop()
+        solve_stage.pop()
 
     def converged(self,r):
         """

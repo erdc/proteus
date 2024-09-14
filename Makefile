@@ -10,9 +10,9 @@ N ?= 1
 PROTEUS ?= $(shell python3 -c "import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_BUILD_CMD = python3 setup.py build_ext
-PROTEUS_INSTALL_CMD = pip3 install --no-deps --no-build-isolation --no-binary=proteus -v . #python3 setup.py install
+PROTEUS_INSTALL_CMD = pip3 install --no-deps --no-build-isolation --no-binary=:all: -v . #python3 setup.py install
 PROTEUS_DEVELOP_BUILD_CMD = python3 setup.py build_ext -i
-PROTEUS_DEVELOP_CMD = pip3 install --no-deps --no-build-isolation --no-binary=proteus -v -e . 
+PROTEUS_DEVELOP_CMD = pip3 install --no-deps --no-build-isolation --no-binary=:all: -v -e . 
 #
 ifeq (${N}, 1)
 PROTEUS_BUILD_CMD = python3 -c "print('Letting install handle build_ext')"
@@ -197,7 +197,7 @@ develop: ${PROTEUS_PREFIX}/bin/proteus_env.sh stack/default.yaml ${PROTEUS_PREFI
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} pip3 install py2gmsh pytest pytest-xdist pytest-cov tables future hypothesis
+	${PROTEUS_ENV} pip3 install py2gmsh pytest pytest-xdist pytest-cov pytest-forked hypothesis
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_BUILD_CMD}
 	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
@@ -221,7 +221,7 @@ develop-conda:
 	@echo "************************************"
 	$(call show_info)
 	${PROTEUS_DEVELOP_CMD}
-	pip3 install pytest-xdist-forked
+	pip3 install pytest-forked
 	@echo "************************"
 	@echo "Development installation complete"
 	@echo "************************"

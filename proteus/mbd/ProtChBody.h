@@ -15,7 +15,7 @@ using namespace chrono;
 using namespace std;
 
 class cppSystem {
- public:
+public:
   std::shared_ptr<ChSystemSMC> systemSMC;
   std::shared_ptr<ChSystem> system;
   double chrono_dt;
@@ -30,7 +30,7 @@ class cppSystem {
 
 
 class cppRigidBody {
- public:
+public:
   ChVector3d free_x;
   ChVector3d free_r;
   ChVector3d pos;
@@ -133,29 +133,29 @@ cppSystem::cppSystem()
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
   if (tstype == "HHT") {
     system->SetTimestepperType(ChTimestepper::Type::HHT);
-      auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
-      mystepper->SetAlpha(-0.2);
-      mystepper->SetMaxItersSuccess(10);
-      mystepper->SetAbsTolerances(1e-6);
-      //mystepper->SetMode(ChTimestepperHHT::POSITION);
-      //mystepper->SetScaling(false);
-      mystepper->SetVerbose(verbose);
-      mystepper->SetModifiedNewton(false);
-    }
-    else if (tstype == "Euler") {
-      system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
-    }
-    else if (tstype == "Trapezoidal") {
-      system->SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
-    }
+    auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
+    mystepper->SetAlpha(-0.2);
+    mystepper->SetMaxItersSuccess(10);
+    mystepper->SetAbsTolerances(1e-6);
+    //mystepper->SetMode(ChTimestepperHHT::POSITION);
+    //mystepper->SetScaling(false);
+    mystepper->SetVerbose(verbose);
+    mystepper->SetModifiedNewton(false);
   }
+  else if (tstype == "Euler") {
+    system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
+  }
+  else if (tstype == "Trapezoidal") {
+    system->SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
+  }
+}
 
 void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
-    double dt2 = proteus_dt/(double)n_substeps;
-   for (int i = 0; i < n_substeps; ++i) {
-     system->DoStepDynamics(dt2);
-   }
+  double dt2 = proteus_dt/(double)n_substeps;
+  for (int i = 0; i < n_substeps; ++i) {
+    system->DoStepDynamics(dt2);
+  }
 }
 
 void cppSystem::addMesh(std::shared_ptr<ChMesh> mesh) {
@@ -182,7 +182,7 @@ cppRigidBody::cppRigidBody(cppSystem* system):
 }
 
 void cppSystem::setDirectory(std::string dir) {
-    directory = dir;
+  directory = dir;
 }
 
 void cppRigidBody::updateTriangleMeshVisualisationPos() {
@@ -242,11 +242,11 @@ void cppRigidBody::calculate_init() {
     auto trimesh_coords = trimesh->GetCoordsVertices();
     for (int i = 0; i < trimesh_coords.size(); i++) {
       trimesh_pos0.push_back(ChVector3d(trimesh_coords[i].x(),
-                                              trimesh_coords[i].y(),
-                                              trimesh_coords[i].z()));
+					trimesh_coords[i].y(),
+					trimesh_coords[i].z()));
       trimesh_pos.push_back(ChVector3d(trimesh_coords[i].x(),
-                                             trimesh_coords[i].y(),
-                                             trimesh_coords[i].z()));
+				       trimesh_coords[i].y(),
+				       trimesh_coords[i].z()));
     }
   }
 }
@@ -274,24 +274,24 @@ void cppRigidBody::prestep(double* force, double* torque)
   if (free_x.y() == 0) {forceG[1] = -system->system->GetGravitationalAcceleration().y()*body->GetMass();}
   if (free_x.z() == 0) {forceG[2] = -system->system->GetGravitationalAcceleration().z()*body->GetMass();}
   body->AccumulateForce(ChVector3d(forceG[0]+force[0]*free_x.x(),
-                                          forceG[1]+force[1]*free_x.y(),
-                                          forceG[2]+force[2]*free_x.z()),
-                         pos_last,
-                         false);
+				   forceG[1]+force[1]*free_x.y(),
+				   forceG[2]+force[2]*free_x.z()),
+			pos_last,
+			false);
   body->AccumulateTorque(ChVector3d(torque[0]*free_r.x(),
-                                           torque[1]*free_r.y(),
-                                           torque[2]*free_r.z()),
-                          false);
+				    torque[1]*free_r.y(),
+				    torque[2]*free_r.z()),
+			 false);
   if (spring!=0) {
-      double spring_length = spring->GetLength();
-      if (spring_length < mooring_restlength) {
-          spring->SetDisabled(true);//SetRestLength(spring_length);
-      }
-      else {
-          spring->SetDisabled(false);//SetRestLength(mooring_restlength);
-      }
+    double spring_length = spring->GetLength();
+    if (spring_length < mooring_restlength) {
+      spring->SetDisabled(true);//SetRestLength(spring_length);
+    }
+    else {
+      spring->SetDisabled(false);//SetRestLength(mooring_restlength);
+    }
   }
-  }
+}
 
 
 

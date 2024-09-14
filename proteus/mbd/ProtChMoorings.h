@@ -84,12 +84,12 @@ private:
 
 
 class MyLoaderTriangular : public ChLoaderUdistributed {
- public:
+public:
   // Useful: a constructor that also sets ChLoadable
   ChVector3d Fa;
   ChVector3d Fb;
- MyLoaderTriangular(std::shared_ptr<ChLoadableU> mloadable):
-  ChLoaderUdistributed(mloadable) {
+  MyLoaderTriangular(std::shared_ptr<ChLoadableU> mloadable):
+    ChLoaderUdistributed(mloadable) {
     Fa = ChVector3d(0.,0.,0.);
     Fb = ChVector3d(0.,0.,0.);
   };
@@ -123,7 +123,7 @@ class MyLoaderTriangular : public ChLoaderUdistributed {
 
 
 class cppCable {
- public:
+public:
   std::shared_ptr<ChSystem> system;  // global system
   std::shared_ptr<ChMesh> mesh;  // mesh
   int nb_elems;   // number of nodes along cable
@@ -191,7 +191,7 @@ class cppCable {
 };
 
 class cppMultiSegmentedCable {
- public:
+public:
   std::shared_ptr<ChSystem> system;  // global system
   std::string beam_type;
   std::shared_ptr<ChContactMaterialSMC> mysurfmaterial;
@@ -262,7 +262,7 @@ cppMultiSegmentedCable::cppMultiSegmentedCable(std::shared_ptr<ChSystem> system,
                                                std::vector<double> rho,
                                                std::vector<double> E,
                                                std::string beam_type="CableANCF"):
-system(system),
+  system(system),
   mesh(mesh),
   length(length),
   nb_elems(nb_elems),
@@ -646,7 +646,7 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     auto axis = ref%dir; // cross product
     frame_quat.SetFromAngleAxis(ang, axis);
     node = chrono_types::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[i],
-                                                       frame_quat));
+								frame_quat));
     nodesRot.push_back(node);
     std::shared_ptr<ChVector3d> drag0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
     std::shared_ptr<ChVector3d> am0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
@@ -660,7 +660,7 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     auto axis = ref%dir; // cross product
     frame_quat.SetFromAngleAxis(ang, axis);
     node = chrono_types::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[mvecs.size()-1],
-                                                       frame_quat));
+								frame_quat));
     nodesRot.push_back(node);
     nb_nodes = nodesRot.size();
     nb_elems = nb_nodes-1;

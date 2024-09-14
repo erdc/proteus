@@ -24,14 +24,11 @@ jobs:
       - hash -r
       - conda config --set always_yes yes --set changeps1 no
       - mamba init
-      - mamba update -q conda
-      - mamba update -q mamba
+      - mamba update -q conda mamba
       - mamba info -a
       - mamba env create -f environment-dev.yml
       - mamba activate proteus-dev
-      - mamba install pip
-      - which pip
-      - pip install . --no-build-isolation
+      - pip install -v . --no-build-isolation --no-binary=":all:"
     script:
       - export MPLBACKEND="AGG"
       - mkdir test_output

@@ -3339,4 +3339,3 @@ class CombineWaves(object):
         for cond in self.waveList:
             u += cond.u(x,t)
         return u
-   
