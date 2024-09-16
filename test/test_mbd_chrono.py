@@ -6,6 +6,7 @@ import pytest
 import pychrono as chrono
 
 class TestCable(unittest.TestCase):
+    @pytest.mark.skip()
     def testHangingCableANCF(self):
         g = np.array([0.,0.,-9.81])
         system = fsi.ProtChSystem()
@@ -81,6 +82,7 @@ class TestCable(unittest.TestCase):
         npt.assert_almost_equal(mass0, mass)
 
     #CURRENTLY NOT FULLY WORKING
+    @pytest.mark.skip()
     def testHangingCableEuler(self):
         g = np.array([0.,0.,-9.81])
         system = fsi.ProtChSystem()

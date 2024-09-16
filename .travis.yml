@@ -33,4 +33,4 @@ jobs:
       - export MPLBACKEND="AGG"
       - mkdir test_output
       - cd test_output
-      - py.test -v --forked --import-mode=importlib ../test --ignore ../test/test_mbd_chrono.py --ignore ../test/AddedMass
+      - py.test -v --forked --import-mode=importlib ../test
