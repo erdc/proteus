@@ -1,4 +1,4 @@
-name: proteus-dev-up-240321
+name: proteus-dev-up-240912
 channels:
   - conda-forge
   - defaults
@@ -8,7 +8,7 @@ dependencies:
   - make
   - setuptools
   - cython
-  - daetk
+  - pybind11
   - hdf5 =*=*mpich*
   - h5py =*=*mpich*
   - metis
@@ -20,15 +20,14 @@ dependencies:
   - parmetis
   - petsc4py
   - petsc
-  - scorec
   - superlu
   - superlu_dist
+  - scorec >=2.2.8
   - triangle
-  - pychrono
+  - pychrono >=9.0.1
   - gmsh
   - matplotlib
   - mpi4py
-  - pytables
   - pytest
   - pytest-cov
   - pytest-xdist
@@ -36,18 +35,12 @@ dependencies:
   - tetgen
   - ncurses
   - python
-  - future
   - ipyparallel
-  - pillow
   - xtensor-python
   - git-lfs
   - eigen
   - zoltan
   - hypre
-  - mumps-mpi
-  - numexpr
-  - ptscotch
-  - scalapack
   - tbb
   - zipp
   - parso
@@ -55,5 +48,5 @@ dependencies:
   - ipython
   - decorator
   - cffi
-  - netcdf4
   - jupyterlab
+  - openmp

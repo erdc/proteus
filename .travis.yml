@@ -17,16 +17,20 @@ jobs:
     install:
       - git lfs pull
       - sudo apt-get update
-      - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-      - bash miniconda.sh -b -p $HOME/miniconda
-      - source "$HOME/miniconda/etc/profile.d/conda.sh"
+      - wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O miniforge3.sh;
+      - bash miniforge3.sh -b -p $HOME/miniforge3
+      - source "$HOME/miniforge3/etc/profile.d/conda.sh"
+      - source "$HOME/miniforge3/etc/profile.d/mamba.sh"
       - hash -r
       - conda config --set always_yes yes --set changeps1 no
-      - conda update -q conda
-      - conda info -a
-      - conda env create -f environment-dev.yml
-      - conda activate proteus-dev
-      - PROTEUS_OPT="-g0 -O1" N=2 make develop-conda
+      - mamba init
+      - mamba update -q conda mamba
+      - mamba info -a
+      - mamba env create -f environment-dev.yml
+      - mamba activate proteus-dev
+      - pip install -v . --no-build-isolation --no-binary=":all:"
     script:
       - export MPLBACKEND="AGG"
-      - py.test -n 1 --forked -v proteus/tests --ignore proteus/tests/POD
+      - mkdir test_output
+      - cd test_output
+      - py.test -v --forked --import-mode=importlib ../test

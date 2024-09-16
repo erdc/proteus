@@ -253,7 +253,7 @@ namespace proteus
             }//i
           //
           //save momentum for time history and velocity for subgrid error
-          //save solution for other models 	     	      
+          //save solution for other models
           //
           q_a[eN_k] = a;
           q_u[eN_k] = u;
@@ -408,7 +408,7 @@ namespace proteus
                                    ebqe_grad_u.data(),
 				   offset_u,
                                    stride_u, 
-				   elementResidual_u,			   
+				   elementResidual_u,
 				   nExteriorElementBoundaries_global,
 				   exteriorElementBoundariesArray.data(),
 				   elementBoundaryElementsArray.data(),
@@ -423,7 +423,7 @@ namespace proteus
 	  //
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
-	      int eN_i=eN*nDOF_test_element+i;          
+	      int eN_i=eN*nDOF_test_element+i;
 	      globalResidual.data()[offset_u+stride_u*u_l2g.data()[eN_i]]+=elementResidual_u[i];
 	    }//i
 	}//elements
@@ -434,7 +434,7 @@ namespace proteus
       //ebN is the element boundary INdex
       //eN is the element index
       for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
-      	{
+     	{
       	  int ebN = exteriorElementBoundariesArray.data()[ebNE],
       	    eN  = elementBoundaryElementsArray.data()[ebN*2+0],
       	    ebN_local = elementBoundaryLocalElementBoundariesArray.data()[ebN*2+0];

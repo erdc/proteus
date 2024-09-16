@@ -4,17 +4,12 @@ Classes for archiving numerical solution data
 .. inheritance-diagram:: proteus.Archiver
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
 from . import Profiling
 from .Profiling import logEvent
 from . import Comm
 import numpy
 import os
+import h5py
 from xml.etree.ElementTree import *
 
 memory = Profiling.memory
@@ -63,7 +58,6 @@ class AR_base(object):
         import datetime
         #filename += datetime.datetime.now().isoformat()
         self.global_sync = global_sync
-        import h5py
         comm_world = self.comm.comm.tompi4py()
         self.xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
         if hotStart:

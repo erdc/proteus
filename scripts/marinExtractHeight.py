@@ -1,11 +1,4 @@
 #! /usr/bin/env pvpython
-
-# for use with pvpython versions at least 4.4
-from __future__ import print_function
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 from paraview import servermanager
 from paraview.simple import *
 from optparse import OptionParser

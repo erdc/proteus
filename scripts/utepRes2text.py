@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
 def printFinalSolutionToFile(resFileName,outputFileName,
                              key='u_dof',component=0,meshLevel=0,verbose=0):
     """

@@ -1,12 +1,4 @@
 """ Helper functions commonly used in tests. """
-from __future__ import print_function
-from __future__ import division
-
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
 import os
 import sys
 import csv
@@ -298,7 +290,7 @@ class NumericResults(object):
             if plot_relative == True:
                 max_term = max(data_set)
                 for i,term in enumerate(data_set):
-                    data_set[i] = old_div(data_set[i], max_term)
+                    data_set[i] = data_set[i]/max_term
             plt.plot(data_set)
         plt.yscale("log")
         plt.legend(legend_lst)

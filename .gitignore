@@ -81,3 +81,6 @@ proteus/mprans/cRANS3PSed.cpp
 proteus/mprans/cVOF3P.cpp
 proteus/mprans/cVOS3P.cpp
 proteus/superluWrappers.c
+proteus/MeshAdaptPUMI/MeshAdapt.cpp
+proteus/tests/ci/meshNoVessel.edge
+proteus/tests/ci/meshNoVessel.neigh

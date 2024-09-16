@@ -4,12 +4,6 @@ Module for diagnostic utilities
 .. inheritance-diagram:: proteus.DiagUtils
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import range
-from past.utils import old_div
 from .EGeometry import *
 from .MeshTools import *
 from .FemTools import *
@@ -140,16 +134,16 @@ def testCrRavNodalBasis(nd,verbose=0):
     if nd == 1:
         xiArray[:,0] = [0.5, 1., 0.]
     elif nd == 2:
-        xiArray[:,0:2] = [[old_div(1.,3.), old_div(1.,3.)],
+        xiArray[:,0:2] = [[1./3., 1./3.],
                           [0.5, 0.5],
                           [0., .5],
                           [0.5, 0.]]
     elif nd == 3:
-        xiArray[:,:] = [[old_div(1.,4.), old_div(1.,4.), old_div(1.,4.)],
-                        [old_div(1.,3.), old_div(1.,3.), old_div(1.,3.)],
-                        [0., old_div(1.,3.), old_div(1.,3.)],
-                        [old_div(1.,3.), 0., old_div(1.,3.)],
-                        [old_div(1.,3.), old_div(1.,3.), 0.]]
+        xiArray[:,:] = [[1./4., 1./4., 1./4.],
+                        [1./3., 1./3., 1./3.],
+                        [0., 1./3., 1./3.],
+                        [1./3., 0., 1./3.],
+                        [1./3., 1./3., 0.]]
     #end if
     if verbose > 1:
         print('trying to get values at points \n',xiArray)
@@ -177,7 +171,7 @@ def testCrRavNodalBasis(nd,verbose=0):
     elif nd == 2:
         exiArray[0,0] = 0.5
     else:
-        exiArray[0,0:2] = [old_div(1.,3.), old_div(1.,3.)]
+        exiArray[0,0:2] = [1./3., 1./3.]
     #end else
     if verbose > -1:
         nElementBoundaries = nd+1
@@ -250,7 +244,7 @@ def testQuadNodalBasis(nd,verbose=0):
     elif nd == 2:
         exiArray[0,0] = 0.5
     else:
-        exiArray[0,0:2] = [old_div(1.,3.), old_div(1.,3.)]
+        exiArray[0,0:2] = [1./3., 1./3.]
     #end else
     if verbose > -1:
         nElementBoundaries = nd+1
@@ -321,7 +315,7 @@ def testQuadRefMats(nd,verbose=0):
 
     lspace = QuadraticOnSimplexWithNodalBasis(nd)
     ndofLoc= lspace.dim
-    volWeights = [1.0,0.5,old_div(1.0,6.0)]
+    volWeights = [1.0,0.5,1.0/6.0]
 
     #compute mass matrix numerically
     quadRule = SimplexGaussQuadrature(nd)
@@ -353,7 +347,7 @@ def testQuadDOFMap(mesh,nd,verbose=0):
     #dofMap = NodalDOFMap(mesh)
     dofMap = QuadraticLagrangeDOFMap(mesh,lspace,nd)
     ndofLoc= lspace.dim
-    volWeights = [1.0,0.5,old_div(1.0,6.0)]
+    volWeights = [1.0,0.5,1.0/6.0]
 
     #compute mass matrix numerically
     quadRule = SimplexGaussQuadrature(nd)

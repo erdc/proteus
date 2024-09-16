@@ -5,16 +5,16 @@
 #include "ChVariablesBodyAddedMass.h"
 
 namespace chrono {
-	class ChBodyAddedMass : public ChBody {
-      protected:
-          ChVariablesBodyAddedMass variables;
-      public:
-          ChBodyAddedMass();
-          virtual ~ChBodyAddedMass() {}
+  class ChBodyAddedMass : public ChBody {
+  protected:
+    ChVariablesBodyAddedMass variables;
+  public:
+    ChBodyAddedMass();
+    virtual ~ChBodyAddedMass() {}
     void SetMass(double newmass);
     void SetInertia(const ChMatrix33<>& iner);
-    void SetInertiaXX(const ChVector<>& iner);
-    void SetInertiaXY(const ChVector<>& iner);
+    void SetInertiaXX(const ChVector3d& iner);
+    void SetInertiaXY(const ChVector3d& iner);
     /* ChVector<> GetInertiaXX(); */
     /* ChVector<> GetInertiaXY(); */
     /* double GetMass() { return variables.GetBodyMass(); }; */
@@ -91,7 +91,7 @@ namespace chrono {
     /// ChVariables in this object (for further passing it to a solver)
     virtual void InjectVariables(ChSystemDescriptor& mdescriptor) override;
 
-    };
+  };
 
 }  // end namespace chrono
 

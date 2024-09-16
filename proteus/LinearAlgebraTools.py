@@ -8,13 +8,6 @@ representations using PETSc.
 .. inheritance-diagram:: proteus.LinearAlgebraTools
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import range
-from builtins import object
-from past.utils import old_div
 import numpy
 import math
 import sys
@@ -1434,7 +1427,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.Np_rho.mult(tmp1,tmp2)
 
         if self.alpha is True:
-            tmp2.axpy(old_div(1.,self.delta_t),x_tmp)
+            tmp2.axpy(1./self.delta_t,x_tmp)
 
         if self.options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
             self.const_null_space.remove(tmp2)
@@ -1560,7 +1553,7 @@ def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
-    scale = old_div(1.0,globalSum(len(x.flat)))
+    scale = 1.0/globalSum(len(x.flat))
     return math.sqrt(scale*globalSum(numpy.dot(x,x)))
 
 
@@ -1593,7 +1586,7 @@ class WeightedNorm(object):
         self.tmp[:] = y
         self.tmp /= self.weight
         value = numpy.linalg.norm(self.tmp.flat,type)
-        return old_div(value,self.dim)
+        return value/self.dim
 
 
 if __name__ == '__main__':
@@ -1711,4 +1704,3 @@ if __name__ == '__main__':
 #         mgits +=1
 #         mgv.apply(w,jits,jits,0,f[1:n-1],u[1:n-1])
 #         rnorm = l2Norm(resList[0])
-

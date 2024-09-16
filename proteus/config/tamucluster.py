@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from .default import *
 
 PROTEUS_MPI_INCLUDE_DIR, PROTEUS_MPI_LIB_DIR = get_flags('mpi')

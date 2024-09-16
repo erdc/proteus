@@ -4,14 +4,6 @@ A class hierarchy and tools for building domains of PDE's.
 .. inheritance-diagram:: proteus.Domain
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import division
-
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 import sys
 import numpy as np
 from proteus.Profiling import logEvent
@@ -381,7 +373,7 @@ class RectangularDomain(D_base):
         """
         self.polyfile = fileprefix #[temp] see PSLG for better implementation that checks if it already exists
         self.boundaryLegend = self.boundaryTags
-        unitesize=old_div(4.0,self.L[0])
+        unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
         if self.nd==2:
             self.boundaryLegend = self.boundaryTags
@@ -440,16 +432,16 @@ class RectangularDomain(D_base):
                                 'x0pL0': self.x[0]+self.L[0],
                                 'x1pL1': self.x[1]+self.L[1],
                                 'x2pL2': self.x[2]+self.L[2],
-                                'm0':old_div((self.x[0]+self.L[0]),2.0),
-                                'm1':old_div((self.x[1]+self.L[1]),2.0),
-                                'm2':old_div((self.x[2]+self.L[2]),2.0)}
+                                'm0':(self.x[0]+self.L[0])/2.0,
+                                'm1':(self.x[1]+self.L[1])/2.0,
+                                'm2':(self.x[2]+self.L[2])/2.0}
         f.write(fileString)
         f.close()
     def writeAsymptote(self, fileprefix):
         """
         Write the rectangular domain as a box displaying the dimesions and coloring the boundaries according to the boundary flags.
         """
-        unitsize=old_div(4.0,self.L[0])
+        unitsize=4.0/self.L[0]
         f = open(fileprefix+".asy",'w')
         if self.nd==1:
             fileString="""
@@ -607,7 +599,7 @@ class GMSH_3D_Domain(D_base):
                  units="m",
                  length_scale=1.0,
                  permute_dims=[0,1,2]):
-        D_base.__init__(self, 2, name, units)
+        D_base.__init__(self, 3, name, units)
         self.geofile=geofile+".geo"
         self.polyfile=geofile
         self.he = he
@@ -801,7 +793,7 @@ class PlanarStraightLineGraphDomain(D_base):
         """
         Write a representation of the PSLG in the Asymptote vector graphics language
         """
-        unitsize=old_div(4.0,self.L[0])
+        unitsize=4.0/self.L[0]
         f = open(fileprefix+".asy",'w')
         fileString="""
 unitsize(4.0 inches / %(Lx)f);

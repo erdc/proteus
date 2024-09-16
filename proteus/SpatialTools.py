@@ -28,13 +28,6 @@ Example::
    :parts: 1
 
 """
-from __future__ import print_function
-from __future__ import division
-
-#from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from math import cos, sin, sqrt
 import math
 import sys
@@ -453,9 +446,9 @@ class Cuboid(Shape):
             self.barycenter = np.array(coords)
         else:
             self.barycenter = np.array(barycenter)
-        self.It = np.array([[old_div((W**2.+H**2.),12.), 0, 0],
-                            [0, old_div((L**2.+H**2.),12.), 0],
-                            [0, 0, old_div((W**2.+L**2.),12.)]])
+        self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
+                            [0, (L**2.+H**2.)/12., 0],
+                            [0, 0, (W**2.+L**2.)/12.]])
 
     def setDimensions(self, dim):
         """
@@ -593,8 +586,8 @@ class Sphere(Shape):
         nN+=1
 
 
-        hxi = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
-        heta = old_div(radius,(math.sqrt(2.0)*float(nSectors)));
+        hxi = radius/(math.sqrt(2.0)*float(nSectors));
+        heta = radius/(math.sqrt(2.0)*float(nSectors));
         #now loop over grains
         #top half  sphere nodes
         top_nodes = {}
@@ -617,7 +610,7 @@ class Sphere(Shape):
                     y0s = (ii-nSectors)*heta
                     r0s = math.sqrt(x0s**2 + y0s**2)
                     theta0s = math.atan2(y0s,x0s)
-                    theta1s = theta0s - old_div(math.pi,4.0)
+                    theta1s = theta0s - math.pi/4.0
                     r1s = r0s
                     x1s = r1s*math.cos(theta1s)
                     y1s = r1s*math.sin(theta1s)
@@ -672,7 +665,7 @@ class Sphere(Shape):
                     y0s = (ii-nSectors)*heta
                     r0s = math.sqrt(x0s**2 + y0s**2)
                     theta0s = math.atan2(y0s,x0s)
-                    theta1s = theta0s - old_div(math.pi,4.0)
+                    theta1s = theta0s - math.pi/4.0
                     r1s = r0s
                     x1s = r1s*math.cos(theta1s)
                     y1s = r1s*math.sin(theta1s)
@@ -795,7 +788,7 @@ class Rectangle(Shape):
                         self.BC['y+'],
                         self.BC['x-']]
         # self.BC = BCContainer(self.BC_dict)
-        self.It = old_div((L**2+H**2),12)
+        self.It = (L**2+H**2)/12
 
     def setDimensions(self, dim):
         """
@@ -847,7 +840,7 @@ class Cylinder(Shape):
     def constructShape(self):
         h_offset = np.array([0., 0., self.height])
         arc = 2.*np.pi*self.radius/self.nPoints
-        ang = old_div(arc,self.radius)
+        ang = arc/self.radius
         vert = []
         facets = []
         segs = []
@@ -868,7 +861,7 @@ class Cylinder(Shape):
         for i in range(len(vert_bottom)-1):
             facets += [[[i, i+1, i+nvb+1, i+nvb]]]
         facets += [[[i+1, 0, nvb, i+1+nvb]]]  # last facet
-        self.vertices = np.vstack((vert_bottom, vert_top))-old_div(h_offset,2.)+np.array(self.coords)
+        self.vertices = np.vstack((vert_bottom, vert_top))-h_offset/2.+np.array(self.coords)
         self.segments = np.vstack((segs_bottom, segs_top))
         self.segmentFlags = np.array([1 for i in range(len(segs_bottom))]+[2 for i in range(len(segs_top))])
         self.facets = facets
@@ -911,7 +904,7 @@ class Circle(Shape):
         self.coords = xc, yc = np.array(coords)
         self.nPoints = nPoints
         self.arc=2.0*pi*self.radius/self.nPoints
-        self.ang=old_div(self.arc,self.radius)
+        self.ang=self.arc/self.radius
         verti=[]
         segm=[]
 
@@ -1284,15 +1277,15 @@ def rotation3D(points, rot, axis=(0., 0., 1.), pivot=(0., 0., 0.)):
     # make axis a unity vector
     axis = np.array(axis)
     r = np.linalg.norm(axis)
-    axis = old_div(axis,r)
+    axis = axis/r
     # get values for rotation matrix
     cx, cy, cz = axis
     d = sqrt(cy**2+cz**2)
     # rotation matrices
     if d != 0:
         Rx = np.array([[1,         0,        0,    0],
-                       [0,         old_div(cz,d),     old_div(cy,d), 0],
-                       [0,         old_div(-cy,d),    old_div(cz,d), 0],
+                       [0,         cz/d,     cy/d, 0],
+                       [0,         -cy/d,    cz/d, 0],
                        [0,         0,        0,    1]])
     else:  # special case: rotation axis aligned with x axis
         Rx = np.array([[1,         0,        0,    0],
@@ -1678,5 +1671,5 @@ def extrude2Dto3D(extrusion, vertices, segments, facets, regions=None):
     regions_extruded = copy.deepcopy(regions)
     if regions is not None:
         for region in regions_extruded:
-            region += old_div(extrusion,2.)
+            region += extrusion/2.
     return vertices, segments, facets, regions_extruded

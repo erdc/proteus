@@ -4,14 +4,6 @@ Class hierarchies for constructing and working with finite element spaces
 .. inheritance-diagram:: proteus.FemTools
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from .EGeometry import *
 from .MeshTools import *
 from .LinearAlgebraTools import *
@@ -74,8 +66,8 @@ class ReferenceSimplex(ReferenceElement):
             self.boundaryMapInverseList.append(lambda x: numpy.array([x[0]]))
             self.boundaryJacobianList.append(numpy.array([[ 1.0],
                                                             [-1.0]]))
-            self.boundaryUnitNormalList.append(numpy.array([old_div(1.0,sqrt(2.0)),
-                                                              old_div(1.0,sqrt(2.0))]))
+            self.boundaryUnitNormalList.append(numpy.array([1.0/sqrt(2.0),
+                                                              1.0/sqrt(2.0)]))
             #1
             self.boundaryMapList.append(lambda xBar: numpy.array([0.0,
                                                                     xBar[0]]))
@@ -115,9 +107,9 @@ class ReferenceSimplex(ReferenceElement):
             self.boundaryJacobianList.append(numpy.array([[1.0 , 0.0],
                                                             [0.0 , 1.0],
                                                             [-1.0,-1.0]]))
-            self.boundaryUnitNormalList.append(numpy.array([old_div(1.0,sqrt(3.0)),
-                                                              old_div(1.0,sqrt(3.0)),
-                                                              old_div(1.0,sqrt(3.0))]))
+            self.boundaryUnitNormalList.append(numpy.array([1.0/sqrt(3.0),
+                                                              1.0/sqrt(3.0),
+                                                              1.0/sqrt(3.0)]))
             #1
             self.boundaryMapList.append(lambda xBar: numpy.array([0.0,
                                                                     xBar[1],
@@ -520,8 +512,8 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
                     fun.append(lambda xi, xb=self.nodes[b],fc=fc:  fun[fc](xi)*(xi - xb))
                     den   = den*(self.nodes[a]-self.nodes[b])
                     fc=fc+1
-            self. fun.append(lambda xi,fc=fc, den=den:   old_div(fun[fc](xi),den))
-            self.dfun.append(lambda xi,fc=fc, den=den:  old_div(dfun[fc](xi),den))
+            self. fun.append(lambda xi,fc=fc, den=den:   fun[fc](xi)/den)
+            self.dfun.append(lambda xi,fc=fc, den=den:  dfun[fc](xi)/den)
 
         # Define multi-dimensional stuff
         basis= []
@@ -627,7 +619,7 @@ class BernsteinOnCube(LocalFunctionSpace):
     from math import factorial 
 
     def nChooseK(self,n,k):
-        return factorial(n)/factorial(k)/factorial(n-k)
+        return factorial(n)/(factorial(k)*factorial(n-k))
     
     def __init__(self,nd=3, order=2):
         self.referenceElement = ReferenceCube(nd)
@@ -650,7 +642,7 @@ class BernsteinOnCube(LocalFunctionSpace):
 
         for k in range(order+1):
             self.fun.append(lambda x,n=order,k=k:
-                            self.nChooseK(n,k)*(old_div((x+1),2.))**k*(old_div((1-x),2.))**(n-k))
+                            self.nChooseK(n,k)*((x+1)/2.)**k*((1-x)/2.)**(n-k))
             self.dfun.append(lambda x,n=order,k=k:
                              #-2.**(-n)*(1-x)**(-1-k+n)*(1+x)**(k-1)*(-2*k+n+n*x)*self.nChooseK(n,k))
                              # Rule out the cases when 1-x or 1+x = 0. This is to avoid warnings due to division by zero
@@ -796,7 +788,7 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
         from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
-        LocalFunctionSpace.__init__(self,old_div(fact(nd+2),(2*fact(nd))),
+        LocalFunctionSpace.__init__(self, fact(nd+2)//(2*fact(nd)),
                                     self.referenceElement)
         self.gradientList=[]
         self.basisHessians=[]
@@ -1082,7 +1074,7 @@ class BernsteinOnSimplex(LocalFunctionSpace):
         from .RefUtils import p2refNodes
 
         self.referenceElement = ReferenceSimplex(nd)
-        LocalFunctionSpace.__init__(self,old_div(fact(nd+2),(2*fact(nd))),
+        LocalFunctionSpace.__init__(self, fact(nd+2)//(2*fact(nd)),
                                     self.referenceElement)
         self.gradientList=[]
         self.basisHessians=[]
@@ -1871,7 +1863,7 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
         from .RefUtils import fact
         from .RefUtils import p2refNodes
         sdim  = referenceElement.dim
-        self.nInterpNodes= old_div(fact(2+sdim),(2*fact(sdim)))
+        self.nInterpNodes= fact(2+sdim)//(2*fact(sdim))
         InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
         self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
         for k in range(self.nInterpNodes):
@@ -1991,7 +1983,7 @@ class FaceBarycenterInterpolationConditions(InterpolationConditions):
         if referenceElement.dim == 2: #2d, interpolation points are edge barycenters
             ebary = EVec(0.5,0.0,0.0)
         elif referenceElement.dim == 3: #3d, interpolation points are face barycenters
-            ebary = EVec(old_div(1.,3.),old_div(1.,3.),0.0)
+            ebary = EVec(1.0/3.0,1.0/3.0,0.0)
         #end
         for k in referenceElement.range_nElementBoundaries:
             for I in range(referenceElement.dim):
@@ -2053,8 +2045,8 @@ class p0InterpolationConditions(InterpolationConditions):
                 self.quadraturePointArray[k,I]=p[I]
         self.nQuadraturePoints = self.quadraturePointArray.shape[0]
         self.vol=sum([w for  w in  self.quadrature.weights])
-        self.functionals.append(lambda f: old_div(sum([w*f(p) for  w,p in zip(self.quadrature.weights,self.quadrature.points)]),self.vol))
-        self.functionalsQuadrature.append(lambda fList: old_div(sum([w*f for w,f in zip(self.quadrature.weights,fList)]),self.vol))
+        self.functionals.append(lambda f: sum([w*f(p) for  w,p in zip(self.quadrature.weights,self.quadrature.points)])/self.vol)
+        self.functionalsQuadrature.append(lambda fList: sum([w*f for w,f in zip(self.quadrature.weights,fList)])/self.vol)
     def quadrature2DOF_element(self,k):
         return 0
     def definedOnLocalElementBoundary(self,k,ebN_local):
@@ -2153,7 +2145,7 @@ class P1BubbleInterpolationConditions(InterpolationConditions):
         if referenceElement.nNodes > 5:
             logEvent("Haven't implemented this many nodes for nodal interpolation conditions",level=1)
         #bubble
-        dp1inv = old_div(1.0,float(self.referenceElement.nNodes))
+        dp1inv = 1.0/float(self.referenceElement.nNodes)
         self.functionals.append(lambda f: f(self.quadraturePointArray[-1,:]) - \
                                     dp1inv * sum([self.functionals[i](self.quadraturePointArray[-1,:]) for i in range(self.referenceElement.nNodes)]))
         self.functionalsQuadrature.append(lambda fList: fList[self.referenceElement.nNodes] - \
@@ -2866,7 +2858,7 @@ class ParametricMaps(ElementMaps):
                             for n in self.referenceElement.range_dim:
                                 jacobianArray[eN,k,m,n] += self.mesh.nodeArray[J,m]*grad_psi[k,j,n]
                     jacobianDeterminantArray[eN,k] = det(jacobianArray[eN,k])
-                    jacobianInverseArray[eN,k,:,:] = old_div(adj(jacobianArray[eN,k]),jacobianDeterminantArray[eN,k])
+                    jacobianInverseArray[eN,k,:,:] = adj(jacobianArray[eN,k])/jacobianDeterminantArray[eN,k]
     def getBasisValuesTraceRef(self,
                                xiArray):
         n_xi = xiArray.shape[0]
@@ -3976,8 +3968,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 #self.viewer("set terminal x11")
             nx = sqrt(self.elementMaps.mesh.nNodes_global)
             ny = nx
-            x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
-            y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+            x = numpy.arange(nx,dtype='i')/float(nx-1)
+            y = numpy.arange(nx,dtype='i')/float(nx-1)
             nSol = numpy.reshape(u.dof,(nx,ny))
             self.viewer('set parametric')
             self.viewer('set data style lines')
@@ -4916,8 +4908,8 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
-                y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+                x = numpy.arange(nx,dtype='i')/float(nx-1)
+                y = numpy.arange(nx,dtype='i')/float(nx-1)
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -5154,8 +5146,8 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
-                y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+                x = numpy.arange(nx,dtype='i')/float(nx-1)
+                y = numpy.arange(nx,dtype='i')/float(nx-1)
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -5764,8 +5756,8 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
-                y = old_div(numpy.arange(nx,dtype='i'),float(nx-1))
+                x = numpy.arange(nx,dtype='i')/float(nx-1)
+                y = numpy.arange(nx,dtype='i')/float(nx-1)
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -7454,7 +7446,7 @@ class MultilevelProjectionOperators(object):
                         if rbc[(I,J)] > 0.0 - 1.0e-8 and rbc[(I,J)] < 0.0 + 1.0e-8:
                             scaled_rbc[(I,J)] = 0.0
                         else:
-                            scaled_rbc[(I,J)] = old_div(rbc[(I,J)],rbcSum[I])
+                            scaled_rbc[(I,J)] = rbc[(I,J)]/rbcSum[I]
                 #now make real sparse matrices
                 (rbc,rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,rbc)
                 (scaled_rbc,scaled_rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,scaled_rbc)

@@ -4,13 +4,6 @@ Classes for taking input in other formats
 .. inheritance-diagram:: proteus.InputTranslators
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import division
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from proteus.EGeometry import *
 from .Profiling import logEvent
 
@@ -737,7 +730,7 @@ class ADH_metfile(object):
         #generate a time entry out of hours days minutes
         self.time_unit = 'day' #hour, sec
         self.data['time'] = numpy.zeros((self.npoints),'d')
-        self.data['time'] = self.data['day']+old_div(self.data['hour'],24.0) + old_div(self.data['min'],(24.*60.))
+        self.data['time'] = self.data['day']+self.data['hour']/24.0 + self.data['min']/(24.*60.)
     def getValue(self,entry,t):
         """
         lookup value of entry at time t

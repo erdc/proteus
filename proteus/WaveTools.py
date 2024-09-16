@@ -6,15 +6,6 @@ approximate) for the free surface deformation and subsurface velocity
 components of water waves. These can be used as boundary conditions, wave
 generation sources, and validation solutions for numerical wave codes.
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-
-from builtins import str
-from builtins import zip
-from builtins import range
-#from builtins import object
-from past.utils import old_div
 import cython
 import numpy as np
 import cmath as cmat
@@ -79,7 +70,7 @@ def fastcos_test(phase,sinus=False):
 
     """
     if(sinus):
-        phase = old_div(np.pi,2.) - phase
+        phase = np.pi/2. - phase
     return fastcos(phase,True)
 def fastcosh_test(k,Z,fast=True):
     """Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING"
@@ -132,8 +123,8 @@ def coshkzd_test(k,Z,d, fast=True):
     cosh(k*(z+d))/sinh(kd) for Z>-d/2, 0 otherwise
 
     """
-    if (Z > old_div(-d,2.)):
-        return old_div(fastcosh_test(k,Z,fast), np.tanh(k*d)) + fastsinh_test(k,Z,fast)
+    if (Z > -d/2.):
+        return fastcosh_test(k,Z,fast)/np.tanh(k*d) + fastsinh_test(k,Z,fast)
     else:
         return 0. 
 
@@ -155,8 +146,8 @@ def sinhkzd_test(k,Z,d,fast=True):
 
     """
 
-    if (Z> old_div(-d,2.)):
-        return fastcosh_test(k,Z,fast) + old_div(fastsinh_test(k,Z,fast), np.tanh(k*d))
+    if (Z> -d/2.):
+        return fastcosh_test(k,Z,fast) + fastsinh_test(k,Z,fast)/np.tanh(k*d)
     else:
         return 0. 
 
@@ -210,7 +201,7 @@ def setVertDir(g):
     numpy.ndarray
 
     """
-    return -np.array(old_div(g,(sqrt(g[0]**2 + g[1]**2 + g[2]**2))))
+    return -np.array(g/(sqrt(g[0]**2+g[1]**2+g[2]**2)))
 
 
 def setDirVector(vector):
@@ -226,7 +217,7 @@ def setDirVector(vector):
     numpy.ndarray
 
     """
-    return old_div(vector,(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2)))
+    return vector/(sqrt(vector[0]**2+vector[1]**2+vector[2]**2))
 
 def dirCheck(v1, v2):
     """ Checks if two vectors are vertical raises SystemError if True
@@ -341,7 +332,7 @@ def normIntegral(f,dom):
     --------
     numpy.ndarray
     """
-    G0 = old_div(1.,sum(returnRectangles(f,dom)))
+    G0 = 1./sum(returnRectangles(f,dom))
     return G0*f
 
 
@@ -434,8 +425,8 @@ def  vel_mode(x,  t, kDir, kAbs,  omega,  phi,  amplitude,  mwl, depth, vDir, gA
     ii=0.
     UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
     UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
-    waveDir = old_div(kDir,kAbs)
-    UH = UH - Udrift(amplitude,gAbs,old_div(omega,kAbs),depth)
+    waveDir = kDir/kAbs
+    UH = UH - Udrift(amplitude,gAbs,omega/kAbs,depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
     V = np.array([UH*waveDir[0]+UV*vDir[0],
                   UH*waveDir[1]+UV*vDir[1],
@@ -491,9 +482,9 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
         1D Numpy array of the spectrum in frequency domain
 
     """
-    Tp = old_div(1.,f0)
-    bj = 0.0624*(1.094-0.01915*log(gamma))/(0.23+0.0336*gamma-old_div(0.185,(1.9+gamma)))
-    r = np.exp(old_div(-(Tp*f-1.)**2,(2.*sigma(f,f0)**2)))
+    Tp = 1./f0
+    bj = 0.0624*(1.094-0.01915*log(gamma))/(0.23+0.0336*gamma-0.185/(1.9+gamma))
+    r = np.exp(-(Tp*f-1.)**2/(2.*sigma(f,f0)**2))
     tma = 1.
     if TMA:
         if (depth is None):
@@ -503,7 +494,7 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
         k = dispersion(2*M_PI*f,depth)
         tma = np.tanh(k*depth)*np.tanh(k*depth)/(1.+ 2.*k*depth/np.sinh(2.*k*depth))
 
-    return tma * bj*(Hs**2)*(old_div(1.,((Tp**4) *(f**5))))*np.exp(-1.25*(old_div(1.,(Tp*f)**(4.))))*(gamma**r)
+    return tma * bj*(Hs**2)*(1./((Tp**4)*(f**5)))*np.exp(-1.25*(1./(Tp*f)**(4.)))*(gamma**r)
 
 def PM_mod(f,f0,Hs):
     """Calculates the Pierson-Moskovitz spectrum (or Bretschneider or ISSC)
@@ -527,7 +518,7 @@ def PM_mod(f,f0,Hs):
         1D Numpy array of the spectrum in frequency domain
 
     """
-    return (old_div(5.0,16.0))*Hs**2*(old_div(f0**4,f**5))*np.exp((old_div(-5.0,4.0))*(old_div(f0,f))**4)
+    return (5.0/16.0)*Hs**2*(f0**4/f**5)*np.exp((-5.0/4.0)*(f0/f)**4)
 
 def cos2s(theta,f,s=10):
     """Calculates the cos-2s directional spreading function
@@ -605,9 +596,9 @@ def dispersion(w,d, g = 9.81,niter = 1000):
         Wavenumber as a float or 1D array for multiple frequencies
     """
     w_aux = np.array(w)
-    K = old_div(w_aux**2,g)
+    K = w_aux**2/g
     for jj in range(niter):
-        K =  old_div(w_aux**2,(g*np.tanh(K*d)))
+        K =  w_aux**2/(g*np.tanh(K*d))
     if type(K) is float:
         return K[0]
     else:
@@ -685,7 +676,7 @@ def decompose_tseries(time,eta,dt):
     fft_x = np.fft.fft(eta,nfft)
     freq = np.fft.fftfreq(nfft,dt)                              #%complex spectrum
     iend = np.where(freq<0)[0][0]
-    setup = old_div(np.real(fft_x[0]),nfft)
+    setup = np.real(fft_x[0])/nfft
     fft_x = fft_x[1:iend]
     freq = freq[1:iend]
                               #%retaining only first half of the spectrum
@@ -814,7 +805,7 @@ class  SolitaryWave(object):
         self.c =  np.sqrt(self.gAbs * (depth+self.H))
         self.mwl = mwl
         self.depth = depth
-        self.K = old_div(np.sqrt(3. *self.H/ (4. * self.depth)),self.depth)
+        self.K = np.sqrt(3.*self.H/(4.*self.depth))/self.depth
         self.d2 = depth*depth
         self.d3 = self.d2 * depth
 #Checking if g and waveDir are perpendicular
@@ -863,7 +854,7 @@ class  SolitaryWave(object):
             2.0 * self.d3 + self.d2 * self.H  + 12.0 * self.depth * self.H * Z + 6.0 *  self.H * Z**2.0 +
             (2.0 * self.d3 - self.d2 * self.H - 6.0 * self.depth * self.H * Z - 3.0 * self.H * Z**2 ) * a1)/(a2)**4
 	
-        Uvert =   1.0 / ( 4.0 * np.sqrt(self.gAbs* self.depth) ) * np.sqrt(3.0) * self.gAbs * (old_div(self.H, self.depth**3.0))** 1.5  * (self.depth + Z)*(
+        Uvert =   1.0 / ( 4.0 * np.sqrt(self.gAbs* self.depth) ) * np.sqrt(3.0) * self.gAbs * (self.H/self.depth**3.0)** 1.5  * (self.depth + Z)*(
                 2.0 * self.depth**3 - 7.0 * self.depth**2.0 * self.H + 10.0 * self.depth * self.H * Z + 5.0 * self.H * Z**2.0 +
                 (2.0 * self.depth**3.0 + self.depth**2.0 * self.H - 2.0 * self.depth * self.H * Z - self.H * Z**2.0)*
                 cosh(np.sqrt( 3.0 * self.H / self.depth**3.0) * phase ))/(
@@ -1230,13 +1221,13 @@ class NewWave(object):
         self.Hs = Hs
         self.depth = depth
         self.Tp = Tp
-        self.fp = old_div(1.,Tp)
+        self.fp = 1./Tp
         self.bandFactor = bandFactor
         self.N = N
         self.mwl = mwl
         fmax = self.bandFactor*self.fp
-        fmin = old_div(self.fp,self.bandFactor)
-        self.df = old_div((fmax-fmin),float(self.N-1))
+        fmin = self.fp/self.bandFactor
+        self.df = (fmax-fmin)/float(self.N-1)
         self.fi = np.linspace(fmin,fmax,self.N)
         self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
@@ -1377,13 +1368,13 @@ class NewWave(object):
         if sum(Lgen[:]*self.waveDir[:])< 0 :
                 logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
                 sys.exit(1)
-        dt = old_div(self.Tp,50.)
+        dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = old_div(sum(self.kDir[j,:]*Lgen[:]),self.omega[j])
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
-        Np = int(old_div((Tend - Tstart),dt))
+        Np = int((Tend-Tstart)/dt)
         time = np.linspace(Tstart,Tend,Np )
         etaR  = np.zeros(len(time), )
         for jj in range(len(time)):
@@ -1462,15 +1453,15 @@ class RandomWaves(object):
         self.Hs = Hs
         self.depth = depth
         self.Tp = Tp
-        self.fp = old_div(1.,Tp)
+        self.fp = 1./Tp
         self.bandFactor = bandFactor
         self.N = N
         if spec_fun.__name__=="custom":
             self.N =len(f_c)
         self.mwl = mwl        
         fmax = self.bandFactor*self.fp
-        fmin = old_div(self.fp,self.bandFactor)
-        self.df = old_div((fmax-fmin),float(self.N-1))
+        fmin = self.fp/self.bandFactor
+        self.df = (fmax-fmin)/float(self.N-1)
         if spec_fun.__name__=="custom":
             self.df = f_c[1]-f_c[0]
         self.fi = np.linspace(fmin,fmax,self.N)
@@ -1635,13 +1626,13 @@ class RandomWaves(object):
         if sum(Lgen[:]*self.waveDir[:])< 0 :
                 logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
                 sys.exit(1)
-        dt = old_div(self.Tp,50.)
+        dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = old_div(sum(self.kDir[j,:]*Lgen[:]),self.omega[j])
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
-        Np = int(old_div((Tend - Tstart),dt))
+        Np = int((Tend-Tstart)/dt)
         time = np.linspace(Tstart,Tend,Np )
         etaR  = np.zeros(len(time), )
         for jj in range(len(time)):
@@ -1776,7 +1767,7 @@ class MultiSpectraRandomWaves(object):
         for ij in range(self.Nall):
             for kk in range(3):
                 self.kDir_cM[3*ij+kk] = self.kDirM[ij,kk]
-                self.waveDir_cM[3*ij+kk] = old_div(self.kDirM[ij,kk], self.kiM[ij])
+                self.waveDir_cM[3*ij+kk] = self.kDirM[ij,kk]/self.kiM[ij]
             self.omega_cM[ij] = self.omegaM[ij]
             self.ki_cM[ij]  =self.kiM[ij]
             self.tanh_cM[ij] = self.tanhFM[ij]
@@ -1944,7 +1935,7 @@ class DirectionalWaves(object):
 
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
         from .SpatialTools import rotation3D
-        thetas = np.linspace(old_div(-M_PI,2),old_div(M_PI,2),2*M+1)
+        thetas = np.linspace(-M_PI/2,M_PI/2,2*M+1)
         dth = (thetas[1] - thetas[0])
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
@@ -2199,7 +2190,7 @@ class TimeSeries(object):
             logEvent("ERROR! Wavetools.py: Timeseries file (%s) must have only two columns [time, eta]" % (timeSeriesFile),level=0)
             sys.exit(1)
         time_temp = tdata[:,0]
-        self.dt = old_div((time_temp[-1]-time_temp[0]),(len(time_temp)-1))
+        self.dt = (time_temp[-1]-time_temp[0])/(len(time_temp)-1)
 
 
 
@@ -2245,8 +2236,8 @@ class TimeSeries(object):
             decomp = decompose_tseries(self.time,self.etaS,self.dt)
             self.ai = decomp[1]
             ipeak = np.where(self.ai == max(self.ai))[0][0]
-            imax = min(ipeak + old_div(Nf,2),len(self.ai))
-            imin = max(0,ipeak - old_div(Nf,2))
+            imax = min(ipeak + Nf//2,len(self.ai))
+            imin = max(0,ipeak - Nf//2)
             self.ai = self.ai[imin:imax]
             self.omega = decomp[0][imin:imax]
             self.phi = - decomp[2][imin:imax]
@@ -2325,16 +2316,16 @@ class TimeSeries(object):
 
             # Portion of window filtered with the Costap filter
             # Setting the handover time, either at the middle of the overlap or just after the filter
-            self.handover = max(1.1 *self.cutoff,  old_div(self.overlap, 2.))
+            self.handover = max(1.1 *self.cutoff,  self.overlap/2.)
             if (self.handover > 0.9 * self.overlap):
                 logEvent("ERROR! Wavetools.py: Window handover is not optimal as the cutoff is too close to the overlap. Decrease cutoff or increase overlap")
                 sys.exit(1)
             self.Twindow =  self.Tm * self.Nwaves            # setting the window duration (approx.). Twindow = Tmean * Nwaves
             self.Toverlap = self.overlap * self.Twindow
-            self.Nwindows = int( old_div((self.tlength -   self.Twindow ), (self.Twindow - self.Toverlap)) ) + 1             #Getting the actual number of windows  (N-1) * (Twindow - Toverlap) + Twindow = total time
-            self.Twindow = old_div(self.tlength,(1. + (1. - self.overlap)*(self.Nwindows-1)))            # Correct Twindow and Toverlap for duration and integer number of windows
+            self.Nwindows = int( (self.tlength-self.Twindow)/(self.Twindow-self.Toverlap) ) + 1             #Getting the actual number of windows  (N-1) * (Twindow - Toverlap) + Twindow = total time
+            self.Twindow = self.tlength/(1.+(1.-self.overlap)*(self.Nwindows-1))            # Correct Twindow and Toverlap for duration and integer number of windows
             self.Toverlap = self.overlap*self.Twindow
-            logEvent("INFO: Wavetools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(old_div(self.Twindow, self.Tm)) )
+            logEvent("INFO: Wavetools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow/self.Tm) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("INFO: Wavetools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
             logEvent("INFO: Wavetools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*self.overlap ))
@@ -2370,8 +2361,8 @@ class TimeSeries(object):
                 self.N = min(self.N, len(decomp[0]))
                 Nftemp = self.N
                 ipeak =  np.where(decomp[1] == max(decomp[1]))[0][0]
-                imax = min(ipeak + old_div(Nftemp,2),len(decomp[1]))
-                imin = max(0,ipeak - old_div(Nftemp,2))
+                imax = min(ipeak + Nftemp//2,len(decomp[1]))
+                imin = max(0,ipeak - Nftemp//2)
                 self.Nf = imax-imin
                 if (self.Nf < self.N):
                     if imin == 0:
@@ -2388,9 +2379,9 @@ class TimeSeries(object):
                 Tlag = np.zeros(ki.shape,)
                 for ii in range(len(ki)):
                     kDir[ii,:] = ki[ii]*self.waveDir[:]
-                    Tlag[ii] = old_div(sum(Lgen[:]*kDir[ii,:]),decomp[0][ii])
+                    Tlag[ii] = sum(Lgen[:]*kDir[ii,:])/decomp[0][ii]
                 self.Tlag = max(Tlag)
-                if self.Tlag > (old_div(self.Toverlap,2.) - self.cutoff*self.Twindow):
+                if self.Tlag > (self.Toverlap/2. - self.cutoff*self.Twindow):
                     logEvent("ERROR!: WaveTools.py: Relaxation zone lenght does not allow for spatial coherency in the windows method.Please a) increase number of waves per window or b) increase overlap or c) decrease lenght of the relaxation zone")
                     sys.exit(1)
                 decomp.append(kDir)
@@ -2692,13 +2683,13 @@ class RandomWavesFast(object):
         self.series = RW.writeEtaSeries(Tstart,Tend,x0,fname,4.*self.Lgen)
         self.cutoff = max(0.2*self.Tp , cutoff_win*Nwaves*Tp)
         duration = (self.series[-1,0]-self.series[0,0])
-        self.cutoff  = old_div(self.cutoff, duration)
-        Tm = old_div(self.Tp,1.1)
+        self.cutoff  = self.cutoff/duration
+        Tm = self.Tp/1.1
 
             #Checking if there are enough windows
-        Nwaves_tot = round(old_div((self.series[-1,0]-self.series[0,0]),Tm))
+        Nwaves_tot = round((self.series[-1,0]-self.series[0,0])/Tm)
         Nwaves = min(Nwaves,Nwaves_tot)
-        self.Nwind = int(old_div(Nwaves_tot,Nwaves))
+        self.Nwind = int(Nwaves_tot/Nwaves)
         self.rec_d = False
         if self.Nwind < 3:
             logEvent("ERROR!: WaveTools.py: Found too few windows in RandomWavesFast. Consider increasing Tend (this is independent from the duration of the simulation)")
@@ -2738,7 +2729,7 @@ class RandomWavesFast(object):
         errors = np.zeros(len(self.series),)
         for ii in range(i1,i2):
             errors[ii] = abs(self.series[ii,1]-TS.eta(x0,self.series[ii,0]) )
-        self.er1 = old_div(max(errors[:]),self.Hs)
+        self.er1 = max(errors[:])/self.Hs
         if self.er1 > 0.01 and checkAcc:
                 logEvent('ERROR!: WaveTools.py: Found large errors error={s}) during window reconstruction at RandomWavesFast. Please a) Increase Nfreq, b) Decrease waves per window to decrease error < 1%. You can set checkAcc = False if you want to proceed with these errors',level=0)
                 sys.exit(1)
@@ -2998,7 +2989,7 @@ class RandomNLWaves(object):
 
         EtasetUp = 0.
         for i in range(0,self.N):
-            wwi_setUp = old_div((self.ai[i]**2*self.ki[i]),(2*sinh(2*self.ki[i]*self.depth)))
+            wwi_setUp = (self.ai[i]**2*self.ki[i])/(2*sinh(2*self.ki[i]*self.depth))
             EtasetUp += wwi_setUp
         return EtasetUp
 
@@ -3072,11 +3063,11 @@ class RandomNLWaves(object):
 
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = old_div(sum(self.kDir[j,:]*Lgen[:]),self.omega[j])
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
 
-        Nseries = int(old_div((Tend - Tstart),dt)) + 1
+        Nseries = int((Tend-Tstart)/dt) + 1
         timelst=np.linspace(Tstart, Tend, Nseries)
         series = np.zeros((Nseries,2),)
         series[:,0] = timelst
@@ -3206,22 +3197,22 @@ class RandomNLWavesFast(object):
 
         Tmax =  NLongW*Tp/1.1
         modes = ["short","linear","long"]
-        periods = [Tp/2./1.1,old_div(Tp,1.1), Tmax]
+        periods = [Tp/2./1.1,Tp/1.1, Tmax]
         self.TS= []
         ii = -1
         for mode in modes:
             logEvent("INFO: Calculating nonlinear corrections for "+mode+" waves. This may take a while")
             ii+=1
             fname = "randomNLWaves_"+mode+".csv"
-            dt = old_div(periods[ii],50.)
+            dt = periods[ii]/50.
             series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen)
             Tstart_temp = series[0,0]
             cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
 
             #Checking if there are enough windows
-            Nwaves_tot = int(old_div((Tend-Tstart_temp),periods[ii]))
+            Nwaves_tot = int((Tend-Tstart_temp)/periods[ii])
             Nwaves = min(Nwaves,Nwaves_tot)
-            Nwind = int(old_div(Nwaves_tot,Nwaves))
+            Nwind = int(Nwaves_tot/Nwaves)
             if Nwind < 3:
                 rec_d = True
             else:
@@ -3348,4 +3339,3 @@ class CombineWaves(object):
         for cond in self.waveList:
             u += cond.u(x,t)
         return u
-   

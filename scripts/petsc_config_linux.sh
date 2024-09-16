@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./configure --prefix=${HOME}/proteus/petsc-dev --CC=/usr/bin/gcc --CXX=/usr/bin/g++ --FC=/usr/bin/gfortran --download-openmpi --download-openmpi-configure-arguments="--with-cuda" --with-numpy --with-petsc4py --download-mpi4py --with-cuda-dir=/usr/local/cuda-12.5 --with-cuda --download-superlu --download-superlu_dist --download-mumps --download-eigen --download-ctetgen --download-tetgen --download-gmsh --download-hdf5 --download-hdf5-configure-arguments="--enable-parallel" --download-hypre --download-libceed --download-metis --download-parmetis --download-opencascade --download-suitesparse --download-scalapack --download-szlib --download-zlib --with-python-exec=/usr/bin/python --download-triangle --download-yaml --download-zoltan --with-debugging=0

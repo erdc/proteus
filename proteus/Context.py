@@ -25,7 +25,6 @@ Example (use the global context)::
   nnx = ct.nnx
 
 """
-from __future__ import print_function
 from collections import  namedtuple
 import dataclasses
 

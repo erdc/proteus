@@ -12,11 +12,6 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
-
-from __future__ import print_function
-from builtins import zip
-from builtins import str
-from builtins import range
 import os
 import proteus
 
@@ -26,7 +21,7 @@ from warnings import *
 import optparse
 import sys
 
-usage = "usage: %prog [options] main.py [soModule.py] [pModule.py nModule.py]"
+usage = "usage: %prog [options] [main.py] [soModule.py] [pModule.py nModule.py]"
 parser = optparse.OptionParser(usage=usage)
 parser.add_option("-I", "--inspect",
                   help="Inspect namespace at 't0','user_step'",

@@ -5,13 +5,6 @@ TransportCoefficients for flow and transport in porous media
    :parts: 1
 
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from math import *
 from .TransportCoefficients import TC_base
 import numpy
@@ -1017,12 +1010,12 @@ class TwophaseDarcyFlow_base(TC_base):
         self.g  = dimensionless_gravity
         ##fluid properties
         #normalized density terms
-        self.rhon = old_div(density_n,density_w)
-        self.rhow = old_div(density_w,density_w)
-        self.b  = old_div(density_n,density_w)
+        self.rhon = density_n/density_w
+        self.rhow = density_w/density_w
+        self.b  = density_n/density_w
         #normalized viscosities
-        self.muw= old_div(viscosity_w,viscosity_w)
-        self.mun= old_div(viscosity_n,viscosity_w)
+        self.muw= viscosity_w/viscosity_w
+        self.mun= viscosity_n/viscosity_w
         #density eos options
         self.density_types={'Exponential':1,
                             'IdealGas':2}
@@ -1036,15 +1029,15 @@ class TwophaseDarcyFlow_base(TC_base):
                                 ['rwork_density_w','rwork_density_n']):
             if params is not None:
                 if params['model'] == 'Exponential':
-                    setattr(self,rwork,numpy.array([old_div(params['rho_0'],params['rho_0']),#normalize by phase density
+                    setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
                                                     params['psi_0'],
                                                     params['beta']],dtype='d'))
                 elif params['model'] == 'IdealGas':
                     setattr(self,rwork,numpy.array([params['T'],
-                                                    old_div(params['W'],params['rho_0']),#normalize by phase density
+                                                    params['W']/params['rho_0'],#normalize by phase density
                                                     params['R'],
                                                     params['headToPressure'],
-                                                    old_div(params['rho_0'],params['rho_0']),#normalize by phase density
+                                                    params['rho_0']/params['rho_0'],#normalize by phase density
                                                     params['psi_0']],dtype='d'))
                 else:
                     assert False, 'TwophaseDarcy_base density params= %s not found ' % params
@@ -1488,10 +1481,10 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
@@ -1586,7 +1579,7 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
@@ -1894,10 +1887,10 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         if self.use_spline:
@@ -1998,7 +1991,7 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
@@ -3318,7 +3311,7 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w[:] = self.swConstant
-        for i in range(old_div(len(self.q_s_w.flat),2),len(self.q_s_w.flat)):
+        for i in range(len(self.q_s_w.flat)//2,len(self.q_s_w.flat)):
             self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
@@ -3930,10 +3923,10 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3990,10 +3983,10 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4172,10 +4165,10 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4239,10 +4232,10 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4295,7 +4288,7 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
 
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4345,10 +4338,10 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4401,10 +4394,10 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4461,10 +4454,10 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
 
-        vgm_m_types    = 1.0-old_div(1.0,vgm_n_types)
+        vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
-        Sw_min_types   = old_div(thetaR_types,thetaS_types)
+        Sw_min_types   = thetaR_types/thetaS_types
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4855,5 +4848,4 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
                                                                                         c[('f',ci)],
                                                                                         c[('df',ci,ci)],
                                                                                         c[('a',ci,ci)])
-
 

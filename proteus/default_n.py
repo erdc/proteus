@@ -5,7 +5,6 @@ The default values for numerics modules
 
   Clean up default_n.py, finish documenting, decide on tolerance scheme
 """
-from __future__ import absolute_import
 try:
     from importlib import reload
 except:

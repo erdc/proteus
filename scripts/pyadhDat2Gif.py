@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import division
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
 #! /usr/bin/env python
@@ -22,8 +20,6 @@ from __future__ import division
 #John Chrispell, Summer 07
 #modified by cek
 
-from builtins import str
-from past.utils import old_div
 import sys
 import os
 import Gnuplot
@@ -119,7 +115,7 @@ while (i < LineTotal -1):
     PlotTitle = "Time: " + str(time)
     g.title(PlotTitle)
     g('set term postscript eps enhanced color solid')
-    Fraction = old_div(float(time),float(FinalTime)) + FudgeFactor
+    Fraction = float(time)/float(FinalTime) + FudgeFactor
     outFile = 'set output \"' + str(Variable) + 'plotFraction' + str(Fraction) + 'MakeAnimations.eps\"'
     g(outFile)
     Plot = 'plot \'' + str(datFile) + '\' index ' + str(i) + ' title \"\"'

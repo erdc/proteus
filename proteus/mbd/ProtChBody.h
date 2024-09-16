@@ -3,19 +3,19 @@
 #include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChSystem.h"
 #include "chrono/timestepper/ChTimestepper.h"
+#include "chrono/timestepper/ChTimestepperHHT.h"
 #include "chrono/solver/ChSolverPMINRES.h"
-#include "chrono/core/ChTransform.h"
+#include "chrono/core/ChFrame.h"
 #include "chrono/physics/ChLinkTSDA.h"
 #include "chrono/geometry/ChTriangleMeshConnected.h"
 #include <iostream>
 #include <fstream>
 
 using namespace chrono;
-using namespace chrono::collision;
 using namespace std;
 
 class cppSystem {
- public:
+public:
   std::shared_ptr<ChSystemSMC> systemSMC;
   std::shared_ptr<ChSystem> system;
   double chrono_dt;
@@ -30,34 +30,34 @@ class cppSystem {
 
 
 class cppRigidBody {
- public:
-  ChVector<> free_x;
-  ChVector<> free_r;
-  ChVector<> pos;
-  ChVector<> pos_last;
-  ChVector<> pos0;
-  std::vector<ChVector<>> trimesh_pos;
-  std::vector<ChVector<>> trimesh_pos_last;
-  std::vector<ChVector<>> trimesh_pos0;
-  ChVector<> pos0_trimesh;
+public:
+  ChVector3d free_x;
+  ChVector3d free_r;
+  ChVector3d pos;
+  ChVector3d pos_last;
+  ChVector3d pos0;
+  std::vector<ChVector3d> trimesh_pos;
+  std::vector<ChVector3d> trimesh_pos_last;
+  std::vector<ChVector3d> trimesh_pos0;
+  ChVector3d pos0_trimesh;
   ChQuaternion<> rotq0_trimesh;
-  ChVector<> vel;
-  ChVector<> vel_last;
-  ChVector<> acc;
-  ChVector<> acc_last;
-  ChVector<> angvel;
-  ChVector<> angvel_last;
-  ChVector<> angacc;
-  ChVector<> angacc_last;
+  ChVector3d vel;
+  ChVector3d vel_last;
+  ChVector3d acc;
+  ChVector3d acc_last;
+  ChVector3d angvel;
+  ChVector3d angvel_last;
+  ChVector3d angacc;
+  ChVector3d angacc_last;
   ChMatrix33<double> rotm;
   ChMatrix33<double> rotm_last;
   ChQuaternion<double> rotq;
   ChQuaternion<double> rotq_last;
   ChQuaternion<double> rotq0;
-  ChVector<> F;
-  ChVector<> F_last;
-  ChVector<> M;
-  ChVector<> M_last;
+  ChVector3d F;
+  ChVector3d F_last;
+  ChVector3d M;
+  ChVector3d M_last;
   std::shared_ptr<ChLinkLockLock> lock_motion;  // lock for prescribed motion
   double lock_motion_t_max;  // max time up to which lock motion is used
   double mass;
@@ -70,7 +70,7 @@ class cppRigidBody {
   std::shared_ptr<ChBody> body;
   cppSystem* system;
   cppRigidBody(cppSystem* system);
-  ChVector<double> hxyz(double* x, double t);
+  ChVector3d hxyz(double* x, double t);
   double hx(double* x, double t);
   double hy(double* x, double t);
   double hz(double* x, double t);
@@ -96,7 +96,7 @@ class cppRigidBody {
                                  std::vector<double> y, std::vector<double> z,
                                  std::vector<double> ang, std::vector<double> ang2,
                                  std::vector<double> ang3, double t_max);
-  void getTriangleMeshSDF(ChVector<> pos_node,
+  void getTriangleMeshSDF(ChVector3d pos_node,
                           double* dist_n);
   void getTriangleMeshVel(double *x,
                           double dt,
@@ -133,29 +133,29 @@ cppSystem::cppSystem()
 void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
   if (tstype == "HHT") {
     system->SetTimestepperType(ChTimestepper::Type::HHT);
-      auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
-      mystepper->SetAlpha(-0.2);
-      mystepper->SetMaxiters(10);
-      mystepper->SetAbsTolerances(1e-6);
-      mystepper->SetMode(ChTimestepperHHT::POSITION);
-      mystepper->SetScaling(false);
-      mystepper->SetVerbose(verbose);
-      mystepper->SetModifiedNewton(false);
-    }
-    else if (tstype == "Euler") {
-      system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
-    }
-    else if (tstype == "Trapezoidal") {
-      system->SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
-    }
+    auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system->GetTimestepper());
+    mystepper->SetAlpha(-0.2);
+    mystepper->SetMaxItersSuccess(10);
+    mystepper->SetAbsTolerances(1e-6);
+    //mystepper->SetMode(ChTimestepperHHT::POSITION);
+    //mystepper->SetScaling(false);
+    mystepper->SetVerbose(verbose);
+    mystepper->SetModifiedNewton(false);
   }
+  else if (tstype == "Euler") {
+    system->SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
+  }
+  else if (tstype == "Trapezoidal") {
+    system->SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
+  }
+}
 
 void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
-    double dt2 = proteus_dt/(double)n_substeps;
-   for (int i = 0; i < n_substeps; ++i) {
-     system->DoStepDynamics(dt2);
-   }
+  double dt2 = proteus_dt/(double)n_substeps;
+  for (int i = 0; i < n_substeps; ++i) {
+    system->DoStepDynamics(dt2);
+  }
 }
 
 void cppSystem::addMesh(std::shared_ptr<ChMesh> mesh) {
@@ -170,70 +170,66 @@ cppRigidBody::cppRigidBody(cppSystem* system):
   // add body to system
   /* system->system->AddBody(body); */ // now added externally in cython
   // basic attributes of body
-  rotm = body->GetA();
-  rotm_last = body->GetA();
+  rotm = body->GetRotMat();
+  rotm_last = body->GetRotMat();
   pos = body->GetPos();
   pos_last = body->GetPos();
   body->SetMass(mass);
-  free_x = ChVector<>(1., 1., 1.);
-  free_r = ChVector<>(1., 1., 1.);
+  free_x = ChVector3d(1., 1., 1.);
+  free_r = ChVector3d(1., 1., 1.);
   lock_motion_t_max = 0.;
   has_trimesh = false;
 }
 
 void cppSystem::setDirectory(std::string dir) {
-    directory = dir;
+  directory = dir;
 }
 
 void cppRigidBody::updateTriangleMeshVisualisationPos() {
-  /* rotm = body->GetA(); */
+  /* rotm = body->GetRotMat(); */
   for (int i = 0; i < trimesh_pos.size(); i++) {
-    ChVector<double> local = ChTransform<double>::TransformParentToLocal(trimesh_pos0[i],
-                                                                         pos0_trimesh,
-                                                                         rotq0_trimesh);
-    ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local,
-                                                                         pos,
-                                                                         rotq);
+    ChVector3d local = ChFrame<double>(pos0_trimesh,rotq0_trimesh).TransformPointParentToLocal(trimesh_pos0[i]);
+    ChVector3d xNew  = ChFrame<double>(pos,rotq).TransformPointLocalToParent(local);
     trimesh_pos[i].Set(xNew.x(), xNew.y(), xNew.z());
   }
 }
 
-ChVector<double> cppRigidBody::hxyz(double* x, double t)
+ChVector3d cppRigidBody::hxyz(double* x, double t)
 {
-  /* rotm = body->GetA(); */
-  ChVector<double> xx = ChVector<double>(x[0], x[1], x[2]);
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(xx, pos_last, rotq_last);
-  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
+  /* rotm = body->GetRotMat(); */
+  ChVector3d xx = ChVector3d(x[0], x[1], x[2]);
+  ChVector3d local = ChFrame<double>(pos_last, rotq_last).TransformPointParentToLocal(xx);
+  ChVector3d xNew  = ChFrame<double>(pos, rotq).TransformPointLocalToParent(local);
   return xNew - xx;
 }
 
 
 void cppSystem::setCollisionEnvelopeMargin(double envelope, double margin) {
-  collision::ChCollisionModel::SetDefaultSuggestedEnvelope(envelope);
-  collision::ChCollisionModel::SetDefaultSuggestedMargin(margin);
+  ChCollisionModel::SetDefaultSuggestedEnvelope(envelope);
+  ChCollisionModel::SetDefaultSuggestedMargin(margin);
 }
 
 double cppRigidBody::hx(double* x, double t)
 {
-  /* rotm = body->GetA(); */
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
-  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
+  /* rotm = body->GetRotMat(); */
+  ChVector3d local = ChFrame<double>(pos_last, rotq_last).TransformPointParentToLocal(ChVector3d(x[0],x[1],x[2]));
+  ChVector3d xNew  = ChFrame<double>(pos, rotq).TransformPointLocalToParent(local);
   return xNew.x() - x[0];
 }
 
 double cppRigidBody::hy(double* x, double t)
 {
-  /* rotm = body->GetA(); */
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
-  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
+  /* rotm = body->GetRotMat(); */
+  ChVector3d local = ChFrame<double>(pos_last, rotq_last).TransformPointParentToLocal(ChVector3d(x[0],x[1],x[2]));
+  ChVector3d xNew  = ChFrame<double>(pos, rotq).TransformPointLocalToParent(local);
   return xNew.y() - x[1];
 }
 
 double cppRigidBody::hz(double* x, double t)
 {
-  /* rotm = body->GetA(); */
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
-  ChVector<double> xNew = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
+  /* rotm = body->GetRotMat(); */
+  ChVector3d local = ChFrame<double>(pos_last, rotq_last).TransformPointParentToLocal(ChVector3d(x[0],x[1],x[2]));
+  ChVector3d xNew = ChFrame<double>(pos, rotq).TransformPointLocalToParent(local);
   return xNew.z() - x[2];
 }
 
@@ -243,14 +239,14 @@ void cppRigidBody::calculate_init() {
   if (has_trimesh == true) {
     trimesh_pos.clear();
     trimesh_pos0.clear();
-    auto trimesh_coords = trimesh->getCoordsVertices();
+    auto trimesh_coords = trimesh->GetCoordsVertices();
     for (int i = 0; i < trimesh_coords.size(); i++) {
-      trimesh_pos0.push_back(ChVector<double>(trimesh_coords[i].x(),
-                                              trimesh_coords[i].y(),
-                                              trimesh_coords[i].z()));
-      trimesh_pos.push_back(ChVector<double>(trimesh_coords[i].x(),
-                                             trimesh_coords[i].y(),
-                                             trimesh_coords[i].z()));
+      trimesh_pos0.push_back(ChVector3d(trimesh_coords[i].x(),
+					trimesh_coords[i].y(),
+					trimesh_coords[i].z()));
+      trimesh_pos.push_back(ChVector3d(trimesh_coords[i].x(),
+				       trimesh_coords[i].y(),
+				       trimesh_coords[i].z()));
     }
   }
 }
@@ -259,57 +255,57 @@ void cppRigidBody::prestep(double* force, double* torque)
 {
   /* step to call before running chrono system step */
   pos_last = body->GetPos();
-  vel_last = body->GetPos_dt();
+  vel_last = body->GetPosDt();
   if (has_trimesh == true) {
-    trimesh_pos_last = trimesh->getCoordsVertices();
+    trimesh_pos_last = trimesh->GetCoordsVertices();
   }
-  acc_last = body->GetPos_dtdt();
-  rotm_last = body->GetA();
+  acc_last = body->GetPosDt2();
+  rotm_last = body->GetRotMat();
   rotq_last = body->GetRot();
-  angacc_last = body->GetWacc_loc();
-  angvel_last = body->GetWvel_loc();
-  F_last = body->Get_accumulated_torque();
-  M_last = body->Get_accumulated_torque();
+  angacc_last = body->GetAngAccLocal();
+  angvel_last = body->GetAngVelLocal();
+  F_last = body->GetAccumulatedForce();
+  M_last = body->GetAccumulatedTorque();
   // apply external forces
-  body->Empty_forces_accumulators();
+  body->EmptyAccumulators();
   // calculate opposite force of gravity if free_x is 0
   double forceG[3]={0.,0.,0.};
-  if (free_x.x() == 0) {forceG[0] = -system->system->Get_G_acc().x()*body->GetMass();}
-  if (free_x.y() == 0) {forceG[1] = -system->system->Get_G_acc().y()*body->GetMass();}
-  if (free_x.z() == 0) {forceG[2] = -system->system->Get_G_acc().z()*body->GetMass();}
-  body->Accumulate_force(ChVector<double>(forceG[0]+force[0]*free_x.x(),
-                                          forceG[1]+force[1]*free_x.y(),
-                                          forceG[2]+force[2]*free_x.z()),
-                         pos_last,
-                         false);
-  body->Accumulate_torque(ChVector<double>(torque[0]*free_r.x(),
-                                           torque[1]*free_r.y(),
-                                           torque[2]*free_r.z()),
-                          false);
+  if (free_x.x() == 0) {forceG[0] = -system->system->GetGravitationalAcceleration().x()*body->GetMass();}
+  if (free_x.y() == 0) {forceG[1] = -system->system->GetGravitationalAcceleration().y()*body->GetMass();}
+  if (free_x.z() == 0) {forceG[2] = -system->system->GetGravitationalAcceleration().z()*body->GetMass();}
+  body->AccumulateForce(ChVector3d(forceG[0]+force[0]*free_x.x(),
+				   forceG[1]+force[1]*free_x.y(),
+				   forceG[2]+force[2]*free_x.z()),
+			pos_last,
+			false);
+  body->AccumulateTorque(ChVector3d(torque[0]*free_r.x(),
+				    torque[1]*free_r.y(),
+				    torque[2]*free_r.z()),
+			 false);
   if (spring!=0) {
-      double spring_length = spring->GetLength();
-      if (spring_length < mooring_restlength) {
-          spring->SetDisabled(true);//SetRestLength(spring_length);
-      }
-      else {
-          spring->SetDisabled(false);//SetRestLength(mooring_restlength);
-      }
+    double spring_length = spring->GetLength();
+    if (spring_length < mooring_restlength) {
+      spring->SetDisabled(true);//SetRestLength(spring_length);
+    }
+    else {
+      spring->SetDisabled(false);//SetRestLength(mooring_restlength);
+    }
   }
-  }
+}
 
 
 
 void cppRigidBody::poststep()
 {
   pos = body->GetPos();
-  vel = body->GetPos_dt();
-  acc = body->GetPos_dtdt();
-  rotm = body->GetA();
+  vel = body->GetPosDt();
+  acc = body->GetPosDt2();
+  rotm = body->GetRotMat();
   rotq = body->GetRot();
-  angacc = body->GetWacc_loc();
-  angvel = body->GetWvel_loc();
-  F = body->Get_accumulated_force();
-  M = body->Get_accumulated_torque();
+  angacc = body->GetAngAccLocal();
+  angvel = body->GetAngVelLocal();
+  F = body->GetAccumulatedForce();
+  M = body->GetAccumulatedTorque();
   if (lock_motion_t_max > 0) {
     double t = system->system->GetChTime();
     if (lock_motion_t_max < t && lock_motion->IsDisabled() == false) {
@@ -328,96 +324,95 @@ void cppRigidBody::setPrescribedMotionCustom(std::vector<double> t,
                                              double t_max) {
   auto fixed_body = chrono_types::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
-  fixed_body->SetBodyFixed(true);
+  fixed_body->SetFixed(true);
   system->system->Add(fixed_body);
   lock_motion = chrono_types::make_shared<ChLinkLockLock>();
   lock_motion_t_max = t_max;
-  lock_motion->Initialize(body, fixed_body, fixed_body->GetCoord());
+  lock_motion->Initialize(body, fixed_body, fixed_body->GetFrameCOMToAbs());
   system->system->Add(lock_motion);
   if (x.size() > 0) {
-    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
     for (int i = 0; i < x.size(); i++) {
       forced_motion->AddPoint(t[i], x[i]);
     }
     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-    lock_motion->SetMotion_X(forced_ptr);
+    lock_motion->SetMotionX(forced_ptr);
   }
   if (y.size() > 0) {
-    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
     for (int i = 0; i < y.size(); i++) {
       forced_motion->AddPoint(t[i], y[i]);
     }
     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-    lock_motion->SetMotion_Y(forced_ptr);
+    lock_motion->SetMotionY(forced_ptr);
   }
   if (z.size() > 0) {
-    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
     for (int i = 0; i < z.size(); i++) {
       forced_motion->AddPoint(t[i], z[i]);
     }
     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-    lock_motion->SetMotion_Z(forced_ptr);
+    lock_motion->SetMotionZ(forced_ptr);
   }
   if (ang.size() > 0) {
-    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
     for (int i = 0; i < ang.size(); i++) {
       forced_motion->AddPoint(t[i], ang[i]);
     }
     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-    lock_motion->SetMotion_ang(forced_ptr);
+    lock_motion->SetMotionAng1(forced_ptr);
   }
   if (ang2.size() > 0) {
-    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
     for (int i = 0; i < ang2.size(); i++) {
       forced_motion->AddPoint(t[i], ang2[i]);
     }
     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-    lock_motion->SetMotion_ang2(forced_ptr);
+    lock_motion->SetMotionAng2(forced_ptr);
   }
   if (ang3.size() > 0) {
-    auto forced_motion = chrono_types::make_shared<ChFunction_Recorder>();
+    auto forced_motion = chrono_types::make_shared<ChFunctionInterp>();
     for (int i = 0; i < ang3.size(); i++) {
       forced_motion->AddPoint(t[i], ang3[i]);
     }
     std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-    lock_motion->SetMotion_ang3(forced_ptr);
+    lock_motion->SetMotionAng3(forced_ptr);
   }
 }
 
 void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
   auto fixed_body = chrono_types::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
-  fixed_body->SetBodyFixed(true);
+  fixed_body->SetFixed(true);
   system->system->Add(fixed_body);
   auto lock = chrono_types::make_shared<ChLinkLockLock>();
-  lock->Initialize(body, fixed_body, fixed_body->GetCoord());
+  lock->Initialize(body, fixed_body, fixed_body->GetFrameCOMToAbs());
   system->system->Add(lock);
-  auto forced_motion = chrono_types::make_shared<ChFunction_Poly>();
-  forced_motion->Set_order(1);
-  forced_motion->Set_coeff(coeff1, 1);
+  auto forced_motion = chrono_types::make_shared<ChFunctionPoly>();
+  forced_motion->SetCoefficients(std::vector<double>{coeff1});
   std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-  lock->SetMotion_X(forced_ptr);
+  lock->SetMotionX(forced_ptr);
 }
 
 
 void cppRigidBody::setPrescribedMotionSine(double a, double f) {
   auto fixed_body = chrono_types::make_shared<ChBody>();
   fixed_body->SetPos(body->GetPos());
-  fixed_body->SetBodyFixed(true);
+  fixed_body->SetFixed(true);
   system->system->Add(fixed_body);
   auto lock = chrono_types::make_shared<ChLinkLockLock>();
-  lock->Initialize(body, fixed_body, fixed_body->GetCoord());
+  lock->Initialize(body, fixed_body, fixed_body->GetFrameCOMToAbs());
   system->system->Add(lock);
-  auto forced_motion = chrono_types::make_shared<ChFunction_Sine>();
-  forced_motion->Set_amp(a);
-  forced_motion->Set_freq(f);
+  auto forced_motion = chrono_types::make_shared<ChFunctionSine>();
+  forced_motion->SetAmplitude(a);
+  forced_motion->SetFrequency(f);
   std::shared_ptr<ChFunction> forced_ptr = forced_motion;
-  lock->SetMotion_X(forced_ptr);
+  lock->SetMotionX(forced_ptr);
 }
 
 void cppRigidBody::setConstraints(double* free_x_in, double* free_r_in){
-  free_x = ChVector<>(free_x_in[0], free_x_in[1], free_x_in[2]);
-  free_r = ChVector<>(free_r_in[0], free_r_in[1], free_r_in[2]);
+  free_x = ChVector3d(free_x_in[0], free_x_in[1], free_x_in[2]);
+  free_r = ChVector3d(free_r_in[0], free_r_in[1], free_r_in[2]);
 }
 
 void cppRigidBody::addSpring(double stiffness,
@@ -429,14 +424,14 @@ void cppRigidBody::addSpring(double stiffness,
   mooring_restlength = rest_length;
   spring = chrono_types::make_shared<ChLinkTSDA>();
   std::shared_ptr<ChBody> anchor_body = chrono_types::make_shared<ChBody>();
-  anchor_body->SetPos(ChVector<>(anchor[0], anchor[1], anchor[2]));
-  anchor_body->SetBodyFixed(true);
+  anchor_body->SetPos(ChVector3d(anchor[0], anchor[1], anchor[2]));
+  anchor_body->SetFixed(true);
   system->system->AddBody(anchor_body);
   spring->Initialize(body,
                      anchor_body,
                      true, // true for pos relative to bodies
-                     ChVector<>(fairlead[0], fairlead[1], fairlead[2]),
-                     ChVector<>(0.,0.,0.));
+                     ChVector3d(fairlead[0], fairlead[1], fairlead[2]),
+                     ChVector3d(0.,0.,0.));
   spring->SetSpringCoefficient(stiffness);
   spring->SetDampingCoefficient(damping);
   system->system->AddLink(spring);
@@ -446,12 +441,14 @@ void cppRigidBody::addPrismaticLinkX(double* pris1)
 {
   auto mybod2 = chrono_types::make_shared<ChBody>();
   mybod2->SetName("PRIS1");
-  mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
+  mybod2->SetPos(ChVector3d(pris1[0], pris1[1], pris1[2]));
   mybod2->SetMass(0.00001);
-  mybod2->SetBodyFixed(true);
+  mybod2->SetFixed(true);
   system->system->AddBody(mybod2);
   auto mylink1 = chrono_types::make_shared<ChLinkLockPrismatic>();
-  auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+  ChQuaternion<double> Q;
+  Q.SetFromAngleAxis(CH_PI/2., VECT_Y);
+  auto mycoordsys1 = ChFrame<double>(mybod2->GetPos(), Q);//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink1->Initialize(mybod2, body, mycoordsys1);
   system->system->AddLink(mylink1);
 }
@@ -470,34 +467,38 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
   system->system->AddBody(fairlead);
   auto mybod2 = chrono_types::make_shared<ChBody>();
   mybod2->SetName("PRIS1");
-  mybod2->SetPos(ChVector<>(pris1[0], pris1[1], pris1[2]));
+  mybod2->SetPos(ChVector3d(pris1[0], pris1[1], pris1[2]));
   mybod2->SetMass(0.00001);
-  //mybod2->AddForce(-system->system->Get_G_acc());
-  //mybod2->SetBodyFixed(true);
+  //mybod2->AddForce(-system->system->GetGravitationalAcceleration());
+  //mybod2->SetFixed(true);
   system->system->AddBody(mybod2);
   auto mybod3 = chrono_types::make_shared<ChBody>();
   mybod3->SetName("PRIS2");
-  mybod3->SetPos(ChVector<>(pris2[0], pris2[1], pris2[2]));
-  mybod3->SetBodyFixed(true);
+  mybod3->SetPos(ChVector3d(pris2[0], pris2[1], pris2[2]));
+  mybod3->SetFixed(true);
   system->system->AddBody(mybod3);
 
   auto mylink1 = chrono_types::make_shared<ChLinkLockPrismatic>();
   system->system->AddLink(mylink1);
-  auto mycoordsys1 = ChCoordsys<>(mybod2->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_Y));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+  ChQuaternion<double> QX;
+  QX.SetFromAngleAxis(CH_PI/2., VECT_Y);
+  auto mycoordsys1 = ChFrame<double>(mybod2->GetPos(), QX);//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink1->Initialize(fairlead, mybod2, mycoordsys1);
 
 
 
   auto mylink2 = chrono_types::make_shared<ChLinkLockPrismatic>();
   system->system->AddLink(mylink2);
-  auto mycoordsys2 = ChCoordsys<>(mybod3->GetPos(),Q_from_AngAxis(CH_C_PI/2., VECT_X));//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+  ChQuaternion<double> QY;
+  QY.SetFromAngleAxis(CH_PI/2., VECT_X);
+  auto mycoordsys2 = ChFrame<double>(mybod3->GetPos(), QY);//Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   mylink2->Initialize(mybod2, mybod3,mycoordsys2);
 
   auto mylink3 = chrono_types::make_shared<ChLinkLockSpherical>();
   //auto mylink3 = chrono_types::make_shared<ChLinkLockRevolute>();
-  //mylink3->SetMotion_axis(ChVector<>(0.,1.,0.));
+  //mylink3->SetMotion_axis(ChVector3d(0.,1.,0.));
   system->system->AddLink(mylink3);
-  mylink3->Initialize(fairlead, body, false, fairlead->GetCoord(), body->GetCoord());
+  mylink3->Initialize(fairlead, body, false, fairlead->GetFrameCOMToAbs(), body->GetFrameCOMToAbs());
 
 
 
@@ -505,8 +506,8 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
   spring->Initialize(fairlead,
                      mybod2,
                      true, // true for pos relative to bodies
-                     ChVector<>(0.,0.,0.),
-                     ChVector<>(0.,0.,0.));
+                     ChVector3d(0.,0.,0.),
+                     ChVector3d(0.,0.,0.));
   spring->SetSpringCoefficient(stiffness);
   spring->SetDampingCoefficient(damping);
   spring->SetName("SPRING1");
@@ -514,14 +515,14 @@ void cppRigidBody::addPrismaticLinksWithSpring(double* pris1,
 }
 
 void cppRigidBody::setName(std::string name) {
-  body->SetNameString(name);
+  body->SetName(name);
 }
 
-void cppRigidBody::getTriangleMeshSDF(ChVector<> pos,
+void cppRigidBody::getTriangleMeshSDF(ChVector3d pos,
                                       double* dist_n) {
-  auto xxs = trimesh->getCoordsVertices();
-  auto nns = trimesh->getCoordsNormals();
-  ChVector<> dist_vec;
+  auto xxs = trimesh->GetCoordsVertices();
+  auto nns = trimesh->GetCoordsNormals();
+  ChVector3d dist_vec;
   double min_dist=1e10;
   double dist;
   for (int i = 0; i < xxs.size(); i++) {
@@ -548,12 +549,12 @@ void cppRigidBody::getTriangleMeshSDF(ChVector<> pos,
 void cppRigidBody::getTriangleMeshVel(double *x,
                                       double dt,
                                       double *vel) {
-  auto xxs = trimesh->getCoordsVertices();
-  auto nns = trimesh->getCoordsNormals();
+  auto xxs = trimesh->GetCoordsVertices();
+  auto nns = trimesh->GetCoordsNormals();
   double min_dist = 1e10;
-  ChVector<> p(x[0], x[1], x[2]);
-  ChVector<> d_vector(0.0);
-  ChVector<> ddlast;
+  ChVector3d p(x[0], x[1], x[2]);
+  ChVector3d d_vector(0.0);
+  ChVector3d ddlast;
   // find closest node
   int node_closest = -1;
   for (int i = 0; i < xxs.size(); i++) {
@@ -589,7 +590,7 @@ cppRigidBody * newRigidBody(cppSystem* system)
 void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
                       std::shared_ptr<ChBody> body2,
                       std::shared_ptr<ChSystem> system,
-                      ChCoordsys<> coordsys,
+                      ChFrame<double> frame,
                       double limit_X=0.,
                       double limit_Y=0.,
                       double limit_Z=0.,
@@ -598,25 +599,25 @@ void ChLinkLockBodies(std::shared_ptr<ChBody> body1,
                       double limit_Rz=0.) {
   auto mylink = chrono_types::make_shared<ChLinkLock>();
   system->AddLink(mylink);
-  auto chlimit_X = mylink->GetLimit_X();
+  auto chlimit_X = mylink->LimitX();
   chlimit_X.SetActive(true);
   chlimit_X.SetMax(limit_X);
-  auto chlimit_Y = mylink->GetLimit_Y();
+  auto chlimit_Y = mylink->LimitY();
   chlimit_Y.SetActive(true);
   chlimit_Y.SetMax(limit_Y);
-  auto chlimit_Z = mylink->GetLimit_Z();
+  auto chlimit_Z = mylink->LimitZ();
   chlimit_Z.SetActive(true);
   chlimit_Z.SetMax(limit_Z);
-  auto chlimit_Rx = mylink->GetLimit_Rx();
+  auto chlimit_Rx = mylink->LimitRx();
   chlimit_Rx.SetMax(limit_Rx);
   chlimit_Rx.SetActive(true);
-  auto chlimit_Ry = mylink->GetLimit_Ry();
+  auto chlimit_Ry = mylink->LimitRy();
   chlimit_Ry.SetActive(true);
   chlimit_Ry.SetMax(limit_Ry);
-  auto chlimit_Rz = mylink->GetLimit_Rz();
+  auto chlimit_Rz = mylink->LimitRz();
   chlimit_Rz.SetActive(true);
   chlimit_Rz.SetMax(limit_Rz);
-  mylink->Initialize(body1, body2, coordsys);
+  mylink->Initialize(body1, body2, frame);
 }
 
 struct no_op_delete

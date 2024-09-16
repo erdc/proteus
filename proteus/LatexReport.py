@@ -5,13 +5,6 @@ Class and script for generating a report from simulation data.
 .. inheritance-diagram:: proteus.LatexReport
    :parts: 1
 """
-from __future__ import division
-
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
-from builtins import object
-from past.utils import old_div
 from .Profiling import logEvent
 
 def openLatexReport(filename,reportname):
@@ -176,7 +169,7 @@ class LatexResultsSummary(object):
                                     exact = self.results['errorData'][ci][nLevels-1][exkey]
                                 if abs(exact) < relativeErrorEps:
                                     exact += relativeErrorEps
-                                error = old_div(error,exact)
+                                error = error/exact
                             if il == 0:
                                 row += """ & %g & %s """ % (error,'-')
                             else:
@@ -186,9 +179,9 @@ class LatexResultsSummary(object):
                                     errM=self.results['errorData'][ci][il-1][ekey]
                                 hM = self.results['simulationData']['spatialMesh'][il-1]['h'][-1]
                                 if useRelativeError == True: #only normalizing by finest mesh val
-                                    rate = old_div(math.log(old_div((old_div(errM,exact)+1.0e-24),(error+1.0e-24))),math.log(old_div(hM,h)))
+                                    rate = math.log((errM/exact+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
                                 else:
-                                    rate = old_div(math.log(old_div((errM+1.0e-24),(error+1.0e-24))),math.log(old_div(hM,h)))
+                                    rate = math.log((errM+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
 
                                 row += """& %g & %g """ % (error,rate)
                     if computeLocalMassBalErr or computeGlobalHeavisideMassBalErr:

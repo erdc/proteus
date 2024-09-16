@@ -10,26 +10,25 @@
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/physics/ChBodyEasy.h"
+#include "chrono/physics/ChContactMaterial.h"
+#include "chrono/physics/ChContactMaterialSMC.h"
 #include "chrono/fea/ChElementBeamANCF_3333.h"
 #include "chrono/fea/ChElementCableANCF.h"
 #include "chrono/fea/ChElementBeamEuler.h"
 #include "chrono/fea/ChBeamSection.h"
 #include "chrono/fea/ChMesh.h"
-#include "chrono/fea/ChLinkPointPoint.h"
-#include "chrono/fea/ChLinkPointFrame.h"
-#include "chrono/fea/ChLinkDirFrame.h"
+#include "chrono/fea/ChLinkNodeNode.h"
+#include "chrono/fea/ChLinkNodeFrame.h"
+#include "chrono/fea/ChLinkNodeSlopeFrame.h"
 #include "chrono/fea/ChLoadsBeam.h"
 #include "chrono/fea/ChContactSurfaceNodeCloud.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverPMINRES.h"
-#include "chrono/core/ChTransform.h"
 
 
 //using namespace std;
 using namespace chrono;
-using namespace chrono::fea;
-using namespace chrono::collision;
-using namespace chrono::geometry;
+using namespace fea;
 
 
 // override some functions of ChElement
@@ -73,10 +72,10 @@ private:
     ChMatrix33<> A0;
     auto node0 = GetNodeA();
     auto node1 = GetNodeB();
-    ChVector<> mXele = node1->GetX0().GetPos() - node0->GetX0().GetPos();
-    ChVector<> myele = node0->GetX0().GetA().Get_A_Yaxis();
-    A0.Set_A_Xdir(mXele, myele);
-    q_element_ref_rot = A0.Get_A_quaternion();
+    ChVector3d mXele = node1->GetX0().GetPos() - node0->GetX0().GetPos();
+    ChVector3d myele = node0->GetX0().GetRotMat().GetAxisY();
+    A0.SetFromAxisX(mXele, myele);
+    q_element_ref_rot = A0.GetQuaternion();
 
     // Compute local stiffness matrix:
     ComputeStiffnessMatrix();
@@ -85,14 +84,14 @@ private:
 
 
 class MyLoaderTriangular : public ChLoaderUdistributed {
- public:
+public:
   // Useful: a constructor that also sets ChLoadable
-  ChVector<> Fa;
-  ChVector<> Fb;
- MyLoaderTriangular(std::shared_ptr<ChLoadableU> mloadable):
-  ChLoaderUdistributed(mloadable) {
-    Fa = ChVector<>(0.,0.,0.);
-    Fb = ChVector<>(0.,0.,0.);
+  ChVector3d Fa;
+  ChVector3d Fb;
+  MyLoaderTriangular(std::shared_ptr<ChLoadableU> mloadable):
+    ChLoaderUdistributed(mloadable) {
+    Fa = ChVector3d(0.,0.,0.);
+    Fb = ChVector3d(0.,0.,0.);
   };
   // Compute F=F(u)
   // This is the function that you have to implement. It should return the
@@ -104,12 +103,12 @@ class MyLoaderTriangular : public ChLoaderUdistributed {
                         ChVectorDynamic<>* state_w
                         ) {
     double Fy_max = 0.005;
-    ChVector<> force = Fa*abs(-1+U)/2.+Fb*(1+U)/2.;
+    ChVector3d force = Fa*abs(-1+U)/2.+Fb*(1+U)/2.;
     F(0) = force.x();
     F(1) = force.y();
     F(2) = force.z();
   }
-  void SetF(ChVector<> Fa_in, ChVector<> Fb_in) {
+  void SetF(ChVector3d Fa_in, ChVector3d Fb_in) {
     Fa = Fa_in;
     Fb = Fb_in;
   }
@@ -124,7 +123,7 @@ class MyLoaderTriangular : public ChLoaderUdistributed {
 
 
 class cppCable {
- public:
+public:
   std::shared_ptr<ChSystem> system;  // global system
   std::shared_ptr<ChMesh> mesh;  // mesh
   int nb_elems;   // number of nodes along cable
@@ -133,10 +132,10 @@ class cppCable {
   double Cd_normal;  // drag coeff in normal direction
   double Cm_axial;  // added mass coeff in axial direction
   double Cm_normal;  // added mass coeff in normal direction
-  std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
-  std::vector<ChVector<>> mvecs_tangents;  // vectors (tangents at nodes coordinates)
-  std::vector<ChVector<>> mvecs_middle;
-  std::vector<ChVector<>> mdirs;  // vectors (nodes coordinates)
+  std::vector<ChVector3d> mvecs;  // vectors (nodes coordinates)
+  std::vector<ChVector3d> mvecs_tangents;  // vectors (tangents at nodes coordinates)
+  std::vector<ChVector3d> mvecs_middle;
+  std::vector<ChVector3d> mdirs;  // vectors (nodes coordinates)
   double d, rho, E, length;  // diameter, density, Young's modulus, length of cable
   double A0; // unstretched diameter
   double L0 = 0;  // initial length along cable
@@ -155,21 +154,21 @@ class cppCable {
   std::shared_ptr<ChBeamSectionCable> msection_cable;  // cable material
   std::shared_ptr<ChBeamSectionAdvanced> msection_advanced;  // cable material
   std::vector<double> elems_length;  // array of elements
-  std::vector<ChVector<>> fluid_velocity;
-  std::vector<ChVector<>> fluid_acceleration;
+  std::vector<ChVector3d> fluid_velocity;
+  std::vector<ChVector3d> fluid_acceleration;
   std::vector<double> fluid_density;
   std::vector<double> nodes_density; // density of (cable-fluid) at nodes
   cppCable(std::shared_ptr<ChSystem> system, std::shared_ptr<ChMesh> mesh, double length,
            int nb_elems, double d, double rho, double E, double L0, std::string beam_type);  // constructor
-  void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
-  void setFluidAccelerationAtNodes(std::vector<ChVector<>> acc);
+  void setFluidVelocityAtNodes(std::vector<ChVector3d> vel);
+  void setFluidAccelerationAtNodes(std::vector<ChVector3d> acc);
   void setFluidDensityAtNodes(std::vector<double> vof);
-  std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
-  std::vector<std::shared_ptr<ChVector<double>>> forces_drag;
-  std::vector<std::shared_ptr<ChVector<double>>> forces_addedmass;
+  std::vector<std::shared_ptr<ChVector3d>> getNodalPositions();
+  std::vector<std::shared_ptr<ChVector3d>> forces_drag;
+  std::vector<std::shared_ptr<ChVector3d>> forces_addedmass;
   /* std::vector<std::shared_ptr<ChLoadBeamWrenchDistributed>> elems_loads_distributed; */
-  std::vector<std::shared_ptr<ChLoad<MyLoaderTriangular>>> elems_loads_triangular;
-  std::vector<std::shared_ptr<ChLoad<ChLoaderGravity>>> elems_loads_volumetric;
+  std::vector<std::shared_ptr<ChLoad>> elems_loads_triangular;
+  std::vector<std::shared_ptr<ChLoad>> elems_loads_volumetric;
   /* std::vector<std::shared_ptr<ChLoadBeamWrench>> elems_loads; */
   void buildVectors();  // builds location vectors for the nodes
   void buildNodes(bool last_node);  // builds the nodes for the mesh
@@ -192,18 +191,18 @@ class cppCable {
 };
 
 class cppMultiSegmentedCable {
- public:
+public:
   std::shared_ptr<ChSystem> system;  // global system
   std::string beam_type;
-  std::shared_ptr<ChMaterialSurfaceSMC> mysurfmaterial;
+  std::shared_ptr<ChContactMaterialSMC> mysurfmaterial;
   std::shared_ptr<ChMesh> mesh;  // mesh
   std::shared_ptr<ChBody> fairleadd;
-  std::shared_ptr<ChLinkPointFrame> fairlead2;
+  std::shared_ptr<ChLinkNodeFrame> fairlead2;
   std::vector<int> nb_nodes;   // number of nodes along cable
   std::vector<int> nb_elems;   // number of nodes along cable
-  std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
+  std::vector<ChVector3d> mvecs;  // vectors (nodes coordinates)
   std::vector<std::shared_ptr<cppCable>> cables;
-  std::shared_ptr<ChMaterialSurfaceSMC> contact_material;  // mesh
+  std::shared_ptr<ChContactMaterialSMC> contact_material;  // mesh
   std::vector<double>  d;
   std::vector<double> rho;
   std::vector<double> E;
@@ -211,15 +210,15 @@ class cppMultiSegmentedCable {
   std::vector<std::shared_ptr<ChNodeFEAxyzD>> nodes;  // array nodes coordinates and direction
   std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodesDD;  // array nodes coordinates and direction
   std::vector<std::shared_ptr<ChNodeFEAxyzrot>> nodesRot;  // array nodes coordinates and direction
-  std::vector<ChVector<>> fluid_velocity;
-  std::vector<ChVector<>> fluid_acceleration;
+  std::vector<ChVector3d> fluid_velocity;
+  std::vector<ChVector3d> fluid_acceleration;
   std::vector<double> fluid_density;
   std::vector<std::shared_ptr<ChElementCableANCF>> elemsCableANCF;  // array of elements */
   std::vector<std::shared_ptr<ChElementBeamEuler>> elemsBeamEuler;  // array of elements */
   std::shared_ptr<ChLinkBase> constraint_front;
   std::shared_ptr<ChLinkBase> constraint_back;
-  std::vector<std::shared_ptr<ChVector<double>>> forces_drag;
-  std::vector<std::shared_ptr<ChVector<double>>> forces_addedmass;
+  std::vector<std::shared_ptr<ChVector3d>> forces_drag;
+  std::vector<std::shared_ptr<ChVector3d>> forces_addedmass;
   std::shared_ptr<ChBody> body_back;
   std::shared_ptr<ChBody> body_front;
   int nb_nodes_tot;
@@ -235,13 +234,13 @@ class cppMultiSegmentedCable {
                          std::vector<double> rho,
                          std::vector<double> E,
                          std::string beam_type);
-  void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
-  void setFluidAccelerationAtNodes(std::vector<ChVector<>> vel);
+  void setFluidVelocityAtNodes(std::vector<ChVector3d> vel);
+  void setFluidAccelerationAtNodes(std::vector<ChVector3d> vel);
   void setFluidDensityAtNodes(std::vector<double> dens);
   void updateDragForces();
   void updateAddedMassForces();
   void applyForces();
-  std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
+  std::vector<std::shared_ptr<ChVector3d>> getNodalPositions();
   void buildNodes();
   void buildElements();
   void buildCable();  // builds the multi-segmented cable
@@ -249,9 +248,9 @@ class cppMultiSegmentedCable {
 
   void attachBackNodeToBody(std::shared_ptr<ChBody> body);
   void attachFrontNodeToBody(std::shared_ptr<ChBody> body);
-  void setContactMaterial(std::shared_ptr<ChMaterialSurfaceSMC> material);
+  void setContactMaterial(std::shared_ptr<ChContactMaterialSMC> material);
   void buildNodesCloud();
-  ChVector<> getTensionElement(int i, double eta);
+  ChVector3d getTensionElement(int i, double eta);
 };
 
 
@@ -263,7 +262,7 @@ cppMultiSegmentedCable::cppMultiSegmentedCable(std::shared_ptr<ChSystem> system,
                                                std::vector<double> rho,
                                                std::vector<double> E,
                                                std::string beam_type="CableANCF"):
-system(system),
+  system(system),
   mesh(mesh),
   length(length),
   nb_elems(nb_elems),
@@ -374,7 +373,7 @@ void cppMultiSegmentedCable::buildCable() {
           system->Add(con1);
         }
         else if (beam_type == "CableANCF") {
-          auto con1 = chrono_types::make_shared<ChLinkPointPoint>();
+          auto con1 = chrono_types::make_shared<ChLinkNodeNode>();
           auto nodeA = cables[i]->nodes.front();
           auto nodeB = cables[i-1]->nodes.back();
           con1->Initialize(nodeA, nodeB);
@@ -396,8 +395,8 @@ void cppMultiSegmentedCable::buildCable() {
     nb_nodes_tot = nodes.size();
   }
   for (int i = 0; i < nb_nodes_tot; ++i) {
-    fluid_velocity.push_back(ChVector<>(0.,0.,0.));
-    fluid_acceleration.push_back(ChVector<>(0.,0.,0.));
+    fluid_velocity.push_back(ChVector3d(0.,0.,0.));
+    fluid_acceleration.push_back(ChVector3d(0.,0.,0.));
     fluid_density.push_back(0.);
   }
   setFluidVelocityAtNodes(fluid_velocity);
@@ -405,7 +404,7 @@ void cppMultiSegmentedCable::buildCable() {
   setFluidDensityAtNodes(fluid_density);
 }
 
-void cppMultiSegmentedCable::setFluidAccelerationAtNodes(std::vector<ChVector<>> acc) {
+void cppMultiSegmentedCable::setFluidAccelerationAtNodes(std::vector<ChVector3d> acc) {
   fluid_acceleration = acc;
   int node_nb = 0;
   int node_nb_prev = node_nb;
@@ -416,14 +415,14 @@ void cppMultiSegmentedCable::setFluidAccelerationAtNodes(std::vector<ChVector<>>
     else if (beam_type == "CableANCF") {
       node_nb += cables[i]->nodes.size();
     }
-    std::vector<ChVector<>> fluid_acc(fluid_acceleration.begin()+node_nb_prev,
+    std::vector<ChVector3d> fluid_acc(fluid_acceleration.begin()+node_nb_prev,
                                       fluid_acceleration.begin()+node_nb);
     cables[i]->setFluidAccelerationAtNodes(fluid_acc);
     node_nb_prev = node_nb;
   }
 }
 
-void cppMultiSegmentedCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel) {
+void cppMultiSegmentedCable::setFluidVelocityAtNodes(std::vector<ChVector3d> vel) {
   fluid_velocity = vel;
   int node_nb = 0;
   int node_nb_prev = node_nb;
@@ -434,7 +433,7 @@ void cppMultiSegmentedCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel
     else if (beam_type == "CableANCF") {
       node_nb += cables[i]->nodes.size();
     }
-    std::vector<ChVector<>> fluid_vel(fluid_velocity.begin()+node_nb_prev,
+    std::vector<ChVector3d> fluid_vel(fluid_velocity.begin()+node_nb_prev,
                                       fluid_velocity.begin()+node_nb);
     cables[i]->setFluidVelocityAtNodes(fluid_vel);
     node_nb_prev = node_nb;
@@ -478,10 +477,10 @@ void cppMultiSegmentedCable::applyForces() {
   };
 }
 
-ChVector<> cppMultiSegmentedCable::getTensionElement(int i, const double eta=0.) {
+ChVector3d cppMultiSegmentedCable::getTensionElement(int i, const double eta=0.) {
 
-  auto force = ChVector<>();
-  auto torque = ChVector<>();
+  auto force = ChVector3d();
+  auto torque = ChVector3d();
   if (beam_type == "CableANCF") {
     elemsCableANCF[i]->EvaluateSectionForceTorque(eta,
                                                   force,
@@ -498,14 +497,14 @@ ChVector<> cppMultiSegmentedCable::getTensionElement(int i, const double eta=0.)
   return force;
 }
 
-std::vector<std::shared_ptr<ChVector<double>>> cppMultiSegmentedCable::getNodalPositions() {
-  std::vector<std::shared_ptr<ChVector<double>>> nodal_positions;
+std::vector<std::shared_ptr<ChVector3d>> cppMultiSegmentedCable::getNodalPositions() {
+  std::vector<std::shared_ptr<ChVector3d>> nodal_positions;
   for (int i = 0; i < nodes.size(); ++i) {
     auto pos = nodes[i]->GetPos();
     double x = pos.x();
     double y = pos.y();
     double z = pos.z();
-    auto nodal_position = chrono_types::make_shared<ChVector<double>>(x, y, z);
+    auto nodal_position = chrono_types::make_shared<ChVector3d>(x, y, z);
     nodal_positions.push_back(nodal_position);
   }
   return nodal_positions;
@@ -520,7 +519,7 @@ void cppMultiSegmentedCable::attachBackNodeToBody(std::shared_ptr<ChBody> body) 
     constraint_back = constraint;
   }
   else {
-    auto constraint = chrono_types::make_shared<ChLinkPointFrame>();
+    auto constraint = chrono_types::make_shared<ChLinkNodeFrame>();
     constraint->Initialize(nodes.back(), body);
     system->Add(constraint);
     body_back = body;
@@ -537,7 +536,7 @@ void cppMultiSegmentedCable::attachFrontNodeToBody(std::shared_ptr<ChBody> body)
     constraint_front = constraint;
   }
   else if (beam_type == "CableANCF") {
-    auto constraint = chrono_types::make_shared<ChLinkPointFrame>();
+    auto constraint = chrono_types::make_shared<ChLinkNodeFrame>();
     constraint->Initialize(nodes.front(), body);
     system->Add(constraint);
     body_front = body;
@@ -545,7 +544,7 @@ void cppMultiSegmentedCable::attachFrontNodeToBody(std::shared_ptr<ChBody> body)
   }
 };
 
-void cppMultiSegmentedCable::setContactMaterial(std::shared_ptr<ChMaterialSurfaceSMC> material) {
+void cppMultiSegmentedCable::setContactMaterial(std::shared_ptr<ChContactMaterialSMC> material) {
   contact_material = material;
 };
 
@@ -601,13 +600,13 @@ cppCable::cppCable(std::shared_ptr<ChSystem> system, // system in which the cabl
     msection_cable->SetDiameter(d);
     msection_cable->SetYoungModulus(E);
     msection_cable->SetDensity(rho);
-    /* msection_cable->SetI(Iyy); */
-    Iyy = msection_cable->GetI();
+    /* msection_cable->SetInertia(Iyy); */
+    Iyy = msection_cable->GetInertia();
   }
   else if (beam_type == "BeamEuler") {
     msection_advanced = chrono_types::make_shared<ChBeamSectionAdvanced>();
     msection_advanced->SetYoungModulus(E);
-    msection_advanced->SetGshearModulus(1e-6);
+    msection_advanced->SetShearModulus(1e-6);
     msection_advanced->SetDensity(rho);
     msection_advanced->SetAsCircularSection(d);
     /* msection_advanced->SetIyy(Iyy); */
@@ -619,7 +618,7 @@ cppCable::cppCable(std::shared_ptr<ChSystem> system, // system in which the cabl
 void cppCable::setIyy(double Iyy_in) {
   Iyy = Iyy_in;
   if (beam_type == "CableANCF") {
-    msection_cable->SetI(Iyy);
+    msection_cable->SetInertia(Iyy);
   }
   else if (beam_type == "BeamEuler") {
     msection_advanced->SetIyy(Iyy);
@@ -637,20 +636,20 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
   forces_drag.clear();
   forces_addedmass.clear();
   std::shared_ptr<ChNodeFEAxyzrot> node;
-  ChVector<> dir;  // direction of node
-  ChVector<> ref = ChVector<>(1.,0.,0.);
+  ChVector3d dir;  // direction of node
+  ChVector3d ref = ChVector3d(1.,0.,0.);
   ChQuaternion<> frame_quat;
   for (int i = 0; i < mvecs.size() - 1; ++i) {
     dir = mvecs_tangents[i];
     dir.Normalize();
     double ang = acos(dir^ref);  // inner product
     auto axis = ref%dir; // cross product
-    frame_quat.Q_from_AngAxis(ang, axis);
+    frame_quat.SetFromAngleAxis(ang, axis);
     node = chrono_types::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[i],
-                                                       frame_quat));
+								frame_quat));
     nodesRot.push_back(node);
-    std::shared_ptr<ChVector<>> drag0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
-    std::shared_ptr<ChVector<>> am0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> drag0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> am0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
     forces_drag.push_back(drag0);
     forces_addedmass.push_back(am0);
   }  // last node
@@ -659,14 +658,14 @@ void cppCable::buildNodesBeamEuler(bool last_node) {
     dir.Normalize();
     double ang = -acos(dir^ref);  // inner product
     auto axis = ref%dir; // cross product
-    frame_quat.Q_from_AngAxis(ang, axis);
+    frame_quat.SetFromAngleAxis(ang, axis);
     node = chrono_types::make_shared<ChNodeFEAxyzrot>(ChFrame<>(mvecs[mvecs.size()-1],
-                                                       frame_quat));
+								frame_quat));
     nodesRot.push_back(node);
     nb_nodes = nodesRot.size();
     nb_elems = nb_nodes-1;
-    std::shared_ptr<ChVector<>> drag0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
-    std::shared_ptr<ChVector<>> am0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> drag0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> am0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
     forces_drag.push_back(drag0);
     forces_addedmass.push_back(am0);
   }
@@ -681,15 +680,15 @@ void cppCable::buildNodesCableANCF(bool last_node) {
   forces_drag.clear();
   forces_addedmass.clear();
   std::shared_ptr<ChNodeFEAxyzD> node;
-  ChVector<> dir;  // direction of node
+  ChVector3d dir;  // direction of node
   ChCoordsys<> coordsys;  // coordinate system of node
   for (int i = 0; i < mvecs.size() - 1; ++i) {
     dir = mvecs_tangents[i];
     dir.Normalize();
     node = chrono_types::make_shared<ChNodeFEAxyzD>(mvecs[i], dir);
     nodes.push_back(node);
-    std::shared_ptr<ChVector<>> drag0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
-    std::shared_ptr<ChVector<>> am0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> drag0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> am0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
     forces_drag.push_back(drag0);
     forces_addedmass.push_back(am0);
   }  // last node
@@ -700,8 +699,8 @@ void cppCable::buildNodesCableANCF(bool last_node) {
     nodes.push_back(node);
     nb_nodes = nodes.size();
     nb_elems = nb_nodes-1;
-    std::shared_ptr<ChVector<>> drag0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
-    std::shared_ptr<ChVector<>> am0 = chrono_types::make_shared<ChVector<>>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> drag0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
+    std::shared_ptr<ChVector3d> am0 = chrono_types::make_shared<ChVector3d>(0.,0.,0.);
     forces_drag.push_back(drag0);
     forces_addedmass.push_back(am0);
   }
@@ -733,9 +732,10 @@ void cppCable::buildElementsCableANCF(bool set_lastnodes) {
     auto element = chrono_types::make_shared<ChElementCableANCFmod>();
     auto load_distributed = chrono_types::make_shared<ChLoadBeamWrenchDistributed>(element);
     auto load = chrono_types::make_shared<ChLoadBeamWrench>(element);
-    std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
-    auto load_volumetric = chrono_types::make_shared<ChLoad<ChLoaderGravity>>(element);
-    load_volumetric->loader.Set_G_acc(system->Get_G_acc());
+    auto gravity = chrono_types::make_shared<ChLoaderGravity>(element);
+    gravity->SetGravitationalAcceleration(system->GetGravitationalAcceleration());
+    std::shared_ptr<ChLoad> loadtri(new ChLoad(gravity));
+    auto load_volumetric = chrono_types::make_shared<ChLoad>(gravity);
     /* loadcontainer->Add(load_distributed); */
     /* loadcontainer->Add(load); */
     loadcontainer->Add(loadtri);  // do not forget to add the load to the load container.
@@ -770,9 +770,10 @@ void cppCable::buildElementsBeamEuler(bool set_lastnodes) {
     auto element = chrono_types::make_shared<ChElementBeamEulermod>();
     auto load_distributed = chrono_types::make_shared<ChLoadBeamWrenchDistributed>(element);
     auto load = chrono_types::make_shared<ChLoadBeamWrench>(element);
-    std::shared_ptr<ChLoad<MyLoaderTriangular>> loadtri(new ChLoad<MyLoaderTriangular>(element));
-    auto load_volumetric = chrono_types::make_shared<ChLoad<ChLoaderGravity>>(element);
-    load_volumetric->loader.Set_G_acc(system->Get_G_acc());
+    auto gravity = chrono_types::make_shared<ChLoaderGravity>(element);
+    gravity->SetGravitationalAcceleration(system->GetGravitationalAcceleration());
+    std::shared_ptr<ChLoad> loadtri(new ChLoad(gravity));
+    auto load_volumetric = chrono_types::make_shared<ChLoad>(gravity);
     /* loadcontainer->Add(load_distributed); */
     /* loadcontainer->Add(load); */
     loadcontainer->Add(loadtri);  // do not forget to add the load to the load container.
@@ -835,11 +836,11 @@ void cppCable::buildMeshCableANCF(bool add_lastnode) {
   }
   mesh->AddElement(elemsCableANCF[elemsCableANCF.size()-1]);
 }
-void cppCable::setFluidAccelerationAtNodes(std::vector<ChVector<>> acc) {
+void cppCable::setFluidAccelerationAtNodes(std::vector<ChVector3d> acc) {
   fluid_acceleration = acc;
 }
 
-void cppCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel) {
+void cppCable::setFluidVelocityAtNodes(std::vector<ChVector3d> vel) {
   fluid_velocity = vel;
 }
 
@@ -867,32 +868,32 @@ void cppCable::setDragForce() {
    * setFluidVelocityAtNodes and setFluidDensityAtNodes
    * must be called before this function
    */
-  ChVector<> u_ch;  // velocity from chrono
-  ChVector<> u_prot;  // velocity from proteus
-  ChVector<> u_rel;  // relative velocity of node with surrounding fluid
-  ChVector<> t_dir;  // tangent at node
-  ChVector<> Fd_a;  // axial (tangential) drag force
-  ChVector<> Fd_n;  // normal(transversal) drag force
-  ChVector<> Fd;  // total drag force
-  ChVector<> Va;
-  ChVector<> Vn;
+  ChVector3d u_ch;  // velocity from chrono
+  ChVector3d u_prot;  // velocity from proteus
+  ChVector3d u_rel;  // relative velocity of node with surrounding fluid
+  ChVector3d t_dir;  // tangent at node
+  ChVector3d Fd_a;  // axial (tangential) drag force
+  ChVector3d Fd_n;  // normal(transversal) drag force
+  ChVector3d Fd;  // total drag force
+  ChVector3d Va;
+  ChVector3d Vn;
   double rho_f;
   // clear current drag forces
   double length_elem = length / (nb_nodes - 1);
   for (int i = 0; i < nb_nodes; ++i) {
     if (beam_type == "CableANCF") {
-      t_dir = nodes[i]->GetD();
-      u_ch = nodes[i]->GetPos_dt();
+      t_dir = nodes[i]->GetSlope1();
+      u_ch = nodes[i]->GetPosDt();
     }
     else if (beam_type == "BeamEuler") {
       t_dir = nodesRot[i]->GetRot().GetVector();
-      u_ch = nodesRot[i]->GetPos_dt();
+      u_ch = nodesRot[i]->GetPosDt();
     }
     // get velocity u_prot from proteus // TO CHANGE !!
     double ux_prot = fluid_velocity[i][0];
     double uy_prot = fluid_velocity[i][1];
     double uz_prot = fluid_velocity[i][2];
-    u_prot = ChVector<>(ux_prot, uy_prot, uz_prot);
+    u_prot = ChVector3d(ux_prot, uy_prot, uz_prot);
     u_rel = u_prot - u_ch;
     // CAREFUL HERE: ChBeamElementANCF, GetD() does not give direction but normal
     rho_f = fluid_density[i];
@@ -912,33 +913,33 @@ void cppCable::setAddedMassForce() {
    * setFluidVelocityAtNodes and setFluidDensityAtNodes
    * must be called before this function
    */
-  ChVector<> a_ch;  // acceleration from chrono
-  ChVector<> a_prot;  // acceleration from proteus
-  ChVector<> a_rel;  // relative acceleration of node with surrounding fluid
-  ChVector<> t_dir;  // tangent at node
-  ChVector<> Fm_a;  // axial (tangential) added mass force
-  ChVector<> Fm_n;  // normal(transversal) added mass force
-  ChVector<> Fm_f;  // fluid part added mass force
-  ChVector<> Fm;  // total added mass force
-  ChVector<> Va;
-  ChVector<> Vn;
+  ChVector3d a_ch;  // acceleration from chrono
+  ChVector3d a_prot;  // acceleration from proteus
+  ChVector3d a_rel;  // relative acceleration of node with surrounding fluid
+  ChVector3d t_dir;  // tangent at node
+  ChVector3d Fm_a;  // axial (tangential) added mass force
+  ChVector3d Fm_n;  // normal(transversal) added mass force
+  ChVector3d Fm_f;  // fluid part added mass force
+  ChVector3d Fm;  // total added mass force
+  ChVector3d Va;
+  ChVector3d Vn;
   double rho_f;
   // clear current drag forces
   double length_elem = length / (nb_nodes - 1);
   for (int i = 0; i < nb_nodes; ++i) {
     if (beam_type == "CableANCF") {
-      t_dir = nodes[i]->GetD();
-      a_ch = nodes[i]->GetPos_dtdt();
+      t_dir = nodes[i]->GetSlope1();
+      a_ch = nodes[i]->GetPosDt2();
     }
     else if (beam_type == "BeamEuler") {
       t_dir = nodesRot[i]->GetRot().GetVector();
-      a_ch = nodesRot[i]->GetPos_dtdt();
+      a_ch = nodesRot[i]->GetPosDt2();
     }
     // get velocity u_prot from proteus // TO CHANGE !!
     double ax_prot = fluid_acceleration[i][0];
     double ay_prot = fluid_acceleration[i][1];
     double az_prot = fluid_acceleration[i][2];
-    a_prot = ChVector<>(ax_prot, ay_prot, az_prot);
+    a_prot = ChVector3d(ax_prot, ay_prot, az_prot);
     a_rel = a_prot - a_ch;
     rho_f = fluid_density[i];
     double dot = a_rel^t_dir;
@@ -954,8 +955,8 @@ void cppCable::setAddedMassForce() {
 
 void cppCable::applyForces() {
   for (int i = 0; i < nb_nodes-1; ++i) {
-    ChVector<> Fa = ChVector<>(0.,0.,0.);
-    ChVector<> Fb = ChVector<>(0.,0.,0.);
+    ChVector3d Fa = ChVector3d(0.,0.,0.);
+    ChVector3d Fb = ChVector3d(0.,0.,0.);
     if (applyDrag == true) {
       Fa = Fa+*forces_drag[i].get();
       Fb = Fb+*forces_drag[i+1].get();
@@ -968,10 +969,10 @@ void cppCable::applyForces() {
     // buoyancy
     if (applyBuoyancy == true) {
       if (mesh->GetAutomaticGravity() == true) {
-        /* elems_loads_volumetric[i]->loader.Set_G_acc(-fluid_density[i]/rho*system->Get_G_acc()); */
+        /* elems_loads_volumetric[i]->loader.SetBodyAppliedForce(-fluid_density[i]/rho*system->GetBodyAppliedForce()); */
       }
       else {
-        /* elems_loads_volumetric[i]->loader.Set_G_acc((1-fluid_density[i]/rho)*system->Get_G_acc()); */
+        /* elems_loads_volumetric[i]->loader.SetBodyAppliedForce((1-fluid_density[i]/rho)*system->GetBodyAppliedForce()); */
       }
     }
   }
@@ -1012,7 +1013,7 @@ void cppAttachNodeToNodeFEAxyzD(cppMultiSegmentedCable* cable1,
                                 int node1,
                                 cppMultiSegmentedCable* cable2,
                                 int node2) {
-  auto con1 = chrono_types::make_shared<ChLinkPointPoint>();
+  auto con1 = chrono_types::make_shared<ChLinkNodeNode>();
   auto nodeA = cable1->nodes[node1];
   auto nodeB = cable2->nodes[node2];
   con1->Initialize(nodeA, nodeB);

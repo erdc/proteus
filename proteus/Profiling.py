@@ -4,14 +4,6 @@ Tools for high level profiling and event logging
 .. inheritance-diagram:: proteus.Profiling
    :parts: 1
 """
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
-from past.utils import old_div
 import gc
 import inspect
 import pstats
@@ -250,8 +242,8 @@ Wall clock percentage of top 20 calls
                     fname=f[-1].strip("<").strip(">")
                 else:
                     fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
-                msg+=("{0:11.1%} {1:s}\n".format(old_div(statsm[f][2],stats.__dict__['total_tt']),str(fname)))
-                total += old_div(statsm[f][2],stats.__dict__['total_tt'])
+                msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
+                total += statsm[f][2]/stats.__dict__['total_tt']
             logEvent(msg)
             logEvent("Representing "+repr(total*100.)+"%")
         return func_return

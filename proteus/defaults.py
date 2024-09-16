@@ -1,4 +1,4 @@
-import sys, os, imp, copy, inspect, dataclasses
+import sys, os, copy, inspect, dataclasses
 from . import (TransportCoefficients,
                Transport,
                default_p,
@@ -23,6 +23,18 @@ from .Archiver import ArchiveFlags
 from .Profiling import logEvent
 
 import sys
+import importlib.util
+import importlib.machinery
+
+def load_source(modname, filename):
+    loader = importlib.machinery.SourceFileLoader(modname, filename)
+    spec = importlib.util.spec_from_file_location(modname, filename, loader=loader)
+    module = importlib.util.module_from_spec(spec)
+    # The module is always executed and not cached in sys.modules.
+    # Uncomment the following line to cache the module.
+    # sys.modules[module.__name__] = module
+    loader.exec_module(module)
+    return module
 
 if sys.version_info.major < 3:  # Python 2?
     # Using exec avoids a SyntaxError in Python 3.
@@ -102,7 +114,7 @@ def reset_default_p():
 def load_physics(pModule, path='.'):
     reset_default_p()
     sys.path.append(path)
-    p = imp.load_source(pModule, os.path.join(path, pModule+".py"))
+    p = load_source(pModule, os.path.join(path, pModule+".py"))
     sys.path.remove(path)
     physics_object = Physics_base()
     for k,v in p.__dict__.items():
@@ -193,7 +205,7 @@ def reset_default_n():
 def load_numerics(nModule, path='.'):
     reset_default_n()
     sys.path.append(path)
-    n = imp.load_source(nModule, os.path.join(path, nModule+".py"))
+    n = load_source(nModule, os.path.join(path, nModule+".py"))
     sys.path.remove(path)
     numerics_object = Numerics_base()
     for k,v in n.__dict__.items():
@@ -234,11 +246,10 @@ def reset_default_so():
 def load_system(soModule, path='.'):
     reset_default_so()
     sys.path.append(path)
-    so = imp.load_source(soModule, os.path.join(path, soModule+".py"))
+    so = load_source(soModule, os.path.join(path, soModule+".py"))
     sys.path.remove(path)
     system_object = System_base()
     for k,v in so.__dict__.items():
         if k not in system_excluded_keys:
             system_object.__dict__[k] = v
     return system_object
-

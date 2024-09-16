@@ -1,11 +1,6 @@
-from __future__ import print_function
-
-
 #import numpy
 #import os
 #from xml.etree.ElementTree import *
-from builtins import str
-from builtins import range
 import tables
 #from Xdmf import *
 

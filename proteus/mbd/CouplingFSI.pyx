@@ -134,7 +134,7 @@ cdef class ProtChBody:
             if take_shape_name is True:
                 self.setName(bytes(shape.name,'utf-8'))
         self.nd = shape.Domain.nd
-        new_vec = chrono.ChVectorD(shape.barycenter[0],
+        new_vec = chrono.ChVector3d(shape.barycenter[0],
                                    shape.barycenter[1],
                                    shape.barycenter[2])
         self.ChBody.SetPos(new_vec)
@@ -245,13 +245,13 @@ cdef class ProtChBody:
 
     def getTriangleMeshInfo(self):
         # vertices
-        cdef vector[ch.ChVector[double]] chpos = deref(self.thisptr.trimesh).getCoordsVertices()
+        cdef vector[ch.ChVector3d] chpos = deref(self.thisptr.trimesh).GetCoordsVertices()
         cdef double[:,:] pos = np.zeros((chpos.size(),3 ))
         for i in range(chpos.size()):
             pos[i, 0] = chpos.at(i).x()
             pos[i, 1] = chpos.at(i).y()
             pos[i, 2] = chpos.at(i).z()
-        cdef vector[ch.ChVector[int]] chel_connect = deref(self.thisptr.trimesh).getIndicesVertexes()
+        cdef vector[ch.ChVector3i] chel_connect = deref(self.thisptr.trimesh).GetIndicesVertexes()
             # connection of vertices
         cdef int[:,:] el_connect = np.zeros((chel_connect.size(), 3), dtype=np.int32)
         for i in range(chel_connect.size()):
@@ -264,7 +264,7 @@ cdef class ProtChBody:
                             double envelope=0.001,
                             double margin=0.0005,
                             bool collide=True):
-        deref(self.thisptr.body).SetCollide(collide)
+        deref(self.thisptr.body).EnableCollision(collide)
         deref(deref(self.thisptr.body).GetCollisionModel()).SetEnvelope(envelope)
         deref(deref(self.thisptr.body).GetCollisionModel()).SetSafeMargin(margin)
 
@@ -326,7 +326,7 @@ cdef class ProtChBody:
         cdef np.ndarray d_tra, d_tra_last # translational displacements
         cdef np.ndarray d_rot, d_rot_last # rotational displacements
         cdef np.ndarray h_body  # displacement from body
-        cdef ch.ChVector h_body_vec
+        cdef ch.ChVector3d h_body_vec
         h = np.zeros(3)
         if self.predicted is False:
             self.prediction()
@@ -591,11 +591,11 @@ cdef class ProtChBody:
         # inverse of full mass matrix
         inv_FM = np.linalg.inv(FM)
         #set it to chrono variable
-        chFM = chrono.ChMatrixDynamicD(6, 6)
-        inv_chFM = chrono.ChMatrixDynamicD(6, 6)
+        chFM = chrono.ChMatrixDynamicd(6, 6)
+        inv_chFM = chrono.ChMatrixDynamicd(6, 6)
         for i in range(6):
             for j in range(6):
-                chFM.setitem(i, j, FM[i, j])
+                chFM.SetItem(i, j, FM[i, j])
 
         # hack for swig
         cdef SwigPyObject *swig_obj = <SwigPyObject*> chFM.this
@@ -607,8 +607,8 @@ cdef class ProtChBody:
 
         aa = np.zeros(6)
 
-        aa[:3] = pyvec2array(self.ChBody.GetPos_dtdt())
-        aa[3:] = pyvec2array(self.ChBody.GetWacc_par())
+        aa[:3] = pyvec2array(self.ChBody.GetPosDt2())
+        aa[3:] = pyvec2array(self.ChBody.GetAngAccParent())
         Aija = np.dot(Aij_global, aa)
         self.F_Aij = Aija[:3]
         self.M_Aij = Aija[3:]
@@ -677,15 +677,15 @@ cdef class ProtChBody:
         rot: array_like
             current rotation (matrix) of body
         """
-        x0 = self.thisptr.rotm.Get_A_Xaxis().x()
-        x1 = self.thisptr.rotm.Get_A_Xaxis().y()
-        x2 = self.thisptr.rotm.Get_A_Xaxis().z()
-        y0 = self.thisptr.rotm.Get_A_Yaxis().x()
-        y1 = self.thisptr.rotm.Get_A_Yaxis().y()
-        y2 = self.thisptr.rotm.Get_A_Yaxis().z()
-        z0 = self.thisptr.rotm.Get_A_Zaxis().x()
-        z1 = self.thisptr.rotm.Get_A_Zaxis().y()
-        z2 = self.thisptr.rotm.Get_A_Zaxis().z()
+        x0 = self.thisptr.rotm.GetAxisX().x()
+        x1 = self.thisptr.rotm.GetAxisX().y()
+        x2 = self.thisptr.rotm.GetAxisX().z()
+        y0 = self.thisptr.rotm.GetAxisY().x()
+        y1 = self.thisptr.rotm.GetAxisY().y()
+        y2 = self.thisptr.rotm.GetAxisY().z()
+        z0 = self.thisptr.rotm.GetAxisZ().x()
+        z1 = self.thisptr.rotm.GetAxisZ().y()
+        z2 = self.thisptr.rotm.GetAxisZ().z()
         rot = np.array([x0, x1, x2],
                        [y0, y1, y2],
                        [z0, z1, z2])
@@ -788,15 +788,15 @@ cdef class ProtChBody:
         """
         if self.prescribed_motion_function is not None:
             new_x = self.callPrescribedMotion(self.ProtChSystem.model.stepController.t_model_last)
-            new_vec = chrono.ChVectorD(new_x[0], new_x[1], new_x[2])
+            new_vec = chrono.ChVector3d(new_x[0], new_x[1], new_x[2])
             self.ChBody.SetPos(new_vec)
         self.thisptr.poststep()
         self.getValues()
         comm = Comm.get().comm.tompi4py()
         cdef ch.ChQuaternion rotq
         cdef ch.ChQuaternion rotq_last
-        cdef ch.ChVector pos
-        cdef ch.ChVector pos_last
+        cdef ch.ChVector3d pos
+        cdef ch.ChVector3d pos_last
         cdef double e0, e1, e2, e3, e0_last, e1_last, e2_last, e3_last
         cdef double posx, posy, posz, posx_last, posy_last, posz_last
         if comm.rank == 0 and self.ProtChSystem.record_values is True:
@@ -810,8 +810,8 @@ cdef class ProtChBody:
         e0_last, e1_last, e2_last, e3_last = self.rotq_last
         posx, posy, posz = self.position
         posx_last, posy_last, posz_last = self.position_last
-        pos = ch.ChVector[double](posx, posy, posz)
-        pos_last = ch.ChVector[double](posx_last, posy_last, posz_last)
+        pos = ch.ChVector3d(posx, posy, posz)
+        pos_last = ch.ChVector3d(posx_last, posy_last, posz_last)
         rotq = ch.ChQuaternion[double](e0, e1, e2, e3)
         rotq_last = ch.ChQuaternion[double](e0_last, e1_last, e2_last, e3_last)
         self.thisptr.rotq = rotq
@@ -829,8 +829,8 @@ cdef class ProtChBody:
         c = self.ProtChSystem.model.levelModelList[-1].coefficients
         if c.use_ball_as_particle:
             chpos = self.ChBody.GetPos()
-            chvel = self.ChBody.GetPos_dt()
-            chvel_ang = self.ChBody.GetWvel_loc()
+            chvel = self.ChBody.GetPosDt()
+            chvel_ang = self.ChBody.GetAngVelLocal()
             for flag in self.boundaryFlags:
                 c.ball_radius[flag] = self.radiusIBM
                 c.ball_center[flag, 0] = chpos.x
@@ -853,7 +853,7 @@ cdef class ProtChBody:
         return self.sdfIBM(t, relative_x)
 
     def setPosition(self, np.ndarray pos):
-        chvec = chrono.ChVectorD(pos[0], pos[1], pos[2])
+        chvec = chrono.ChVector3d(pos[0], pos[1], pos[2])
         self.ChBody.SetPos(chvec)
 
     def getPosition(self):
@@ -867,11 +867,11 @@ cdef class ProtChBody:
         return self.ChBody.GetMass()
 
     def setInertiaXX(self, np.ndarray inertia):
-        chvec = chrono.ChVectorD(inertia[0], inertia[1], inertia[2])
+        chvec = chrono.ChVector3d(inertia[0], inertia[1], inertia[2])
         self.ChBody.SetInertiaXX(chvec)
 
     def setInertiaXY(self, np.ndarray inertia):
-        chvec = chrono.ChVectorD(inertia[0], inertia[1], inertia[2])
+        chvec = chrono.ChVector3d(inertia[0], inertia[1], inertia[2])
         self.ChBody.SetInertiaXY(chvec)
 
     def getInertia(self):
@@ -879,16 +879,16 @@ cdef class ProtChBody:
         return iner
 
     def getVelocity(self):
-        chvel = self.ChBody.GetPos_dt()
+        chvel = self.ChBody.GetPosDt()
         return pyvec2array(chvel)
 
     def setVelocity(self, np.ndarray vel):
-        chvec = chrono.ChVectorD(vel[0], vel[1], vel[2])
-        self.ChBody.SetPos_dt(chvec)
+        chvec = chrono.ChVector3d(vel[0], vel[1], vel[2])
+        self.ChBody.SetPosDt(chvec)
 
     def prediction(self):
         comm = Comm.get().comm.tompi4py()
-        cdef ch.ChVector h_body_vec
+        cdef ch.ChVector3d h_body_vec
         h_body_vec = self.thisptr.hxyz(<double*> self.position_last.data, 0.)
         #print("MY BODY DISP: ", h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
         if self.ProtChSystem.model is not None:
@@ -916,7 +916,7 @@ cdef class ProtChBody:
         #                              +self.ang_velocity[2]**2)*dt_half
         # self.h_ang_vel_predict = self.ang_velocity
         #     # else:
-        #     #     nsteps = max(int(dt_half/self.ProtChSystem.chrono_dt), 1)
+        #     #     nsteps = max(int(dt_half/self.ProtChSystem.chronoDt), 1)
         #     #     if nsteps < self.ProtChSystem.min_nb_steps:
         #     #         nsteps = self.ProtChSystem.min_nb_steps
         #     #     h = np.zeros(3)
@@ -937,7 +937,7 @@ cdef class ProtChBody:
         #     # else:
         #     #     self.h_predict = np.zeros(3)
         #     # print("ADDED: ", self.h_predict, dt_half)
-        #     # print("BODY H:", h_body, self.velocity, self.ChBody.GetPos_dt())
+        #     # print("BODY H:", h_body, self.velocity, self.ChBody.GetPosDt())
         #     self.h_predict = h
         self.predicted = True
 
@@ -961,8 +961,8 @@ cdef class ProtChBody:
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
         # build collision model
-        if deref(self.thisptr.body).GetCollide() is True:
-            deref(deref(self.thisptr.body).GetCollisionModel()).BuildModel()
+        #if deref(self.thisptr.body).IsCollisionEnabled():
+        #    deref(deref(self.thisptr.body).GetCollisionModel()).BuildModel()
         # poststep (record values, etc)
         self.thisptr.poststep()
         # get first, store then on initial time step
@@ -1111,13 +1111,13 @@ cdef class ProtChBody:
         self.rotq = pyquat2array(self.ChBody.GetRot())
         # self.rotm = mat332array(self.ChBody.GetA())
         # acceleration
-        self.acceleration = pyvec2array(self.ChBody.GetPos_dtdt())
+        self.acceleration = pyvec2array(self.ChBody.GetPosDt2())
         #velocity
-        self.velocity = pyvec2array(self.ChBody.GetPos_dt())
+        self.velocity = pyvec2array(self.ChBody.GetPosDt())
         # angular acceleration
-        self.ang_acceleration = pyvec2array(self.ChBody.GetWacc_loc())
+        self.ang_acceleration = pyvec2array(self.ChBody.GetAngAccLocal())
         # angular velocity
-        self.ang_velocity = pyvec2array(self.ChBody.GetWvel_loc())
+        self.ang_velocity = pyvec2array(self.ChBody.GetAngVelLocal())
         # norm of angular velocity
         self.ang_vel_norm = np.sqrt(self.ang_velocity[0]**2
                                     +self.ang_velocity[1]**2
@@ -1488,11 +1488,11 @@ cdef class ProtChSystem:
         mesh.ProtChSystem = self
 
     def setGravitationalAcceleration(self, g):
-        chvec = chrono.ChVectorD(g[0], g[1], g[2])
-        self.ChSystem.Set_G_acc(chvec)
+        chvec = chrono.ChVector3d(g[0], g[1], g[2])
+        self.ChSystem.SetGravitationalAcceleration(chvec)
 
     def getGravitationalAcceleration(self):
-        return pyvec2array(self.ChSystem.Get_G_acc())
+        return pyvec2array(self.ChSystem.GetGravitationalAcceleration())
 
     def setCouplingScheme(self, string scheme, string prediction=b'backwardEuler'):
         assert scheme == b"CSS" or scheme == b"ISS", "Coupling scheme requested unknown"
@@ -1512,7 +1512,7 @@ cdef class ProtChSystem:
 
     def setMinimumSubsteps(self, int nb):
         """Sets the minimum nb of chrono substeps per proteus step
-        if prot_dt=0.001 and ch_dt=0.002, there will be <nb>
+        if protDt=0.001 and chDt=0.002, there will be <nb>
         substeps of chrono instead of just 1.
 
         Parameters
@@ -2398,8 +2398,8 @@ cdef class ProtChSystem:
 #    cdef ChSystem system = ChSystem()
 #    cdef ChBody bod = ChBody()
 #    cdef ChVector oo = ChVector[double](2.,3.,4.)
-#    bod.SetPos_dt(oo)
-#    cdef ChVector& gg = bod.GetPos_dt()
+#    bod.SetPosDt(oo)
+#    cdef ChVector& gg = bod.GetPosDt()
 #    print(gg.x, gg.y, gg.z)
 
 
@@ -2826,9 +2826,9 @@ cdef class ProtChMoorings:
         """
         Get Tension at the back of the cable
         """
-        cdef ch.ChVector T
+        cdef ch.ChVector3d T
         if self.thisptr.constraint_back:
-            T = deref(self.thisptr.constraint_back).Get_react_force()
+            T = deref(self.thisptr.constraint_back).GetReaction2().force
             return np.array([T.x(), T.y(), T.z()])
         else:
             return np.zeros(3)
@@ -2837,9 +2837,9 @@ cdef class ProtChMoorings:
         """
         Get Tension at the front of the cable
         """
-        cdef ch.ChVector T
+        cdef ch.ChVector3d T
         if self.thisptr.constraint_front:
-            T = deref(self.thisptr.constraint_front).Get_react_force()
+            T = deref(self.thisptr.constraint_front).GetReaction1().force
             return np.array([T.x(), T.y(), T.z()])
         else:
             return np.zeros(3)
@@ -2973,12 +2973,12 @@ cdef class ProtChMoorings:
         self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
     def getTensionElement(self, int i=0, eta=0.):
-        cdef ch.ChVector[double] F
+        cdef ch.ChVector3d F
         F = self.thisptr.getTensionElement(i, eta)
         return np.array([F.x(), F.y(), F.z()])
 
     def getNodesTension(self, eta=0.):
-        cdef ch.ChVector[double] vec
+        cdef ch.ChVector3d vec
         if self.beam_type == b'BeamEuler':
             T = np.zeros((self.thisptr.nodesRot.size()-1,3 ))
         else:
@@ -3039,7 +3039,7 @@ cdef class ProtChMoorings:
         """
         # self.nodes_positions0 = positions
         # self.nodes_tangents0 = tangents
-        cdef ch.ChVector[double] vec
+        cdef ch.ChVector3d vec
         if positions is None:
             for i in range(self.thisptr.cables.size()):
                 deref(self.thisptr.cables[i]).mvecs.clear()
@@ -3054,7 +3054,7 @@ cdef class ProtChMoorings:
                 ds = L/(nb_nodes-1)
                 for j in range(nb_nodes):
                     x, y, z = self.nodes_function(L0+ds*j)
-                    vec = ch.ChVector[double](x, y, z)
+                    vec = ch.ChVector3d(x, y, z)
                     deref(self.thisptr.cables[i]).mvecs.push_back(vec)
         else:
             for i in range(self.thisptr.cables.size()):
@@ -3062,7 +3062,7 @@ cdef class ProtChMoorings:
                 nb_nodes = len(positions[i])
                 for j in range(len(positions[i])):
                     x, y, z = positions[i][j]
-                    vec = ch.ChVector[double](x, y, z)
+                    vec = ch.ChVector3d(x, y, z)
                     deref(self.thisptr.cables[i]).mvecs.push_back(vec)
         if tangents is None:
             for i in range(self.thisptr.cables.size()):
@@ -3078,7 +3078,7 @@ cdef class ProtChMoorings:
                 ds = L/(nb_nodes-1)
                 for j in range(nb_nodes):
                     x, y, z = self.nodes_function_tangent(L0+ds*j)
-                    vec = ch.ChVector[double](x, y, z)
+                    vec = ch.ChVector3d(x, y, z)
                     deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
         else:
             for i in range(self.thisptr.cables.size()):
@@ -3086,7 +3086,7 @@ cdef class ProtChMoorings:
                 nb_nodes = len(tangents[i])
                 for j in range(len(tangents[i])):
                     x, y, z = tangents[i][j]
-                    vec = ch.ChVector[double](x, y, z)
+                    vec = ch.ChVector3d(x, y, z)
                     deref(self.thisptr.cables[i]).mvecs_tangents.push_back(vec)
         # self.buildNodes()
 
@@ -3167,13 +3167,13 @@ cdef class ProtChMoorings:
         if self.beam_type == b'BeamEuler':
             pos = np.zeros(( self.thisptr.nodesRot.size(),3 ))
             for i in range(self.thisptr.nodesRot.size()):
-                vec = deref(self.thisptr.nodesRot[i]).GetPos_dt()
+                vec = deref(self.thisptr.nodesRot[i]).GetPosDt()
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
         else:
             pos = np.zeros(( self.thisptr.nodes.size(),3 ))
             for i in range(self.thisptr.nodes.size()):
-                vec = deref(self.thisptr.nodes[i]).GetPos_dt()
+                vec = deref(self.thisptr.nodes[i]).GetPosDt()
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
 
@@ -3188,18 +3188,18 @@ cdef class ProtChMoorings:
         if self.beam_type == b'BeamEuler':
             pos = np.zeros((self.nodes_nb,3 ))
             for i in range(self.thisptr.nodesRot.size()):
-                vec = deref(self.thisptr.nodesRot[i]).GetPos_dtdt()
+                vec = deref(self.thisptr.nodesRot[i]).GetPosDt2()
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
         else:
             pos = np.zeros(( self.thisptr.nodes.size(),3 ))
             for i in range(self.thisptr.nodes.size()):
-                vec = deref(self.thisptr.nodes[i]).GetPos_dtdt()
+                vec = deref(self.thisptr.nodes[i]).GetPosDt2()
                 pos[i] = [vec.x(), vec.y(), vec.z()]
             return pos
 
     def getDragForces(self):
-        cdef ch.ChVector Fd
+        cdef ch.ChVector3d Fd
         drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_drag.size()):
             Fd = deref(self.thisptr.forces_drag[i])
@@ -3207,7 +3207,7 @@ cdef class ProtChMoorings:
         return drag
 
     def getAddedMassForces(self):
-        cdef ch.ChVector Fd
+        cdef ch.ChVector3d Fd
         drag = np.zeros((self.nodes_nb,3 ))
         for i in range(self.thisptr.forces_addedmass.size()):
             Fd = deref(self.thisptr.forces_addedmass[i])
@@ -3228,7 +3228,7 @@ cdef class ProtChMoorings:
         """
         dire = np.zeros(( self.thisptr.nodes.size(),3 ))
         for i in range(self.thisptr.nodes.size()):
-            vec = deref(self.thisptr.nodes[i]).GetD()
+            vec = deref(self.thisptr.nodes[i]).GetSlope1()
             dire[i] = [vec.x(), vec.y(), vec.z()]
         return dire
 
@@ -3237,12 +3237,12 @@ cdef class ProtChMoorings:
 
         Parameters
         ----------
-        mat: ChMaterialSurfaceSMC
+        mat: ChContactMaterialSMC
             Material of cable.
         """
         cdef SwigPyObject *swig_obj = <SwigPyObject*> mat.this
-        cdef shared_ptr[ch.ChMaterialSurfaceSMC]* pt_to_shp = <shared_ptr[ch.ChMaterialSurfaceSMC]*> swig_obj.ptr;
-        cdef shared_ptr[ch.ChMaterialSurfaceSMC] matp = pt_to_shp[0]
+        cdef shared_ptr[ch.ChContactMaterialSMC]* pt_to_shp = <shared_ptr[ch.ChContactMaterialSMC]*> swig_obj.ptr;
+        cdef shared_ptr[ch.ChContactMaterialSMC] matp = pt_to_shp[0]
         self.thisptr.setContactMaterial(matp)
 
     def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
@@ -3260,10 +3260,10 @@ cdef class ProtChMoorings:
             self.fluid_density_array = fluid_density_array
         if fluid_acceleration_array is not None:
             self.fluid_acceleration_array = fluid_acceleration_array
-        cdef vector[ch.ChVector[double]] fluid_velocity
-        cdef vector[ch.ChVector[double]] fluid_acceleration
-        cdef ch.ChVector[double] vel
-        cdef ch.ChVector[double] acc
+        cdef vector[ch.ChVector3d] fluid_velocity
+        cdef vector[ch.ChVector3d] fluid_acceleration
+        cdef ch.ChVector3d vel
+        cdef ch.ChVector3d acc
         cdef vector[double] fluid_density
         cdef double dens
         comm = Comm.get().comm.tompi4py()
@@ -3323,19 +3323,19 @@ cdef class ProtChMoorings:
                 else:
                     vel_arr[:] = 0
             self.fluid_velocity_array[i] = vel_arr
-            vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+            vel = ch.ChVector3d(vel_arr[0], vel_arr[1], vel_arr[2])
             if self.fluid_velocity_function is not None and fluid_velocity_array is None:
                 vel_arr = self.fluid_velocity_function(coords, self.ProtChSystem.t)
-                vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+                vel = ch.ChVector3d(vel_arr[0], vel_arr[1], vel_arr[2])
             else:
-                vel = ch.ChVector[double](self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
+                vel = ch.ChVector3d(self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
             fluid_velocity.push_back(vel)
             self.fluid_acceleration_array[i] = (self.fluid_velocity_array[i]-self.fluid_velocity_array_previous[i])/self.ProtChSystem.proteus_dt
             # acc = du/dt+u.grad(u)
             #vel_grad_arr[:] = self.ProtChSystem.getFluidVelocityGradientLocalCoords(xi, el, rank)
             #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
             #arr[:self.nd] = self.ProtChSystem.findFluidVelocityAtCoords(coords[:self.nd])
-            acc = ch.ChVector[double](self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
+            acc = ch.ChVector3d(self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
             fluid_acceleration.push_back(acc)
             dens = self.fluid_density_array[i]
             fluid_density.push_back(dens)
@@ -3364,20 +3364,20 @@ cdef class ProtChMoorings:
         self.thisptr.setFluidDensityAtNodes(fluid_density)
 
     def setFluidVelocityAtNodes(self, np.ndarray velocity_array):
-        cdef vector[ch.ChVector[double]] fluid_velocity
-        cdef ch.ChVector[double] vel
+        cdef vector[ch.ChVector3d] fluid_velocity
+        cdef ch.ChVector3d vel
         self.fluid_velocity_array = velocity_array
         for v in velocity_array:
-            vel = ch.ChVector[double](v[0], v[1], v[2])
+            vel = ch.ChVector3d(v[0], v[1], v[2])
             fluid_velocity.push_back(vel)
         self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
 
     def setFluidAccelerationAtNodes(self, np.ndarray acceleration_array):
-        cdef vector[ch.ChVector[double]] fluid_acceleration
-        cdef ch.ChVector[double] acc
+        cdef vector[ch.ChVector3d] fluid_acceleration
+        cdef ch.ChVector3d acc
         self.fluid_acceleration_array = acceleration_array
         for a in acceleration_array:
-            acc = ch.ChVector[double](a[0], a[1], a[2])
+            acc = ch.ChVector3d(a[0], a[1], a[2])
             fluid_acceleration.push_back(acc)
         self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
 
@@ -3645,14 +3645,14 @@ def pyvec2array(vec):
     return np.array([vec.x, vec.y, vec.z])
 
 def mat332array(mat):
-    return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
-                     [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
-                     [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
+    return np.array([[mat.GetAxisX().x(), mat.GetAxisX().y(), mat.GetAxisX().z()],
+                     [mat.GetAxisY().x(), mat.GetAxisY().y(), mat.GetAxisY().z()],
+                     [mat.GetAxisZ().x(), mat.GetAxisZ().y(), mat.GetAxisZ().z()]])
 
 def pymat332array(mat):
-    return np.array([[mat.Get_A_Xaxis().x, mat.Get_A_Xaxis().y, mat.Get_A_Xaxis().z],
-                     [mat.Get_A_Yaxis().x, mat.Get_A_Yaxis().y, mat.Get_A_Yaxis().z],
-                     [mat.Get_A_Zaxis().x, mat.Get_A_Zaxis().y, mat.Get_A_Zaxis().z]])
+    return np.array([[mat.GetAxisX().x, mat.GetAxisX().y, mat.GetAxisX().z],
+                     [mat.GetAxisY().x, mat.GetAxisY().y, mat.GetAxisY().z],
+                     [mat.GetAxisZ().x, mat.GetAxisZ().y, mat.GetAxisZ().z]])
 
 def quat2array(quat):
     return np.array([quat.e0(), quat.e1(), quat.e2(), quat.e3()])

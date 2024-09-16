@@ -4,7 +4,6 @@ import sys
 import platform
 import site
 PROTEUS_PRELOAD_LIBS=[]
-
 prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
     prefix = sys.exec_prefix
@@ -60,6 +59,7 @@ def get_flags(package):
     return include_dir, lib_dir
 
 PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
+PROTEUS_EXTRA_LINK_ARGS=[]
 
 if sys.platform == 'darwin':
     PROTEUS_BLAS_LIB ='m'
@@ -70,7 +70,6 @@ elif sys.platform.startswith('linux'):
     PROTEUS_BLAS_LIB   ='openblas'
     PROTEUS_BLAS_INCLUDE_DIR, PROTEUS_BLAS_LIB_DIR = get_flags('blas')
 
-PROTEUS_EXTRA_LINK_ARGS=[]
 
 PROTEUS_CHRONO_INCLUDE_DIR, PROTEUS_CHRONO_LIB_DIR = get_flags('chrono')
 
@@ -78,6 +77,8 @@ PROTEUS_CHRONO_CXX_FLAGS = []
 chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','Chrono','ChronoConfig.cmake')
 if not os.path.isfile(chrono_cmake_file_path):
     chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','ChronoConfig.cmake')
+    if not os.path.isfile(chrono_cmake_file_path):
+        chrono_cmake_file_path = os.path.join(PROTEUS_CHRONO_LIB_DIR,'cmake','Chrono','chrono-config.cmake') 
 with open(chrono_cmake_file_path,'r') as f:
     for l in f:
         if 'set(CHRONO_CXX_FLAGS' in l:
@@ -137,7 +138,7 @@ PROTEUS_SCOREC_INCLUDE_DIR, PROTEUS_SCOREC_LIB_DIR = get_flags('scorec')
 PROTEUS_PARMETIS_INCLUDE_DIR, PROTEUS_PARMETIS_LIB_DIR = get_flags('parmetis')
 PROTEUS_ZOLTAN_INCLUDE_DIR, PROTEUS_ZOLTAN_LIB_DIR = get_flags('zoltan')
 PROTEUS_SCOREC_INCLUDE_DIRS = [PROTEUS_SCOREC_INCLUDE_DIR, PROTEUS_PETSC_INCLUDE_DIR, PROTEUS_ZOLTAN_INCLUDE_DIR, PROTEUS_PARMETIS_INCLUDE_DIR, PROTEUS_MPI_INCLUDE_DIR, PROTEUS_LAPACK_INCLUDE_DIR, PROTEUS_BLAS_INCLUDE_DIR]
-PROTEUS_SCOREC_LIB_DIRS =     [PROTEUS_SCOREC_LIB_DIR,     PROTEUS_PETSC_LIB_DIR,     PROTEUS_ZOLTAN_LIB_DIR, PROTEUS_PARMETIS_LIB_DIR,     PROTEUS_MPI_LIB_DIR, PROTEUS_LAPACK_LIB_DIR, PROTEUS_BLAS_LIB_DIR]
+PROTEUS_SCOREC_LIB_DIRS =     [PROTEUS_SCOREC_LIB_DIR,     PROTEUS_PETSC_LIB_DIR,     PROTEUS_ZOLTAN_LIB_DIR, PROTEUS_PARMETIS_LIB_DIR,     PROTEUS_MPI_LIB_DIR, PROTEUS_LAPACK_LIB_DIR, PROTEUS_BLAS_LIB_DIR,'/usr/lib/x86_64-linux-gnu/']
 PROTEUS_SCOREC_LIBS = [
     'spr',
     'ma',
@@ -176,6 +177,7 @@ if os.getenv('SIM_INCLUDE_DIR') is not None:
 
 PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_PETSC_INCLUDE_DIR
 PROTEUS_SUPERLU_LIB_DIR = pjoin(prefix, 'lib64')
+PROTEUS_SUPERLU_LIB_DIR = pjoin(prefix, 'lib')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
 PROTEUS_SUPERLU_LIB = 'superlu'
 

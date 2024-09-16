@@ -1,10 +1,6 @@
 """
 Optimized  Two-Phase Reynolds Averaged Navier-Stokes
 """
-from __future__ import division
-from builtins import str
-from builtins import range
-from past.utils import old_div
 import math
 import proteus
 import sys
@@ -950,13 +946,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #          repr(self.netForces_v[:,:]))
             self.timeHistory.write("%21.16e\n" % (t,))
             self.timeHistory.flush()
-            self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            for bN in range(self.wettedAreas.shape[0]):
+                self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[bN],))
+                self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[bN, :]))
+                self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[bN, :]))
+                self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[bN, :]))
             self.wettedAreaHistory.flush()
-            self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_p[-1, :]))
             self.forceHistory_p.flush()
-            self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" % tuple(self.netForces_v[-1, :]))
             self.forceHistory_v.flush()
-            self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1, :]))
             self.momentHistory.flush()
             if self.nParticles > 0:
                 self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" % tuple(self.particle_netForces[0, :]))
@@ -1542,16 +1539,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if 'penalty' in self.ebq_global:
             for ebN in range(self.mesh.nElementBoundaries_global):
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebq_global['penalty'][ebN, k] = old_div(self.numericalFlux.penalty_constant, \
-                        (self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power))
+                    self.ebq_global['penalty'][ebN, k] = self.numericalFlux.penalty_constant/(self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
         # penalty term
         # cek move  to Numerical flux initialization
         if 'penalty' in self.ebqe:
             for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['penalty'][ebNE, k] = old_div(self.numericalFlux.penalty_constant, \
-                        self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power)
+                    self.ebqe['penalty'][ebNE, k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         logEvent(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
         logEvent("setting up post-processing")
@@ -1692,6 +1687,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r : :class:`numpy.ndarray`
             Stores the calculated residual vector.
         """
+        memory()
         assert(np.all(np.isfinite(u)))
         assert(np.all(np.isfinite(r)))
         # Load the unknowns into the finite element dof
@@ -1769,7 +1765,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                      self.timeIntegration.t)
                             if self.MOVING_DOMAIN == 1.0:
                                 self.u[cj].dof[dofN] += self.mesh.nodeVelocityArray[dofN, cj - 1]
-
+        logEvent(memory("residaul-pre-argdict","RANS"),level=4)
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["NONCONSERVATIVE_FORM"] = float(self.coefficients.NONCONSERVATIVE_FORM)
         argsDict["MOMENTUM_SGE"] = float(self.coefficients.MOMENTUM_SGE)
@@ -2012,7 +2008,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         argsDict["ball_u"]= self.ball_u
         argsDict["ball_v"]= self.ball_v
         argsDict["ball_w"]= self.ball_w
+        logEvent(memory("ArgumentsDict-post","RANS"),level=4)
         self.rans2p.calculateResidual(argsDict)
+        logEvent(memory("calculateResidual","RANS"),level=4)
         if self.forceStrongConditions:
             try:
                 for cj in range(len(self.dirichletConditionsForceDOF)):
@@ -2110,8 +2108,10 @@ v_I.append({:21.16e})
 w_I.append({:21.16e})
 velocity_I.append({:21.16e})
 """.format(*self.errors.flatten().tolist()))
+        logEvent(memory("calculateResidual-end","RANS"),level=4)
     
     def getJacobian(self, jacobian):
+        memory()
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
         if self.nSpace_global == 2:
@@ -2136,7 +2136,7 @@ velocity_I.append({:21.16e})
             self.csrColumnOffsets_eb[(3, 1)] = self.csrColumnOffsets[(0, 2)]
             self.csrColumnOffsets_eb[(3, 2)] = self.csrColumnOffsets[(0, 2)]
             self.csrColumnOffsets_eb[(3, 3)] = self.csrColumnOffsets[(0, 2)]
-
+        logEvent(memory("ArgumentsDict-J","RANS-pre"),level=4)
         argsDict = cArgumentsDict.ArgumentsDict()
         argsDict["NONCONSERVATIVE_FORM"] = float(self.coefficients.NONCONSERVATIVE_FORM)
         argsDict["MOMENTUM_SGE"] = float(self.coefficients.MOMENTUM_SGE)
@@ -2375,7 +2375,9 @@ velocity_I.append({:21.16e})
         argsDict["isActiveDOF_vel"] = self.isActiveDOF_vel
         argsDict["isActiveElement"] = self.isActiveElement
         argsDict["isActiveElement_last"] = self.isActiveElement_last
+        logEvent(memory("ArgumentsDict-J-post","RANS"),level=4)
         self.rans2p.calculateJacobian(argsDict)
+        logEvent(memory("calcualteJacobian","RANS"),level=4)
         assert(np.all(np.isfinite(jacobian.getCSRrepresentation()[2])))
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof, numpy.inf), numpy.linalg.norm(self.u[2].dof, numpy.inf), numpy.linalg.norm(self.u[3].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
@@ -2425,6 +2427,7 @@ velocity_I.append({:21.16e})
                 
         logEvent("Jacobian ", level=10, data=jacobian)
         self.nonlinear_function_jacobian_evaluations += 1
+        logEvent(memory("calcualteJacobian-rest","RANS"),level=4)
         return jacobian
 
     def calculateElementQuadrature(self, domainMoved=False):

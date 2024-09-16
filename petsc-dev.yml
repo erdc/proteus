@@ -1,0 +1,16 @@
+name: petsc-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - compilers
+  - python
+  - numpy
+  - setuptools
+  - pip
+  - make
+  - cmake
+  - cython
+  - swig
+  - ncurses
+  - xtensor-python

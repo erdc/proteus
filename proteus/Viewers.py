@@ -9,13 +9,7 @@ Some simple modules for doing runtime visualization
 .. inheritance-diagram:: proteus.Viewers
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import range
-from builtins import object
-from past.utils import old_div
-import  subprocess
+import subprocess
 import numpy
 
 cmdFile=None
@@ -256,7 +250,7 @@ class V_base(object):
                             newWindow()
                         #end 2d
                         elif vt.nSpace_global == 3:
-                            (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[old_div(vt.mesh.nodeArray.shape[0],2),:]
+                            (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]//2,:]
                             for x in vt.mesh.nodeArray[:,:]:
                                 uex = self.p.analyticalSolution[ci].uOfXT(x,tsim)
                                 if x[0] == slice_x:
@@ -350,7 +344,7 @@ class V_base(object):
                                 for k in range(vt.nQuadraturePoints_element):
                                     xtmp = vt.q['x'][eN,k,:];
                                     vtmp = v[eN,k,:]
-                            self.datFile.write("%12.5e %12.5e \n" % (xtmp[0],old_div(vtmp[0],scale)))
+                            self.datFile.write("%12.5e %12.5e \n" % (xtmp[0],vtmp[0]/scale))
                             cmd = "set term x11 %i; plot \'%s\' index %i with linespoints title \"%s\" \n" % (self.windowNumber(),
                                                                                                               self.datFilename,
                                                                                                               self.plotNumber(),
@@ -375,7 +369,7 @@ class V_base(object):
                                     xtmp = vt.q['x'][eN,k,:];
                                     vtmp = v[eN,k,:]
                                     self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
-                                                                                                  old_div(vtmp[0],scale),old_div(vtmp[1],scale)))
+                                                                                                  vtmp[0]/scale,vtmp[1]/scale))
                             self.datFile.write("\n \n")
                             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                           self.datFilename,
@@ -388,7 +382,7 @@ class V_base(object):
                             newWindow()
                         elif vt.nSpace_global == 3:
                             max_u = 0.0; max_v =0.0; max_w = 0.0;
-                            (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[old_div(vt.mesh.nodeArray.shape[0],2),:]
+                            (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]/2,:]
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
                                     xtmp = vt.q['x'][eN,k,:];
@@ -405,7 +399,7 @@ class V_base(object):
                                     vtmp = v[eN,k,:]
                                     if abs(xtmp[0]- slice_x) < vt.mesh.h:
                                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[1],xtmp[2],
-                                                                                                  old_div(vtmp[1],scale),old_div(vtmp[2],scale)))
+                                                                                                  vtmp[1]/scale,vtmp[2]/scale))
                             self.datFile.write("\n \n")
                             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                           self.datFilename,
@@ -422,7 +416,7 @@ class V_base(object):
                                     vtmp = v[eN,k,:]
                                     if abs(xtmp[1]- slice_y) < vt.mesh.h:
                                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[2],
-                                                                                                  old_div(vtmp[0],scale),old_div(vtmp[2],scale)))
+                                                                                                  vtmp[0]/scale,vtmp[2]/scale))
                             self.datFile.write("\n \n")
                             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                           self.datFilename,
@@ -439,7 +433,7 @@ class V_base(object):
                                     vtmp = v[eN,k,:]
                                     if abs(xtmp[2]- slice_z) < vt.mesh.h:
                                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
-                                                                                                  old_div(vtmp[0],scale),old_div(vtmp[1],scale)))
+                                                                                                  vtmp[0]/scale,vtmp[1]/scale))
                             self.datFile.write("\n \n")
                             cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                           self.datFilename,
@@ -492,7 +486,7 @@ class V_base(object):
                     newPlot()
                     newWindow()
             elif vt.nSpace_global == 3:
-                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[old_div(vt.mesh.nodeArray.shape[0],2),:]
+                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]/2,:]
                 uci = vt.coefficients.vectorComponents[0]; vci = vt.coefficients.vectorComponents[1]
                 wci = vt.coefficients.vectorComponents[2]
                 plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
@@ -650,7 +644,7 @@ class V_base(object):
                 newWindow()
             #end 2d
             elif vt.nSpace_global == 3:
-                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[old_div(vt.mesh.nodeArray.shape[0],2),:]
+                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]/2,:]
                 for eN in range(vt.q['x'].shape[0]):
                     for k in range(vt.q['x'].shape[1]):
                         if vt.q['x'][eN,k,0] == slice_x:
@@ -766,7 +760,7 @@ class V_base(object):
                 xandu = [(vt.ebq_global['x'].flat[i*3+0],vt.ebq_global[ckey].flat[i]) for i in range(npoints)]
                 xandu.sort()
                 for xu in xandu:
-                    self.datFile.write("%12.5e %12.5e \n" % (xu[0],old_div(xu[1],scale)))
+                    self.datFile.write("%12.5e %12.5e \n" % (xu[0],xu[1]/scale))
                 self.datFile.write("\n \n")
                 cmd = "set term x11 %i; plot \'%s\' index %i with linespoints title \"%s\" \n" % (self.windowNumber(),
                                                                                                   self.datFilename,
@@ -788,7 +782,7 @@ class V_base(object):
                     for k in range(vt.ebq_global[ckey].shape[1]):
                         xtmp =vt.ebq_global['x'][ebN,k,:]; vtmp = vt.ebq_global[ckey][ebN,k,:]
                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
-                                                                                  old_div(vtmp[0],scale),old_div(vtmp[1],scale)))
+                                                                                  vtmp[0]/scale,vtmp[1]/scale))
                 self.datFile.write("\n \n")
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                               self.datFilename,
@@ -802,7 +796,7 @@ class V_base(object):
                 #raw_input('simTools coef press return to continue\n')
             #end 2d
             elif vt.nSpace_global == 3:
-                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[old_div(vt.mesh.nodeArray.shape[0],2),:]
+                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]//2,:]
                 max_u=max(numpy.absolute(numpy.take(vt.ebq_global[ckey],[0],2).flat))
                 max_v=max(numpy.absolute(numpy.take(vt.ebq_global[ckey],[1],2).flat))
                 max_w=max(numpy.absolute(numpy.take(vt.ebq_global[ckey],[2],2).flat))
@@ -817,7 +811,7 @@ class V_base(object):
                         xtmp = vt.ebq_global['x'][ebN,k,:]; vtmp = vt.ebq_global[ckey][ebN,k,:]
                         if abs(xtmp[0]-slice_x) < vt.mesh.h:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[1],xtmp[2],
-                                                                                      old_div(vtmp[1],scale),old_div(vtmp[2],scale)))
+                                                                                      vtmp[1]/scale,vtmp[2]/scale))
 
                 self.datFile.write("\n \n")
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -836,7 +830,7 @@ class V_base(object):
                         xtmp = vt.ebq_global['x'][ebN,k,:]; vtmp = vt.ebq_global[ckey][ebN,k,:]
                         if abs(xtmp[0]-slice_y) < vt.mesh.h:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[1],xtmp[2],
-                                                                                      old_div(vtmp[1],scale),old_div(vtmp[2],scale)))
+                                                                                      vtmp[1]/scale,vtmp[2]/scale))
 
                 self.datFile.write("\n \n")
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -854,7 +848,7 @@ class V_base(object):
                         xtmp = vt.ebq_global['x'][ebN,k,:]; vtmp = vt.ebq_global[ckey][ebN,k,:]
                         if abs(xtmp[0]-slice_z) < vt.mesh.h:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[1],xtmp[2],
-                                                                                      old_div(vtmp[1],scale),old_div(vtmp[2],scale)))
+                                                                                      vtmp[1]/scale,vtmp[2]/scale))
 
                 self.datFile.write("\n \n")
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -879,7 +873,7 @@ class V_base(object):
                     scale = 1.0
                 npoints  = vt.ebq_global['x'].shape[0]*vt.ebq_global['x'].shape[1]
                 xvals = [vt.ebq_global['x'].flat[i*3+0] for i in range(npoints)]
-                yvals = [old_div(vt.ebq_global[ckey].flat[i],scale) for i in range(npoints)]
+                yvals = [vt.ebq_global[ckey].flat[i]/scale for i in range(npoints)]
                 vtkViewers.viewScalar_1D(xvals,yvals,"x",ckey[0],title,self.windowNumber(),
                                             Pause=self.s.viewerPause,sortPoints=True)
                 newPlot()
@@ -896,8 +890,8 @@ class V_base(object):
 #                x = [vt.ebq_global['x'].flat[i*3+0] for i in range(npoints)]
 #                y = [vt.ebq_global['x'].flat[i*3+1] for i in range(npoints)]
 #                z = [vt.ebq_global['x'].flat[i*3+2] for i in range(npoints)]
-                xvals= [old_div(vt.ebq_global[ckey].flat[i*2+0],scale) for i in range(npoints)]
-                yvals= [old_div(vt.ebq_global[ckey].flat[i*2+1],scale) for i in range(npoints)]
+                xvals= [vt.ebq_global[ckey].flat[i*2+0]/scale for i in range(npoints)]
+                yvals= [vt.ebq_global[ckey].flat[i*2+1]/scale for i in range(npoints)]
                 nodes = vt.ebq_global['x'].flat[:]
                 vtkViewers.viewVector_pointSet_2D(nodes,xvals,yvals,None,title,self.windowNumber(),
                                                          arrows=True,streamlines=False,
@@ -920,9 +914,9 @@ class V_base(object):
 #                y = [vt.ebq_global['x'].flat[i*3+1] for i in range(npoints)]
 #                z = [vt.ebq_global['x'].flat[i*3+2] for i in range(npoints)]
                 nodes = vt.ebq_global['x'].flat[:]
-                xvals= [old_div(vt.ebq_global[ckey].flat[i*3+0],scale) for i in range(npoints)]
-                yvals= [old_div(vt.ebq_global[ckey].flat[i*3+1],scale) for i in range(npoints)]
-                zvals= [old_div(vt.ebq_global[ckey].flat[i*3+2],scale) for i in range(npoints)]
+                xvals= [vt.ebq_global[ckey].flat[i*3+0]/scale for i in range(npoints)]
+                yvals= [vt.ebq_global[ckey].flat[i*3+1]/scale for i in range(npoints)]
+                zvals= [vt.ebq_global[ckey].flat[i*3+2]/scale for i in range(npoints)]
                 vtkViewers.viewVector_pointSet_3D(nodes,xvals,yvals,zvals,title,self.windowNumber(),
                                                          arrows=True,streamlines=False,
                                                          Pause=self.s.viewerPause)
@@ -962,7 +956,7 @@ class V_base(object):
                 xandu = [(vt.q['x'].flat[i*3+0],vt.q[ckey].flat[i]) for i in range(npoints)]
                 xandu.sort()
                 for xu in xandu:
-                    self.datFile.write("%12.5e %12.5e \n" % (xu[0],old_div(xu[1],scale)))
+                    self.datFile.write("%12.5e %12.5e \n" % (xu[0],xu[1]/scale))
                 self.datFile.write("\n \n")
                 ptitle = title+" max= %g" % max_u
                 cmd = "set term x11 %i; plot \'%s\' index %i with linespoints title \"%s\" \n" % (self.windowNumber(),
@@ -985,7 +979,7 @@ class V_base(object):
                     for k in range(min(nVectorPlotPointsPerElement,vt.nQuadraturePoints_element)):
                         xtmp = vt.q['x'][eN,k,:]; vtmp = vt.q[ckey][eN,k,:]
                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
-                                                                                  old_div(vtmp[0],scale),old_div(vtmp[1],scale)))
+                                                                                  vtmp[0]/scale,vtmp[1]/scale))
                 self.datFile.write("\n \n")
                 ptitle = title + "max=(%s,%s)" % (max_u,max_v)
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -998,7 +992,7 @@ class V_base(object):
                 newPlot()
                 newWindow()
             elif vt.nSpace_global == 3:
-                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[old_div(vt.mesh.nodeArray.shape[0],2),:]
+                (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]//2,:]
                 max_u=max(numpy.absolute(numpy.take(vt.q[ckey],[0],2).flat))
                 max_v=max(numpy.absolute(numpy.take(vt.q[ckey],[1],2).flat))
                 max_w=max(numpy.absolute(numpy.take(vt.q[ckey],[2],2).flat))
@@ -1013,7 +1007,7 @@ class V_base(object):
                         xtmp = vt.q['x'][eN,k,:]; vtmp = vt.q[ckey][eN,k,:]
                         if abs(xtmp[0]-slice_x) < vt.mesh.h:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[1],xtmp[2],
-                                                                                      old_div(vtmp[1],scale),old_div(vtmp[2],scale)))
+                                                                                      vtmp[1]/scale,vtmp[2]/scale))
                 self.datFile.write("\n \n")
                 ptitle = title + " max=(%s,%s,%s) " % (max_u,max_v,max_w)+" : x-slice"
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -1031,7 +1025,7 @@ class V_base(object):
                         xtmp = vt.q['x'][eN,k,:]; vtmp = vt.q[ckey][eN,k,:]
                         if abs(xtmp[1]-slice_y) < vt.mesh.h:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[2],
-                                                                                      old_div(vtmp[0],scale),old_div(vtmp[2],scale)))
+                                                                                      vtmp[0]/scale,vtmp[2]/scale))
                 self.datFile.write("\n \n")
                 ptitle = title + " max=(%s,%s,%s) " % (max_u,max_v,max_w)+" : y-slice"
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -1049,7 +1043,7 @@ class V_base(object):
                         xtmp = vt.q['x'][eN,k,:]; vtmp = vt.q[ckey][eN,k,:]
                         if abs(xtmp[2]-slice_z) < vt.mesh.h:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
-                                                                                      old_div(vtmp[0],scale),old_div(vtmp[1],scale)))
+                                                                                      vtmp[0]/scale,vtmp[1]/scale))
                 self.datFile.write("\n \n")
                 ptitle = title + " max=(%s,%s,%s) " % (max_u,max_v,max_w)+" : z-slice"
                 cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
@@ -1086,7 +1080,7 @@ class V_base(object):
                     scale = 1.0
                 npoints  = vt.q['x'].shape[0]*vt.q['x'].shape[1]
                 xvals = [vt.q['x'].flat[i*3+0] for i in range(npoints)]
-                yvals = [old_div(vt.q[ckey].flat[i],scale) for i in range(npoints)]
+                yvals = [vt.q[ckey].flat[i]/scale for i in range(npoints)]
                 vtkViewers.viewVector_1D(xvals,yvals,"x",ckey[0],title,self.windowNumber(),
                                             Pause=self.s.viewerPause)
                 newPlot()

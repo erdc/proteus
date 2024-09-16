@@ -4,14 +4,6 @@ A class hierarchy of time discretizations
 .. inheritance-diagram:: proteus.TimeIntegration
    :parts: 1
 """
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from .LinearAlgebraTools import *
 import sys,math
 from . import Profiling
@@ -316,7 +308,7 @@ class BackwardEuler(TI_base):
                 self.m_ip_last[ci].flat[:] = self.m_ip_tmp[ci].flat
     def calculateCoefs(self):
         #for bdf interface
-        dtInv = old_div(1.0,self.dt)
+        dtInv = 1.0/self.dt
         self.alpha_bdf = dtInv
         for ci in list(self.m_last.keys()):
             self.beta_bdf[ci].flat[:] = self.m_last[ci].flat
@@ -342,10 +334,10 @@ class BackwardEuler_cfl(BackwardEuler):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
                 #print "mac cfl component ci",maxCFL,ci
-        self.dt = old_div(self.runCFL,maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
+        if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def initialize_dt(self,t0,tOut,q):
@@ -753,10 +745,10 @@ class ForwardEuler(TI_base):
         for ci in range(self.nc):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt = old_div(self.runCFL,maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
+        if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def initialize_dt(self,t0,tOut,q):
@@ -934,10 +926,10 @@ class ForwardEuler_A(TI_base):
         for ci in range(self.nc):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt = old_div(self.runCFL,maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
+        if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def updateStage(self):
@@ -1133,10 +1125,10 @@ class ForwardEuler_H(TI_base):
             if ci in self.cfl:
                 maxCFL=globalMax(self.cfl[ci].max())
             #end has key
-        self.dt = old_div(self.runCFL,maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
+        if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def updateTimeHistory(self,resetFromDOF=False):
@@ -1287,10 +1279,10 @@ class OuterTheta(TI_base):
         for ci in range(self.nc):
             if ci in self.cfl:
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt = old_div(self.runCFL,maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
+        if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
     def updateTimeHistory(self,resetFromDOF=False):
@@ -1545,7 +1537,7 @@ class VBDF(TI_base):
         #import pdb
         #pdb.set_trace()
         if self.timeOrder == 2:
-            r = old_div(self.dt,self.dt_history[0])
+            r = self.dt/self.dt_history[0]
             for ci in list(self.mt_tmp.keys()):
                 self.error_estimate[ci].flat[:] = self.m_history[1][ci].flat
                 self.error_estimate[ci]   *= r
@@ -1553,7 +1545,7 @@ class VBDF(TI_base):
                 self.work[ci]             *= -(1.0+r)
                 self.error_estimate[ci]   += self.work[ci]
                 self.error_estimate[ci]   += self.m_tmp[ci]
-                self.error_estimate[ci]   *= old_div(r,(1.0+r))
+                self.error_estimate[ci]   *= r/(1.0+r)
             #
         else:
             for ci in list(self.mt_tmp.keys()):
@@ -1574,9 +1566,9 @@ class VBDF(TI_base):
 
     def calculateCoefs(self):
         if self.needToCalculateBDFCoefs:
-            dtInv = old_div(1.0,self.dt)
+            dtInv = 1.0/self.dt
             if self.timeOrder == 2:
-                r         = old_div(self.dt,self.dt_history[0])
+                r         = self.dt/self.dt_history[0]
                 self.alpha_bdf = (1.0+2.0*r)/(1.0+r)*dtInv
 
                 b0        =-(1.0+r)*dtInv
@@ -2026,10 +2018,10 @@ class ExplicitRK_base(TI_base):
                                                       self.transport.q[('dH',ci,ci)],
                                                       self.transport.q[('cfl',ci)])
                     maxCFL=max(globalMax(self.cfl[ci].max()),maxCFL)
-        self.dt = old_div(self.runCFL,maxCFL)
+        self.dt = self.runCFL/maxCFL
         if self.dtLast is None:
             self.dtLast = self.dt
-        if old_div(self.dt,self.dtLast)  > self.dtRatioMax:
+        if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.generateSubsteps([self.tLast+self.dt])
         self.t = self.substeps[0]
@@ -2188,13 +2180,13 @@ class LinearSSPRKintegration(ExplicitRK_base):
         elif stages == 2:
             self.alpha[1,0] = 0.5;     self.alpha[1,1] = 0.5
         elif stages == 3:
-            self.alpha[2,0] = old_div(1.,3.);   self.alpha[2,1] = old_div(1.,2.); self.alpha[2,2] = old_div(1.,6.)
+            self.alpha[2,0] = 1./3.;   self.alpha[2,1] = 1./2.; self.alpha[2,2] = 1./6.
         elif stages == 4:
-            self.alpha[3,0] = old_div(3.,8.);   self.alpha[3,1] = old_div(1.,3.); self.alpha[3,2] = old_div(1.,4.);
-            self.alpha[3,3] = old_div(1.,24.);
+            self.alpha[3,0] = 3./8.;   self.alpha[3,1] = 1./3.; self.alpha[3,2] = 1./4.;
+            self.alpha[3,3] = 1./24.;
         elif stages == 5:
-            self.alpha[4,0] = old_div(11.,30.); self.alpha[4,1] = old_div(3.,8.); self.alpha[4,2] = old_div(1.,6.);
-            self.alpha[4,3] = old_div(1.,12.);  self.alpha[4,4] = old_div(1.,120.)
+            self.alpha[4,0] = 11./30.; self.alpha[4,1] = 3./8.; self.alpha[4,2] = 1./6.;
+            self.alpha[4,3] = 1./12.;  self.alpha[4,4] = 1./120.
         #
         self.beta = numpy.zeros((stages,stages),'d')
         for l in range(stages-1):
@@ -2300,7 +2292,7 @@ class SSPRKPIintegration(ExplicitRK_base):
             self.alpha[0,0] = 1.0;   self.alpha[1,0] = 0.5;  self.alpha[1,1] = 0.5
         elif order == 3:
             self.alpha[0,0] = 1.0;   self.alpha[1,0] = 0.75; self.alpha[1,1] = 0.25;
-            self.alpha[2,0] = old_div(1.,3.); self.alpha[2,1] = 0.0;  self.alpha[2,2] = old_div(2.,3.)
+            self.alpha[2,0] = 1./3.; self.alpha[2,1] = 0.0;  self.alpha[2,2] = 2./3.
         self.beta = numpy.zeros((stages,stages),'d')
 
         if order == 1:
@@ -2308,7 +2300,7 @@ class SSPRKPIintegration(ExplicitRK_base):
         elif order == 2:
             self.beta[0,0] = 1.0; self.beta[1,1] = 0.5
         elif order == 3:
-            self.beta[0,0] = 1.0; self.beta[1,1] = 0.25; self.beta[2,2] = old_div(2.0,3.0)
+            self.beta[0,0] = 1.0; self.beta[1,1] = 0.25; self.beta[2,2] = 2.0/3.0
         #
         #1st order t = [t^{n+1}]
         #2nd order t = [t^{n+1},t^{n+1}]
@@ -2573,8 +2565,7 @@ class DGlimiterP2Lagrange1d(object):
             x0   = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,0],0]
             x1   = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,1],0]
             dx   = x1-x0; du = solndofs[self.l2gSolution[ci][eN,1]]-solndofs[self.l2gSolution[ci][eN,0]]
-            uBar = old_div((solndofs[self.l2gSolution[ci][eN,0]] + solndofs[self.l2gSolution[ci][eN,1]] +
-                    4.0*solndofs[self.l2gSolution[ci][eN,2]]),6.0) #simpson's rule
+            uBar = (solndofs[self.l2gSolution[ci][eN,0]]+solndofs[self.l2gSolution[ci][eN,1]]+4.0*solndofs[self.l2gSolution[ci][eN,2]])/6.0 #simpson's rule
             xbar = self.mesh.elementBarycentersArray[eN,0]
             self.ulim[ci].dof[self.l2gLimiting[ci][eN,0]] = uBar + (x0-xbar)*du/dx
             self.ulim[ci].dof[self.l2gLimiting[ci][eN,1]] = uBar + (x1-xbar)*du/dx
@@ -2817,10 +2808,10 @@ class UnstructuredLimiter_base(object):
                     #try each local interpolant
                     for ebN in range(self.mesh.nElementBoundaries_element):
                         ebN_1 = int(fmod(ebN+1,self.mesh.nElementBoundaries_element))
-                        xbar_ebN = old_div((self.mesh.elementBarycentersArray[eN].flat+xbar[ebN].flat+xbar[ebN_1].flat),3.0)
+                        xbar_ebN = (self.mesh.elementBarycentersArray[eN].flat+xbar[ebN].flat+xbar[ebN_1].flat)/3.0
                         gradU.flat[:] = uEn*self.elementNeighborShapeGradients[eN,ebN,0,:]+ubar[ebN]*self.elementNeighborShapeGradients[eN,ebN,1,:]\
                                         +ubar[ebN_1]*self.elementNeighborShapeGradients[eN,ebN,2,:]
-                        uout = old_div((uEn+ubar[ebN]+ubar[ebN_1]),3.0) + gradU[0]*(x[0]-xbar_ebN[0])+gradU[1]*(x[1]-xbar_ebN[1])
+                        uout = (uEn+ubar[ebN]+ubar[ebN_1])/3.0 + gradU[0]*(x[0]-xbar_ebN[0])+gradU[1]*(x[1]-xbar_ebN[1])
                         uex  = 3.0*x[0] + 2.0*x[1]
                         assert abs(uout-uex) < 1.0e-4, "mistake eN=%d nN=%d ebN=%d uout=%s uex=%g " % (eN,nN,ebN,uout,uex)
                     #ebN
@@ -2979,7 +2970,7 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                 #for debugging
                 uavIn = 0.0; uavgOut = 0.0
                 for eN in range(self.mesh.nElements_global):
-                    uBar = old_div((uDofIn[l2g[eN,0]]+uDofIn[l2g[eN,1]]+uDofIn[l2g[eN,2]]),3.0) #P1 2d
+                    uBar = (uDofIn[l2g[eN,0]]+uDofIn[l2g[eN,1]]+uDofIn[l2g[eN,2]])/3.0 #P1 2d
                     uavgIn = uBar
                     deltaU.fill(0.0)
                     tdeltaU.fill(0.0)
@@ -2991,8 +2982,8 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                             ip2= int(fmod(i+2,self.mesh.nElementBoundaries_element))
                             uM[i] = 0.5*(uDofIn[l2g[eN,ip1]]+uDofIn[l2g[eN,ip2]])
                             eN1   = self.alphaNeighbors[eN,i,0]; eN2 = self.alphaNeighbors[eN,i,1]
-                            uBar1 = old_div((uDofIn[l2g[eN1,0]]+uDofIn[l2g[eN1,1]]+uDofIn[l2g[eN1,2]]),3.0) #P1 2d
-                            uBar2 = old_div((uDofIn[l2g[eN2,0]]+uDofIn[l2g[eN2,1]]+uDofIn[l2g[eN2,2]]),3.0) #P1 2d
+                            uBar1 = (uDofIn[l2g[eN1,0]]+uDofIn[l2g[eN1,1]]+uDofIn[l2g[eN1,2]])/3.0 #P1 2d
+                            uBar2 = (uDofIn[l2g[eN2,0]]+uDofIn[l2g[eN2,1]]+uDofIn[l2g[eN2,2]])/3.0 #P1 2d
                             dUi = self.alphas[eN,i,0]*(uBar1-uBar)+self.alphas[eN,i,1]*(uBar2-uBar)
                             deltaU[i],tag_eN[i] = self.limiter(uM[i]-uBar,self.nu*dUi)
                             tdeltaU[i]  = deltaU[i]
@@ -3003,7 +2994,7 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                         posi = [max(0.0,deltaU[i]) for i in range(self.mesh.nElementBoundaries_element)]
                         negi = [max(0.0,-deltaU[i]) for i in range(self.mesh.nElementBoundaries_element)]
                         pos = sum(posi); neg = sum(negi)
-                        thp= min(1.,old_div(neg,(pos+1.0e-8))); thm = min(1.0,old_div(pos,(neg+1.0e-8)))
+                        thp= min(1.,neg/(pos+1.0e-8)); thm = min(1.0,pos/(neg+1.0e-8))
                         for i in range(self.mesh.nElementBoundaries_element):
                             tdeltaU[i] = thp*posi[i] - thm*negi[i]
                             tag_eN[i]=1
@@ -3019,7 +3010,7 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
                         uDofOut[ci][l2g[eN,i]] = uMlim[ip1]+uMlim[ip2]-uMlim[i]
                     #i
                     #for debugging
-                    uavgOut = old_div((uDofOut[ci][l2g[eN,0]]+uDofOut[ci][l2g[eN,1]]+uDofOut[ci][l2g[eN,2]]),3.0)
+                    uavgOut = (uDofOut[ci][l2g[eN,0]]+uDofOut[ci][l2g[eN,1]]+uDofOut[ci][l2g[eN,2]])/3.0
                     assert abs(uavgOut-uavgIn) < 1.0e-6, "eN=%d uavgOut=%s uavgIn=%s" % (eN,uavgOut,uavgIn)
                 #eN
         #end else
@@ -3891,7 +3882,7 @@ PsiTCtte!""" % self.dtMeth)
                     if nssteps == 0:
                         res0 = solver.norm_r
                     res = solver.norm_r
-                    ssError = old_div(res,(res0*self.steadyStateRtol + self.steadyStateAtol))
+                    ssError = res/(res0*self.steadyStateRtol+self.steadyStateAtol)
                     converged = ssError < 1.0
                     #mwf hack
                     #converged = False
@@ -3936,7 +3927,7 @@ PsiTCtte!""" % self.dtMeth)
                 if nssteps == 0:
                     res0 = self.mlNL.solverList[-1].norm_r
                 res = self.mlNL.solverList[-1].norm_r
-                ssError = old_div(res,(res0*self.steadyStateRtol + self.steadyStateAtol))
+                ssError = res/(res0*self.steadyStateRtol+self.steadyStateAtol)
                 converged = ssError < 1.0
                 #mwf hack
                 #converged = False
@@ -4156,7 +4147,7 @@ class CentralDifference_2ndD(TI_base):
             self.mt1_last[ci].flat[:] = self.mt1_tmp[ci].flat
     def calculateCoefs(self):
         #for bdf interface
-        dtInv = old_div(1.0,self.dt**2)
+        dtInv = 1.0/self.dt**2
         self.alpha_bdf = dtInv
         for ci in list(self.m_last.keys()):
             self.beta_bdf[ci].flat[:] = self.m_last[ci].flat

@@ -1,7 +1,5 @@
 ## Automatically adapted for numpy.oldnumeric Apr 14, 2008 by -c
 
-
-from builtins import range
 def writeMeshMatlabFormat(mesh,meshFileBase):
     """
     build array data structures for matlab finite element mesh representation

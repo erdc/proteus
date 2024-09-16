@@ -4,14 +4,7 @@ A class hierarchy for methods of controlling the step size
 .. inheritance-diagram:: proteus.StepControl
    :parts: 1
 """
-from __future__ import absolute_import
-from __future__ import division
-from builtins import zip
-from builtins import range
-from past.utils import old_div
-from builtins import object
 from .Profiling import logEvent
-#mwf add Comm for saving info about time step in separate file
 from . import Comm
 from petsc4py import PETSc
 from .Comm import globalMax
@@ -247,7 +240,7 @@ class PsiTCtte_controller(SC_base):
             self.res0 = self.model.solver.solverList[-1].norm_r0
         res = self.model.solver.solverList[-1].norm_r0
         #print "res dt",res,self.dt_model,self.res0,self.rtol,self.atol
-        ssError = old_div(res,(self.res0*self.rtol + self.atol))
+        ssError = res/(self.res0*self.rtol + self.atol)
         #print "ssError",ssError
         for m in self.model.levelModelList:
             m.updateTimeHistory(self.t_model)
@@ -331,7 +324,7 @@ class Osher_controller(SC_base):
             self.res0 = self.model.solver.solverList[-1].norm_r0
         res = self.model.solver.solverList[-1].norm_r0
         #print "res0",res
-        ssError = old_div(res,(self.res0*self.rtol + self.atol))
+        ssError = res/(self.res0*self.rtol + self.atol)
         #print "ssError",ssError
         for m in self.model.levelModelList:
             m.updateTimeHistory(self.t_model)
@@ -416,7 +409,7 @@ class Osher_PsiTC_controller(SC_base):
             for m in self.model.levelModelList:
                 m.timeIntegration.choose_dt()
         res = self.model.solver.solverList[-1].norm_r0
-        ssError = old_div(res,(self.res0*self.rtol + self.atol))
+        ssError = res/(self.res0*self.rtol + self.atol)
         for m in self.model.levelModelList:
             m.updateTimeHistory(self.t_model)
             m.timeIntegration.updateTimeHistory()
@@ -511,7 +504,7 @@ class Osher_PsiTC_controller2(SC_base):
 
             self.dt_model = self.start_ratio*self.model.levelModelList[0].timeIntegration.dt
         res = self.model.solver.solverList[-1].norm_r0
-        ssError = old_div(res,(self.res0*self.rtol + self.atol))
+        ssError = res/(self.res0*self.rtol + self.atol)
         for m in self.model.levelModelList:
             m.updateTimeHistory(self.t_model)
             m.timeIntegration.updateTimeHistory()
@@ -529,7 +522,7 @@ class Osher_PsiTC_controller2(SC_base):
             self.substeps.append(self.substeps[0])
 
 
-            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(old_div(res,self.res0))*100.0),level=1)
+            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
         elif self.nSteps >= self.nStepsMax:
             logEvent("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
             self.nSteps=0
@@ -645,10 +638,10 @@ class Min_dt_cfl_controller(Min_dt_controller):
         for ci in range(m.nc):
             if ci in self.cfl:
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt_model = old_div(self.runCFL,maxCFL)
+        self.dt_model = self.runCFL/maxCFL
         if self.dt_model_last is None:
             self.dt_model_last = self.dt_model
-        if old_div(self.dt_model,self.dt_model_last)  > self.dt_ratio_max:
+        if self.dt_model/self.dt_model_last  > self.dt_ratio_max:
             self.dt_model = self.dt_model_last*self.dt_ratio_max
         self.set_dt_allLevels()
         self.substeps = [self.t_model]
@@ -664,10 +657,10 @@ class Min_dt_cfl_controller(Min_dt_controller):
         for ci in range(m.nc):
             if ci in self.cfl:
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
-        self.dt_model = old_div(self.runCFL,maxCFL)
+        self.dt_model = self.runCFL/maxCFL
         if self.dt_model_last is None:
             self.dt_model_last = self.dt_model
-        if old_div(self.dt_model,self.dt_model_last)  > self.dt_ratio_max:
+        if self.dt_model/self.dt_model_last  > self.dt_ratio_max:
             self.dt_model = self.dt_model_last*self.dt_ratio_max
         self.set_dt_allLevels()
         #self.substeps=[self.t_model]
@@ -916,7 +909,7 @@ class HeuristicNL_dt_controller(SC_base):
             for m,r,u,un,unm1 in zip(self.model.levelModelList,rList,uList,self.uListSave,self.unm1ListSave):
                 u[:] = un[:]
                 u   -= unm1
-                u   *= old_div((self.t_model-self.t_model_last),(self.dt_nm1 + 1.0e-16))
+                u   *= (self.t_model-self.t_model_last)/(self.dt_nm1 + 1.0e-16)
                 u   += un
                 m.setFreeDOF(u)
                 m.getResidual(u,r)
@@ -1101,7 +1094,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             for m,r,u,un,unm1 in zip(self.model.levelModelList,rList,uList,self.uListSave,self.unm1ListSave):
                 u[:] = un[:]
                 u   -= unm1
-                u   *= old_div((self.t_model-self.t_model_last),(self.dt_nm1 + 1.0e-16))
+                u   *= (self.t_model-self.t_model_last)/(self.dt_nm1 + 1.0e-16)
                 u   += un
                 m.setFreeDOF(u)
                 m.getResidual(u,r)
@@ -1149,10 +1142,10 @@ class GustafssonFullNewton_dt_controller(SC_base):
         r_a   = 1.0
         if alpha_ref > alpha:
             assert nnl > 0.0
-            r_a = self.phi(old_div(nnl_ref,nnl))
+            r_a = self.phi(nnl_ref/nnl)
         else:
             assert alpha > 0.0
-            r_a = self.phi(old_div(alpha_ref,alpha))
+            r_a = self.phi(alpha_ref/alpha)
         r = min(self.nonlinearGrowthRateMax,max(self.nonlinearGrowthRateMin,r_a))
         dtout = dt*r
         #mwf debug
@@ -1171,7 +1164,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         if alpha <= 0.0:
             r_a = self.nonlinearGrowthRateMax #could use nnl here
         else:
-            r_a = self.phi(old_div(alpha_ref,alpha))
+            r_a = self.phi(alpha_ref/alpha)
         r = min(self.nonlinearGrowthRateMax,max(self.nonlinearGrowthRateMin,r_a))
         dtout = dt*r
         logEvent("Gustafsson solver success dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout),level=1)
@@ -1237,9 +1230,9 @@ class GustafssonFullNewton_dt_controller(SC_base):
 
         if (not mFine.timeIntegration.provides_dt_estimate and
             mFine.timeIntegration.error_estimate is not None):
-            ordInv = old_div(1.0,(mFine.timeIntegration.timeOrder+1.))
+            ordInv = 1.0/(mFine.timeIntegration.timeOrder+1.)
             minErr = max(self.errorEstimate,self.timeEps)
-            r  = self.errorSafetyFactor*(old_div(self.timeErrorTolerance,minErr))**ordInv
+            r  = self.errorSafetyFactor*(self.timeErrorTolerance/minErr)**ordInv
             r_e = min(self.errorGrowthRateMax,max(self.errorGrowthRateMin,r))
             dt_e = r_e*dtIn
             logEvent("Gustafsson choose_dt_fromError self t=%s dt=%s error= %s minErr= %s r_e=%s r= %s" % (self.t_model,self.dt_model,
@@ -1266,7 +1259,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
                     maxCFL=max(maxCFL,globalMax(m.q[('cfl',ci)].max()))
                     #mwf debug
                     logEvent("Gustafsson cfl initial step ci = %s maxCFL= %s " % (ci,maxCFL))
-            self.dt_model = min(old_div(self.cfl_for_initial_dt,maxCFL),m.timeIntegration.dt)
+            self.dt_model = min(self.cfl_for_initial_dt/maxCFL,m.timeIntegration.dt)
         else:
             self.dt_model = m.timeIntegration.dt
         #put safety factor in as in FLCBDF?
